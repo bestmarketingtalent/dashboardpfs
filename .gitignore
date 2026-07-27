@@ -1,0 +1,16 @@
+# credenciales del CRM — NUNCA versionar
+.env
+
+# datos personales (Habeas Data) y descargas de la API — NUNCA versionar
+scripts/data/
+
+# salidas generadas (se regeneran con los scripts)
+*.html
+netlify-pfs/
+*.zip
+
+# sistema
+.DS_Store
+
+# configuración local de la máquina
+.claude/
