@@ -281,6 +281,25 @@ display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}}
 .pleg .li{{cursor:pointer;user-select:none}} .pleg .li:hover{{text-decoration:underline}}
 .pleg .dot{{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}}
 .pslice{{cursor:pointer}} .pslice:hover{{opacity:.82}}
+#scat-wrap{{position:relative}}
+#scat{{width:100%;height:auto;display:block}}
+#scat-tip{{position:absolute;display:none;background:var(--azul-oscuro);color:#F2F6FA;padding:9px 11px;border-radius:8px;font-size:11.8px;line-height:1.5;max-width:280px;pointer-events:none;z-index:40;box-shadow:0 6px 18px rgba(7,32,49,.28)}}
+#scat-interp{{background:var(--gris-fondo);border:1px solid var(--gris-linea);border-radius:11px;padding:12px 16px;font-size:12.9px;margin:12px 0 12px;line-height:1.55}}
+#scat-interp h3{{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--gris);margin-bottom:6px}}
+#scat-interp ul{{margin:0;padding-left:18px}}
+#scat-interp li{{margin:4px 0}}
+#scat-top{{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:3px 22px;font-size:12.3px;margin:10px 2px 6px}}
+#scat-top div{{display:flex;gap:8px;align-items:baseline;border-bottom:1px dashed var(--gris-linea);padding:3px 0}}
+#scat-top .rk{{color:var(--gris);font-weight:700;min-width:18px}}
+#scat-top .pc{{margin-left:auto;font-weight:800;color:var(--azul)}}
+.dot{{fill:#3A566B;fill-opacity:.45;stroke:#3A566B;stroke-width:1.5;cursor:pointer}}
+.dot:hover{{fill-opacity:.85}}
+.ckp{{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--gris-linea);border-radius:18px;padding:4px 10px;cursor:pointer;user-select:none;font-weight:600;color:var(--gris);background:#fff}}
+.ckp input{{accent-color:var(--azul);margin:0}}
+.ckp.on{{border-color:var(--azul);color:var(--azul);background:var(--azul-suave)}}
+.chart-ctrl{{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:6px;font-size:12px}}
+.chart-ctrl b{{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--gris)}}
+.chart-ctrl select{{border:1.5px solid var(--gris-linea);border-radius:8px;padding:4px 8px;font-size:12px;background:#fff;color:var(--tinta)}}
 .chart-sec{{border:1px solid var(--gris-linea);border-radius:13px;padding:16px 16px 12px;margin:4px 0 20px}}
 .chart-sec h2{{font-size:15.5px;margin-bottom:2px}}
 .chart-sub{{font-size:12px;color:var(--gris);margin-bottom:10px}}
@@ -355,6 +374,18 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <p class="chart-sub">Cuántos leads entraron cada mes (últimos 18 meses de la selección), apilados por las 6 fuentes principales. Respeta todos los filtros. Pasa el mouse sobre un segmento para el detalle.</p>
 <div style="overflow-x:auto"><svg id="stack" viewBox="0 0 1240 320" preserveAspectRatio="xMidYMid meet" style="width:100%;min-width:700px;height:auto;display:block"></svg></div>
 <div class="pleg" id="stack-leg"></div>
+</div>
+
+<div class="chart-sec">
+<h2>¿Qué fuentes producen los leads mejor calificados para la venta?</h2>
+<p class="chart-sub">Cada punto es una fuente ("Fuente de contacto" del CRM). Eje horizontal: cuántos leads trajo (escala logarítmica). Eje vertical: qué % de ellos está calificado para venta según los estados que marques abajo. Tamaño del punto: nº de leads calificados. Las fuentes más eficientes quedan arriba; las líneas punteadas son las medianas — el cuadrante superior derecho combina volumen y calificación. Pasa el mouse sobre un punto para ver su detalle. Respeta todos los filtros de arriba excepto los de categoría y fuente (que son las dimensiones analizadas).</p>
+<div class="chart-ctrl"><b data-tip="Define qué estados cuentan como 'lead calificado para venta' en el gráfico. El % de cada fuente = leads en los estados marcados ÷ total de leads de la fuente. Un lead caliente que además tiene un estado marcado se cuenta una sola vez.">Cuenta como calificado:</b><span id="sc-cks"></span>
+<b style="margin-left:8px" data-tip="Excluye del gráfico las fuentes con menos leads que este mínimo, para que los porcentajes de fuentes diminutas no distorsionen la lectura.">Fuentes con al menos</b>
+<select id="sc-min" autocomplete="off"><option value="5">5 leads</option><option value="10" selected>10 leads</option>
+<option value="30">30 leads</option><option value="100">100 leads</option></select></div>
+<div id="scat-wrap"><svg id="scat" viewBox="0 0 1240 430" preserveAspectRatio="xMidYMid meet"></svg><div id="scat-tip"></div></div>
+<div id="scat-interp"></div>
+<div id="scat-top"></div>
 </div>
 
 <div class="chart-sec">
@@ -482,7 +513,7 @@ let view = [];
 function apply() {{
   view = filtro([]).slice().sort((a, b) => b[7] - a[7]);
   shown = PAGE;
-  renderKpis(); renderPies(); renderStack(); renderFuentes(); renderCampanas(); renderAttr(); renderLearn(); renderTabla();
+  renderKpis(); renderPies(); renderStack(); renderScat(); renderFuentes(); renderCampanas(); renderAttr(); renderLearn(); renderTabla();
   document.getElementById('resumen').textContent =
     `${{fmtN(view.length)}} leads en la vista de ${{fmtN(D.rows.length)}} adquiridos.`;
 }}
@@ -632,6 +663,173 @@ function renderStack() {{
   leg.innerHTML = top.map((f, i) =>
     `<span><span class="dot" style="background:${{PIE_COL[i]}}"></span>${{esc(D.fuentes[f])}}</span>`).join('') +
     (serie.some(s => s[top.length]) ? '<span><span class="dot" style="background:#C9D6E4"></span>Otras fuentes</span>' : '');
+}}
+
+/* ---------- dispersión: eficiencia por fuente ---------- */
+const SC_DEFAULT = ['hot', 'Negocio abierto', 'Cliente'];
+(function initScatCtrl() {{
+  const holder = document.getElementById('sc-cks');
+  const opts = [['hot', '🔥 Calientes (score ≥ 55)']]
+    .concat(D.status.map((s, i) => [String(i), s]));
+  holder.innerHTML = opts.map(([v, l]) => {{
+    const on = SC_DEFAULT.includes(v === 'hot' ? 'hot' : D.status[+v]);
+    return `<label class="ckp ${{on ? 'on' : ''}}"><input type="checkbox" autocomplete="off" value="${{v}}" ${{on ? 'checked' : ''}}>${{esc(l)}}</label>`;
+  }}).join('');
+  holder.querySelectorAll('input').forEach(i => i.addEventListener('change', () => {{
+    i.parentElement.classList.toggle('on', i.checked); renderScat();
+  }}));
+  document.getElementById('sc-min').addEventListener('change', renderScat);
+}})();
+
+function scatData() {{
+  const minN = +document.getElementById('sc-min').value;
+  const checked = [...document.querySelectorAll('#sc-cks input:checked')].map(i => i.value);
+  const hotOn = checked.includes('hot');
+  const sSet = new Set(checked.filter(v => v !== 'hot').map(Number));
+  const F = new Map();
+  filtro(['c', 'f']).forEach(r => {{
+    let o = F.get(r[3]);
+    if (!o) {{ o = {{ t: 0, st: {{}}, hotSt: {{}} }}; F.set(r[3], o); }}
+    o.t++;
+    o.st[r[5]] = (o.st[r[5]] || 0) + 1;
+    if (r[7] >= 55) o.hotSt[r[5]] = (o.hotSt[r[5]] || 0) + 1;
+  }});
+  const pts = [];
+  F.forEach((o, fi) => {{
+    if (o.t < minN) return;
+    let q = 0;
+    for (const [s, c] of Object.entries(o.st)) if (sSet.has(+s)) q += c;
+    if (hotOn) for (const [s, c] of Object.entries(o.hotSt)) if (!sSet.has(+s)) q += c;
+    pts.push({{ fi, t: o.t, q, p: q / o.t * 100, st: o.st,
+                hot: Object.values(o.hotSt).reduce((a, b) => a + b, 0) }});
+  }});
+  return pts;
+}}
+
+function median(a) {{
+  if (!a.length) return 0;
+  const s = a.slice().sort((x, y) => x - y), m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}}
+
+function renderScat() {{
+  const pts = scatData();
+  const svg = document.getElementById('scat');
+  if (!pts.length) {{ svg.innerHTML = ''; document.getElementById('scat-top').innerHTML = ''; return; }}
+  const W = 1240, H = 430, L = 52, R = 26, T = 16, B = 40;
+  const xmin = Math.min(...pts.map(p => p.t)), xmax = Math.max(...pts.map(p => p.t));
+  const lx0 = Math.log10(Math.max(1, xmin * .8)), lx1 = Math.log10(xmax * 1.25);
+  const ymax = Math.max(5, Math.max(...pts.map(p => p.p)) * 1.14);
+  const X = t => L + (Math.log10(t) - lx0) / (lx1 - lx0) * (W - L - R);
+  const Y = p => T + (1 - p / ymax) * (H - T - B);
+  const rad = q => Math.max(6, Math.min(24, 5 + Math.sqrt(q) * 1.9));
+  let g = '';
+  /* grid + ejes */
+  const xticks = [5, 10, 30, 100, 300, 1000, 3000, 10000].filter(v => v >= xmin * .8 && v <= xmax * 1.25);
+  xticks.forEach(v => {{
+    g += `<line x1="${{X(v)}}" y1="${{T}}" x2="${{X(v)}}" y2="${{H - B}}" stroke="#F0F3F8"/>` +
+         `<text x="${{X(v)}}" y="${{H - B + 16}}" text-anchor="middle" font-size="10.5" fill="#5B6B85">${{fmtN(v)}}</text>`;
+  }});
+  const ystep = ymax > 40 ? 10 : ymax > 16 ? 5 : 2;
+  for (let v = 0; v <= Math.min(100, ymax); v += ystep) {{
+    g += `<line x1="${{L}}" y1="${{Y(v)}}" x2="${{W - R}}" y2="${{Y(v)}}" stroke="#F0F3F8"/>` +
+         `<text x="${{L - 7}}" y="${{Y(v) + 3.5}}" text-anchor="end" font-size="10.5" fill="#5B6B85">${{v}}%</text>`;
+  }}
+  g += `<text x="${{(L + W - R) / 2}}" y="${{H - 6}}" text-anchor="middle" font-size="11" fill="#5B6B85" font-weight="700">Leads que trajo la fuente (escala log)</text>`;
+  g += `<text x="14" y="${{(T + H - B) / 2}}" text-anchor="middle" font-size="11" fill="#5B6B85" font-weight="700" transform="rotate(-90 14 ${{(T + H - B) / 2}})">% calificados para venta</text>`;
+  /* medianas */
+  const mx = median(pts.map(p => p.t)), my = median(pts.map(p => p.p));
+  g += `<line x1="${{X(mx)}}" y1="${{T}}" x2="${{X(mx)}}" y2="${{H - B}}" stroke="#C9D6E4" stroke-dasharray="5 4"/>`;
+  g += `<line x1="${{L}}" y1="${{Y(my)}}" x2="${{W - R}}" y2="${{Y(my)}}" stroke="#C9D6E4" stroke-dasharray="5 4"/>`;
+  g += `<text x="${{W - R - 4}}" y="${{T + 12}}" text-anchor="end" font-size="10.5" fill="#8A99A8" font-style="italic">↗ alto volumen · alta calificación</text>`;
+  /* puntos (grandes debajo, pequeños encima) */
+  const drawn = pts.slice().sort((a, b) => b.t - a.t);
+  drawn.forEach((p, i) => {{
+    g += `<circle class="dot" data-i="${{pts.indexOf(p)}}" cx="${{X(p.t)}}" cy="${{Y(p.p)}}" r="${{rad(p.q)}}"/>`;
+  }});
+  /* etiquetas directas: top 4 por nº calificados y top 3 por % */
+  const lab = new Set();
+  pts.slice().sort((a, b) => b.q - a.q).slice(0, 4).forEach(p => lab.add(p.fi));
+  pts.slice().sort((a, b) => b.p - a.p).slice(0, 3).forEach(p => lab.add(p.fi));
+  pts.filter(p => lab.has(p.fi)).forEach(p => {{
+    const nm = D.fuentes[p.fi].length > 26 ? D.fuentes[p.fi].slice(0, 25) + '…' : D.fuentes[p.fi];
+    const anchor = X(p.t) > W - 220 ? 'end' : 'start';
+    const dx = anchor === 'end' ? -(rad(p.q) + 5) : rad(p.q) + 5;
+    g += `<text x="${{X(p.t) + dx}}" y="${{Y(p.p) + 3.5}}" text-anchor="${{anchor}}" font-size="10.8" font-weight="700" fill="#2C4356">${{esc(nm)}}</text>`;
+  }});
+  svg.innerHTML = g;
+  /* tooltip */
+  const tip = document.getElementById('scat-tip'), wrap = document.getElementById('scat-wrap');
+  svg.querySelectorAll('.dot').forEach(c => {{
+    const show = e => {{
+      const p = pts[+c.dataset.i];
+      const det = Object.entries(p.st).sort((a, b) => b[1] - a[1]).slice(0, 6)
+        .map(([s, n]) => `${{esc(D.status[+s])}}: <b>${{fmtN(n)}}</b>`).join(' · ');
+      tip.innerHTML = `<b>${{esc(D.fuentes[p.fi])}}</b><br>` +
+        `Leads: <b>${{fmtN(p.t)}}</b> · Calificados: <b>${{fmtN(p.q)}}</b> (${{p.p.toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}%)` +
+        ` · 🔥 Calientes: <b>${{fmtN(p.hot)}}</b><br><span style="opacity:.85">${{det}}</span>`;
+      const r = wrap.getBoundingClientRect();
+      let tx = e.clientX - r.left + 14, ty = e.clientY - r.top - 10;
+      tip.style.display = 'block';
+      if (tx + 290 > r.width) tx = e.clientX - r.left - 300;
+      tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
+    }};
+    c.addEventListener('mousemove', show);
+    c.addEventListener('mouseenter', show);
+    c.addEventListener('mouseleave', () => tip.style.display = 'none');
+  }});
+  /* interpretación dinámica según el filtro activo */
+  renderInterp(pts, mx, my);
+  /* ranking accesible */
+  document.getElementById('scat-top').innerHTML =
+    '<div style="border:0;font-weight:800;color:var(--gris);text-transform:uppercase;font-size:10.5px;letter-spacing:.5px">Fuentes más eficientes (con el mínimo de leads elegido)</div><div style="border:0"></div>' +
+    pts.slice().sort((a, b) => b.p - a.p || b.q - a.q).slice(0, 10).map((p, i) =>
+      `<div><span class="rk">${{i + 1}}.</span> ${{esc(D.fuentes[p.fi])}}
+       <span style="color:var(--gris)">${{fmtN(p.q)}} de ${{fmtN(p.t)}}</span>
+       <span class="pc">${{p.p.toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}%</span></div>`).join('');
+}}
+function renderInterp(pts, mx, my) {{
+  const el = document.getElementById('scat-interp');
+  const pct = x => x.toLocaleString('es-CO', {{ maximumFractionDigits: 1 }}) + '%';
+  const nm = p => `<b>${{esc(D.fuentes[p.fi])}}</b>`;
+  const minN = +document.getElementById('sc-min').value;
+  const checked = [...document.querySelectorAll('#sc-cks input:checked')];
+  if (!checked.length) {{
+    el.innerHTML = '<h3>Interpretación</h3>Marca al menos un estado en “Cuenta como calificado” para generar la lectura del gráfico.';
+    return;
+  }}
+  const defTxt = checked.map(i => i.value === 'hot' ? '🔥 Calientes (score ≥ 55)' : D.status[+i.value]).join(' + ');
+  const T = pts.reduce((a, p) => a + p.t, 0), Q = pts.reduce((a, p) => a + p.q, 0);
+  const li = [];
+  li.push(`Con la definición actual de calificado (<b>${{esc(defTxt)}}</b>) y fuentes de al menos ${{fmtN(minN)}} leads, se analizan <b>${{fmtN(pts.length)}} fuentes</b> que suman <b>${{fmtN(T)}}</b> leads, de los cuales <b>${{fmtN(Q)}}</b> (${{pct(T ? Q / T * 100 : 0)}}) están calificados. La fuente mediana convierte el ${{pct(my)}}.`);
+  const stars = pts.filter(p => p.t >= mx && p.p >= my && p.q > 0).sort((a, b) => b.q - a.q);
+  if (stars.length) {{
+    li.push(`<b>Dónde está el negocio (volumen + calificación):</b> ${{stars.slice(0, 3).map(p =>
+      `${{nm(p)}} (${{fmtN(p.q)}} calificados de ${{fmtN(p.t)}}, ${{pct(p.p)}})`).join(' · ')}}. Son las fuentes que combinan escala y calidad: protege su presupuesto y su seguimiento.`);
+  }} else {{
+    li.push(`<b>Ninguna fuente combina hoy volumen y calificación por encima de la mediana</b>: las eficientes son pequeñas y las masivas convierten poco.`);
+  }}
+  const gems = pts.filter(p => p.t < mx && p.p >= my * 1.5 && p.q >= 3 && p.p < 99).sort((a, b) => b.p - a.p);
+  if (gems.length) {{
+    li.push(`<b>Joyas por escalar (alta calificación, poco volumen):</b> ${{gems.slice(0, 3).map(p =>
+      `${{nm(p)}} (${{pct(p.p)}} con ${{fmtN(p.t)}} leads)`).join(' · ')}}. Si su calidad se sostiene al crecer, son la mejor inversión marginal.`);
+  }}
+  const low = pts.filter(p => p.t >= mx && p.p < my).sort((a, b) => b.t - a.t);
+  if (low.length) {{
+    li.push(`<b>Volumen con baja calificación:</b> ${{low.slice(0, 3).map(p =>
+      `${{nm(p)}} (${{fmtN(p.t)}} leads, solo ${{pct(p.p)}})`).join(' · ')}}. Aportan ${{fmtN(low.reduce((a, p) => a + p.q, 0))}} calificados por puro volumen, pero pagan mucho lead frío: revisar segmentación o el proceso de gestión de esos leads.`);
+  }}
+  const perfect = pts.filter(p => p.p >= 99).sort((a, b) => b.t - a.t);
+  if (perfect.length) {{
+    li.push(`<b>Ojo con ${{perfect.map(nm).join(' y ')}}</b>: convierte(n) ~100%, patrón típico de listas de clientes ya existentes importadas al CRM, no de una fuente real de captación. No usar como referencia de eficiencia.`);
+  }}
+  const hotOn = checked.some(i => i.value === 'hot');
+  if (hotOn) {{
+    const H = pts.reduce((a, p) => a + p.hot, 0);
+    const topHot = pts.filter(p => p.hot > 0).sort((a, b) => b.hot - a.hot).slice(0, 3);
+    if (topHot.length) li.push(`<b>Los ${{fmtN(H)}} leads calientes</b> de estas fuentes salen sobre todo de ${{topHot.map(p => `${{nm(p)}} (${{fmtN(p.hot)}})`).join(' · ')}}.`);
+  }}
+  el.innerHTML = '<h3>Interpretación (se actualiza con el filtro)</h3><ul>' + li.map(x => `<li>${{x}}</li>`).join('') + '</ul>';
 }}
 
 /* ---------- tabla maestra: categoría → fuente (drill-down) ---------- */
@@ -928,7 +1126,15 @@ function reset() {{
   apply();
 }}
 /* arranque limpio contra la restauración de formularios del navegador */
-function arranque() {{ reset(); }}
+function arranque() {{
+  const defc = ['hot', String(D.status.indexOf('Negocio abierto')), String(D.status.indexOf('Cliente'))];
+  document.querySelectorAll('#sc-cks input').forEach(i => {{
+    i.checked = defc.includes(i.value);
+    i.parentElement.classList.toggle('on', i.checked);
+  }});
+  const scm = document.getElementById('sc-min'); if (scm) scm.value = '10';
+  reset();
+}}
 arranque();
 window.addEventListener('pageshow', e => {{ if (e.persisted) arranque(); }});
 setTimeout(() => {{
