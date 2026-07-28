@@ -242,6 +242,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <a href="adquisicion.html"><span class="ic">📣</span> Adquisición</a>
 <a href="asesores.html" class="act"><span class="ic">👤</span> Asesores comerciales</a>
 <a href="clientes.html"><span class="ic">💎</span> Fidelización clientes</a>
+<a href="lineas.html"><span class="ic">🔑</span> Arriendo y crédito</a>
 <a href="estrategia.html"><span class="ic">🎯</span> Estrategia comercial</a>
 </div></nav>
 <div class="strip"></div>
