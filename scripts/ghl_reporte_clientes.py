@@ -110,6 +110,15 @@ def intentos_of(_cid):
         return [len(_fs), len(set(_fs)), len(_fs), 0, 0, 0]
     return 0
 
+
+# ---------- followers: el asesor cuenta como owner O seguidor (solo lectura) ----------
+try:
+    _FWMAP = json.load(open(DATA / 'followers.json'))
+except Exception:
+    _FWMAP = {}
+def fols(c):
+    """user ids que siguen al contacto (del fetch o del mapa aparte)."""
+    return c.get('followers') or _FWMAP.get(c['id'], [])
 ROWS = []
 for ct in clientes:
     rl = ct.get('realtor') or []
@@ -127,7 +136,8 @@ for ct in clientes:
                  giR(rl[:60]), giA(a), giM(pais_of(ct.get('phone'))), giF(grupo(ct.get('source'))),
                  giK(ku), score_of(ct), (ct.get('created') or '')[:10],
                  ultimo, wait_dias.get(ct['id']), elite, inter,
-                 [giTG(t) for t in tags[:8]], intentos_of(ct['id'])])
+                 [giTG(t) for t in tags[:8]], intentos_of(ct['id']),
+                 [giA(users[u]) for u in fols(ct) if u in users]])
 
 TOTAL = len(ROWS)
 n_oport = sum(1 for r in ROWS if 'Oportunidad' in list(DK)[r[7]] if True) if False else 0
@@ -239,7 +249,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 
 <div class="filters">
 <div><label data-tip="Realtor vinculado al cliente: el dueño natural de la relación post-venta.">Realtor</label><select id="f-r" autocomplete="off"></select></div>
-<div><label data-tip="Usuario del CRM asignado al cliente.">Asesor</label><select id="f-a" autocomplete="off"></select></div>
+<div><label data-tip="Asesor del cliente contando OWNER (assignedTo) o SEGUIDOR (followers) — solo cambia la consulta, el CRM no se toca.">Asesor</label><select id="f-a" autocomplete="off"></select></div>
 <div><label data-tip="Mercado por indicativo telefónico del cliente.">Mercado (país)</label><select id="f-m" autocomplete="off"></select></div>
 <div><label data-tip="Fuente original por la que llegó (campo Fuente de contacto, agrupado).">Fuente original</label><select id="f-f" autocomplete="off"></select></div>
 <div><label data-tip="Campo 'En curso por': si tiene una nueva oportunidad de compra registrada.">Oportunidad vigente</label><select id="f-k" autocomplete="off"><option value="">Todos</option><option value="si">🔁 Con oportunidad (recompra)</option><option value="no">Sin oportunidad</option></select></div>
@@ -338,7 +348,7 @@ function apply() {{
     if (PRESET === 'elite' && !r[12]) return false;
     if (PRESET === 'frio' && !(r[10] === null || r[10] > 180)) return false;
     if (PRESET === 'activo' && !(r[10] !== null && r[10] <= 30)) return false;
-    return (fr === '' || r[3] == fr) && (fa === '' || r[4] == fa) && (fm === '' || r[5] == fm) &&
+    return (fr === '' || r[3] == fr) && (fa === '' || r[4] == fa || (r[16] && r[16].indexOf(+fa) !== -1)) && (fm === '' || r[5] == fm) &&
       (ff === '' || r[6] == ff) &&
       (fk === '' || (fk === 'si' ? oport : !oport)) &&
       ULT(r[10], fu) &&

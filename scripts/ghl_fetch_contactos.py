@@ -76,6 +76,8 @@ while True:
             "created": c.get("dateAdded"),
             "country": c.get("country") or "",
         }
+        _fw = c.get("followers") or []
+        if _fw: rec["followers"] = _fw
         for f in (c.get("customFields") or []):
             k = CF.get(f.get("id"))
             if k: rec[k] = f.get("value")

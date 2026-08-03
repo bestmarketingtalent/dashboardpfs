@@ -12,6 +12,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(__file__).resolve().parent / 'data'
 
+# ---------- score v2 precalculado (notas, tareas, conversaciones, reciprocidad, recencia real) ----------
+try:
+    _SC2 = json.load(open(DATA / 'score_v2.json'))
+except Exception:
+    _SC2 = {}
+
 contacts = json.load(open(DATA / 'contacts.json'))
 USERS = {u['id']: u['name'] for u in json.load(open(DATA / 'users.json'))}
 
@@ -60,6 +66,8 @@ def num(v):
     except (TypeError, ValueError): return 0
 
 def score_of(c):
+    _v2 = _SC2.get(c.get('id') or '')
+    if _v2 is not None: return _v2['s']
     """Lead scoring 0-100 por interacción y temperatura declarada:
     En curso por (0-35) + Lead Status (0-25) + nº interacciones (0-20) + recencia (0-20)."""
     s  = CURSO_PTS.get((c.get('enCursoPor') or '').strip(), 0)
@@ -136,6 +144,15 @@ def intentos_of(_cid):
         return [len(_fs), len(set(_fs)), len(_fs), 0, 0, 0]
     return 0
 
+
+# ---------- followers: el asesor cuenta como owner O seguidor (solo lectura) ----------
+try:
+    _FWMAP = json.load(open(DATA / 'followers.json'))
+except Exception:
+    _FWMAP = {}
+def fols(c):
+    """user ids que siguen al contacto (del fetch o del mapa aparte)."""
+    return c.get('followers') or _FWMAP.get(c['id'], [])
 # ---------- construir filas ----------
 def dict_indexer():
     d = {}
@@ -179,7 +196,9 @@ for c in contacts:
         giA(a), giS(st), giK(ku), giR(rl), giF(fuente_of(c)),
         (c['created'] or '')[:10], sc,
         [giT(t.strip()) for t in (c.get('tags') or [])[:8] if t and t.strip()],
-        inter, giMO(mo), atn_of(c), intentos_of(c['id'])
+        inter, giMO(mo), atn_of(c), intentos_of(c['id']),
+        [giA(USERS[u]) for u in fols(c) if u in USERS],
+        (_SC2.get(c['id']) or {}).get('fl', '')
     ])
     scnt[st] += 1
 
@@ -293,10 +312,13 @@ TIPS = {
 def _tip(s, n):
     return (f'{TIPS.get(s, "")} Cómo se calcula: cuenta los {fmt(n)} contactos cuyo campo '
             f'“Lead Status” del CRM es “{s}”. Clic: filtra la tabla y los muestra clasificados por asesor.')
-FORMULA = ('El score (0-100) suma 4 criterios del CRM: ① “En curso por” hasta 35 pts (Oportunidad 1-3 meses=35, '
-           '3-6=28, 6+=18) · ② Lead Status hasta 25 pts (Negocio abierto=25, En curso=15, Intento de contacto=8, '
-           'Nuevo=5, En Nutrición=3) · ③ interacciones registradas (nº de contactos + actividades de venta) hasta '
-           '20 pts · ④ recencia de la última actividad hasta 20 pts (≤7 días=20, ≤30=15, ≤90=8, ≤180=4).')
+FORMULA = ('El score v2 (0-100) suma 4 pilares con TODA la evidencia del CRM: ① INTENCIÓN hasta 35 pts — horizonte '
+           'declarado (En curso por), monto de compra detectado en notas/conversaciones (30), compra declarada en texto (20) '
+           'o presupuesto diligenciado (22); un aplazamiento reciente ("retomar en octubre…") la congela a máx 15 · '
+           '② ETAPA hasta 25 pts (Lead Status: Negocio abierto=25, En curso=15…) · ③ RECIPROCIDAD hasta 20 pts — cuenta el eco '
+           'del lead (respondió +8, nº de mensajes entrantes hasta +8, diálogo real +4); gestión sin respuesta vale máx 4 · '
+           '④ RECENCIA REAL hasta 20 pts — la fecha más reciente entre actividad, notas, tareas, intentos y conversaciones '
+           '(≤7 días=20, ≤30=15, ≤90=8, ≤180=4). Flags: 💰 monto · 🛒 compra declarada · ✋ respondió · ⏸ aplazado.')
 hot_tip = (f'CALIENTE = score ≥ 55. {FORMULA} Para superar 55 el lead necesita combinar al menos dos señales fuertes: '
            'oportunidad vigente + estado activo + interacción reciente. Son los más cercanos a la venta. '
            'Clic: filtra la tabla y muestra de cada lead su asesor, etapa y “En curso por”.')
@@ -426,7 +448,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div class="wrap">
 
 <div class="filters">
-<div><label data-tip="Filtra por el usuario del CRM al que está asignado el contacto (campo assignedTo). '(Sin asesor asignado)' agrupa los contactos sin dueño.">Asesor</label><select id="f-a" autocomplete="off"></select></div>
+<div><label data-tip="Filtra por asesor contando OWNER (assignedTo) Y SEGUIDOR (followers): muestra todo contacto que el asesor toca, sea o no su dueño. Las filas donde solo es seguidor llevan el chip 'seguidor' con el owner real. '(Sin asesor asignado)' = contactos sin dueño.">Asesor</label><select id="f-a" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'Lead Status' del CRM: la clasificación comercial del contacto (Nuevo, En curso, En Nutrición, Cliente, Descartado, etc.), ordenada de más caliente a más fría.">Lead status</label><select id="f-s" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'En curso por' del CRM: el horizonte de oportunidad que registró el equipo (Oportunidad 1-3 / 3-6 / 6+ meses, Sin Oportunidad). '(Sin dato)' = campo vacío.">En curso por</label><select id="f-k" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'Realtor' del CRM: el realtor vinculado al contacto, ordenado por volumen.">Realtor</label><select id="f-r" autocomplete="off"></select></div>
@@ -530,6 +552,8 @@ const intTip = it => it ? `${{it[0]}} intento(s) de contacto saliente(s) en ${{i
 const canTxt = it => it ? [it[2] ? it[2] + ' WhatsApp' : '', it[3] ? it[3] + ' llamadas' : '', it[4] ? it[4] + ' emails' : '', it[5] ? it[5] + ' SMS' : ''].filter(Boolean).join(' | ') : '';
 const atnT = h => h < 1 ? Math.round(h * 60) + ' min' : h < 48 ? h.toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' h' : (h / 24).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' días';
 const PAGE = 200;
+/* el filtro de asesor cuenta owner O seguidor (followers) del contacto */
+const matchA = (x, a) => a === '' || x[3] == a || (x[15] && x[15].indexOf(+a) !== -1);
 
 function fill(id, items, labels) {{
   const s = document.getElementById(id);
@@ -558,7 +582,7 @@ function pillsUpdate() {{
   const g = id => document.getElementById(id).value;
   const a = g('f-a'), k = g('f-k'), r = g('f-r'), f = g('f-f'), q = g('f-q').trim().toLowerCase();
   const rows = D.rows.filter(x =>
-    (a === '' || x[3] == a) && (k === '' || x[5] == k) && (r === '' || x[6] == r) &&
+    matchA(x, a) && (k === '' || x[5] == k) && (r === '' || x[6] == r) &&
     (f === '' || x[7] == f) && inFecha(x) &&
     (q === '' || (x[0] + ' ' + x[1] + ' ' + x[2]).toLowerCase().includes(q)));
   document.getElementById('pill-hot').textContent = fmtN(rows.filter(r2 => r2[9] >= 55).length);
@@ -615,7 +639,7 @@ function apply() {{
   const g = id => document.getElementById(id).value;
   const a = g('f-a'), s = g('f-s'), k = g('f-k'), r = g('f-r'), f = g('f-f'), q = g('f-q').trim().toLowerCase();
   view = D.rows.filter(x =>
-    (a === '' || x[3] == a) && (s === '' || x[4] == s) && (k === '' || x[5] == k) &&
+    matchA(x, a) && (s === '' || x[4] == s) && (k === '' || x[5] == k) &&
     (r === '' || x[6] == r) && (f === '' || x[7] == f) && matchTemp(x[9]) &&
     inFecha(x) &&
     (q === '' || (x[0] + ' ' + x[1] + ' ' + x[2]).toLowerCase().includes(q)));
@@ -713,14 +737,17 @@ function tagsCell(idxs) {{
   return out;
 }}
 function renderLeads(d) {{
+  const aFsel = document.getElementById('f-a').value;
   const ls = leadsOf(d);
   const shown = Math.min(ls.length, (+d.dataset.shown || 0) + PAGE);
   d.dataset.shown = shown;
   const rows = ls.slice(0, shown).map(r => {{
     const em = r[1] ? `<a href="mailto:${{esc(r[1])}}">${{esc(r[1])}}</a>` : '—';
     const ph = r[2] ? `<a href="tel:${{esc(r[2])}}">${{esc(r[2])}}</a> · <a href="https://wa.me/${{esc(r[2].replace(/[^0-9]/g, ''))}}" target="_blank">WA</a>` : '—';
-    return `<tr><td><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small></td>
-      <td><b>${{esc(r[0])}}</b></td><td>${{em}}</td><td>${{ph}}</td>
+    const FLG = {{M: ['💰', 'Monto de compra detectado en notas o mensajes del lead.'], C: ['🛒', 'Declaración de compra/inversión detectada en notas o conversaciones.'], R: ['✋', 'El lead HA RESPONDIDO (mensaje entrante, llamada contestada o respuesta registrada en notas).'], Z: ['⏸', 'Aplazamiento reciente detectado en notas ("retomar en…", "más adelante") — la intención está congelada.']}};
+    const flg = (r[16] || '').split('').map(ch => FLG[ch] ? `<span data-tip="${{FLG[ch][1]}}" style="cursor:help">${{FLG[ch][0]}}</span>` : '').join('');
+    return `<tr><td><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}</td>
+      <td><b>${{esc(r[0])}}</b>${{(aFsel !== '' && r[3] != aFsel && r[15] && r[15].indexOf(+aFsel) !== -1) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="El asesor filtrado es SEGUIDOR de este lead; el owner es ${{esc(D.asesores[r[3]])}} (grupo donde aparece).">seguidor</span>` : ''}}</td><td>${{em}}</td><td>${{ph}}</td>
       <td>${{esc(D.fuentes[r[7]])}}</td><td>${{esc(D.cursos[r[5]])}}</td>
       <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[14])}}">${{intCell(r[14])}}</td><td data-tip="${{intTip(r[14])}}">${{canCell(r[14])}}</td><td>${{tagsCell(r[10])}}</td></tr>`;
   }}).join('');
@@ -826,7 +853,7 @@ function filtroBase(exceptos) {{
   const g = id => document.getElementById(id).value;
   const a = g('f-a'), s = g('f-s'), k = g('f-k'), r = g('f-r'), f = g('f-f'), q = g('f-q').trim().toLowerCase();
   return D.rows.filter(x =>
-    (exceptos.includes('a') || a === '' || x[3] == a) &&
+    (exceptos.includes('a') || matchA(x, a)) &&
     (exceptos.includes('s') || s === '' || x[4] == s) &&
     (exceptos.includes('k') || k === '' || x[5] == k) &&
     (exceptos.includes('r') || r === '' || x[6] == r) &&

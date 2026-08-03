@@ -14,6 +14,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(__file__).resolve().parent / 'data'
 
+# ---------- score v2 precalculado (notas, tareas, conversaciones, reciprocidad, recencia real) ----------
+try:
+    _SC2 = json.load(open(DATA / 'score_v2.json'))
+except Exception:
+    _SC2 = {}
+
 contacts = json.load(open(DATA / 'contacts.json'))
 convos   = json.load(open(DATA / 'convos.json'))
 users    = {u['id']: u['name'] for u in json.load(open(DATA / 'users.json'))}
@@ -33,6 +39,8 @@ def _num(v):
     try: return max(0, int(float(v)))
     except (TypeError, ValueError): return 0
 def score_of(ct):
+    _v2 = _SC2.get(ct.get('id') or '')
+    if _v2 is not None: return _v2['s']
     s  = CURSO_PTS.get((ct.get('enCursoPor') or '').strip(), 0)
     s += STATUS_PTS.get((ct.get('leadStatus') or '').strip(), 0)
     s += min(20, _num(ct.get('vecesContactado')) + _num(ct.get('salesActivities')))
@@ -270,6 +278,15 @@ for a in LEADCONVS:
     LEADCONVS[a].sort(key=lambda x: (-x[4], -x[1]))
 CONTACT_RTM = {k: round(statistics.median(v), 1) for k, v in CONTACT_RT.items() if v}
 
+
+# ---------- followers: el asesor cuenta como owner O seguidor (solo lectura) ----------
+try:
+    _FWMAP = json.load(open(DATA / 'followers.json'))
+except Exception:
+    _FWMAP = {}
+def fols(c):
+    """user ids que siguen al contacto (del fetch o del mapa aparte)."""
+    return c.get('followers') or _FWMAP.get(c['id'], [])
 # gestión por lead (llamadas/TMO, emails, tareas, notas) de carteras humanas — ghl_fetch_gestion.py
 try:
     GESTION = json.load(open(DATA / 'gestion.json'))
@@ -328,6 +345,7 @@ for i, ct in enumerate(contacts):
             LEADS[i].append(0)
     else:
         LEADS[i] += [0, 0, 0, 0]
+    LEADS[i].append([giASE(users[u]) for u in fols(ct) if u in users])
     CONTACT_TAGS[ct['id']] = tg
 for a in PENDS:
     for row in PENDS[a]:
@@ -582,7 +600,7 @@ a{{color:var(--azul)}}
 <div class="caveat"><b>Cómo leer este informe.</b> Todo sale de los registros del CRM al corte: cartera asignada, lead scoring, conversaciones de WhatsApp / llamadas / email y una muestra cualitativa leída de 224 conversaciones (16 por asesor con más volumen). Benchmarks de la compañía: conversión a Cliente {pct(G_CONV)} · conversaciones con cliente esperando {pct(G_WPCT)} · score promedio {G_SC:.1f}. <b>Úselo como insumo estructurado, no como veredicto único:</b> la asignación masiva de carteras, los campos sin diligenciar y el tamaño de la muestra afectan las métricas individuales. Antes de decisiones de personal, contraste con el contexto de cada asesor (metas, canal principal, gestión fuera del CRM) y déle la oportunidad de explicar sus números.</div>
 
 <div class="fbar">
-<div><label>Auditar asesor comercial</label><select id="f-a" autocomplete="off"></select></div>
+<div><label data-tip="La cartera del asesor incluye los contactos donde es OWNER o SEGUIDOR (followers). Solo cambia la consulta del reporte — el CRM no se modifica.">Auditar asesor comercial</label><select id="f-a" autocomplete="off"></select></div>
 <div><label>Auditar realtor</label><select id="f-r" autocomplete="off"></select></div>
 <div><label data-tip="Filtra la cartera, las tablas de leads y la cola de espera por la fecha de creación del lead en el CRM (dateAdded). La actividad de conversaciones, el análisis lead a lead y la retroalimentación siguen siendo del histórico completo.">Lead creado desde</label><input type="date" id="f-d1" autocomplete="off" style="border:1.5px solid var(--gris-linea);border-radius:8px;padding:6px 9px;font-size:12.5px"></div>
 <div><label>Hasta</label><input type="date" id="f-d2" autocomplete="off" style="border:1.5px solid var(--gris-linea);border-radius:8px;padding:6px 9px;font-size:12.5px"></div>
@@ -684,10 +702,13 @@ function tagsCell(idxs) {{
 }}
 function filaRk(k) {{
   const p = D.p[k];
-  const c = carteraCalc(personRows(k));
+  const rws = personRows(k);
+  const c = carteraCalc(rws);
+  const iA = k.startsWith('a:') ? D.ase.indexOf(k.slice(2)) : -1;
+  const oCnt = iA >= 0 ? rws.filter(r => r[0] === iA).length : c.leads;
   const wp = p.wa >= 20 ? pc(p.waWait, p.wa) : '—';
   return `<tr class="clk" data-k="${{esc(k)}}"><td><b>${{esc(k.slice(2))}}</b></td>
-    <td>${{fN(c.leads)}}</td><td>${{fN(c.cli)}}</td><td>${{pc(c.cli, c.leads)}}</td><td>${{fN(c.neg)}}</td>
+    <td>${{fN(c.leads)}}${{c.leads > oCnt ? ` <small style="color:var(--gris)" data-tip="Desglose: ${{fN(oCnt)}} como owner + ${{fN(c.leads - oCnt)}} como seguidor.">(${{fN(oCnt)}}+${{fN(c.leads - oCnt)}})</small>` : ''}}</td><td>${{fN(c.cli)}}</td><td>${{pc(c.cli, c.leads)}}</td><td>${{fN(c.neg)}}</td>
     <td>${{fN(c.encurso)}}</td><td>${{fN(c.oport)}}</td>
     <td style="white-space:nowrap">${{fN(c.hot)}} / ${{fN(c.warm)}} / ${{fN(c.cold)}}</td><td>${{c.sc.toLocaleString('es-CO')}}</td>
     <td>${{c.leads ? c.contPct.toFixed(0) + '%' : '—'}}</td>
@@ -704,7 +725,7 @@ function filaRk(k) {{
 }}
 const THS_RK = `<tr>
 <th>Nombre</th>
-<th data-tip="Contactos del CRM asignados a esta persona (campo assignedTo para asesores; campo Realtor para realtors).">Leads</th>
+<th data-tip="Cartera unificada: contactos donde la persona es OWNER (assignedTo) o SEGUIDOR (followers). El desglose (owner+seguidor) aparece cuando hay leads seguidos. Para realtors: campo Realtor.">Leads</th>
 <th data-tip="Contactos de su cartera con Lead Status = Cliente.">Clientes</th>
 <th data-tip="% de cierre de ventas: clientes ÷ leads de su cartera. Promedio compañía: ${{D.bench.conv}}%. Con rango de fechas activo mide el cierre de esa camada de leads.">% cierre</th>
 <th data-tip="Contactos con Lead Status = Negocio abierto: negociaciones activas.">Neg. abiertos</th>
@@ -875,7 +896,8 @@ function leadsDe(k) {{
   const nombre = k.slice(2);
   if (k.startsWith('a:')) {{
     const i = D.ase.indexOf(nombre);
-    return D.leads.filter(r => r[0] === i);
+    /* cartera = owner O seguidor (followers) — el CRM no se modifica */
+    return D.leads.filter(r => r[0] === i || (r[18] && r[18].indexOf(i) !== -1));
   }}
   const i = D.rl.indexOf(nombre);
   return D.leads.filter(r => r[1].includes(i));
@@ -900,13 +922,14 @@ function verLeads(f, label) {{
   document.getElementById('leadbox').scrollIntoView({{behavior: 'smooth', block: 'start'}});
 }}
 function masLeads() {{
+  const curIdx = CURK && CURK.startsWith('a:') ? D.ase.indexOf(CURK.slice(2)) : -1;
   LB.shown = Math.min(LB.list.length, LB.shown + 150);
   const filas = LB.list.slice(0, LB.shown).map(r => {{
     const em = r[3] ? `<a href="mailto:${{esc(r[3])}}">${{esc(r[3])}}</a>` : '—';
     const dig = r[4].replace(/[^0-9]/g, '');
     const ph = r[4] ? `<a href="tel:${{esc(r[4])}}">${{esc(r[4])}}</a>${{dig ? ' · <a href="https://wa.me/' + dig + '" target="_blank">WA</a>' : ''}}` : '—';
     return `<tr><td><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span></td>
-      <td><b>${{esc(r[2])}}</b></td><td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
+      <td><b>${{esc(r[2])}}</b>${{(curIdx >= 0 && r[0] !== curIdx) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="Este asesor es SEGUIDOR del lead; el owner es ${{esc(D.ase[r[0]])}}.">seguidor · owner: ${{esc(D.ase[r[0]]).slice(0, 16)}}</span>` : ''}}</td><td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
       <td>${{esc(D.fu[r[5]])}}</td><td>${{esc(D.sts[r[6]])}}</td><td>${{esc(D.cu[r[7]])}}</td><td>${{esc(r[9] || '—')}}</td><td>${{rtT(r[10])}}</td><td style="white-space:nowrap"${{r[17] ? ` data-tip="${{r[17][0]}} intentos salientes en ${{r[17][1]}} día${{r[17][1] > 1 ? 's distintos' : ' (ráfaga única)'}} — ${{[r[17][2] ? r[17][2] + ' WhatsApp' : '', r[17][3] ? r[17][3] + ' llamada(s)' : '', r[17][4] ? r[17][4] + ' email(s)' : '', r[17][5] ? r[17][5] + ' SMS' : ''].filter(Boolean).join(' · ')}}. Del ${{esc(r[17][6])}} al ${{esc(r[17][7])}}."` : ''}}>${{r[17] ? `<b>${{r[17][0]}}</b> · ${{r[17][1]}}d ${{(r[17][2] ? '💬' : '') + (r[17][3] ? '📞' : '') + (r[17][4] ? '✉' : '') + (r[17][5] ? '𝗌' : '')}}` : '—'}}</td><td style="white-space:nowrap"${{r[15] ? ` data-tip="Última nota (${{esc(r[15][0][0])}}${{r[15][0][1] ? ', ' + esc(r[15][0][1]) : ''}}): ${{esc(r[15][0][2])}}"` : ''}}>${{r[14] ? `📞 ${{r[14][0]}} · ✉ ${{r[14][4]}} · 🗒 ${{r[14][7]}} · ☑ ${{r[14][6]}}/${{r[14][5]}}` : '—'}}</td><td>${{tagsCell(r[11])}}</td></tr>`;
   }}).join('');
   document.getElementById('leadbox').innerHTML = `

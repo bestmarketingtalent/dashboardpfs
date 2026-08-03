@@ -12,6 +12,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(__file__).resolve().parent / 'data'
+
+# ---------- score v2 precalculado (notas, tareas, conversaciones, reciprocidad, recencia real) ----------
+try:
+    _SC2 = json.load(open(DATA / 'score_v2.json'))
+except Exception:
+    _SC2 = {}
 cs = json.load(open(DATA / 'contacts.json'))
 users = {u['id']: u['name'] for u in json.load(open(DATA / 'users.json'))}
 
@@ -28,6 +34,8 @@ def _n(v):
     try: return max(0, int(float(v)))
     except (TypeError, ValueError): return 0
 def score_of(ct):
+    _v2 = _SC2.get(ct.get('id') or '')
+    if _v2 is not None: return _v2['s']
     s = CURSO_PTS.get((ct.get('enCursoPor') or '').strip(), 0) + STATUS_PTS.get((ct.get('leadStatus') or '').strip(), 0)
     s += min(20, _n(ct.get('vecesContactado')) + _n(ct.get('salesActivities')))
     la = ct.get('lastActivity') or ct.get('lastEngagement')

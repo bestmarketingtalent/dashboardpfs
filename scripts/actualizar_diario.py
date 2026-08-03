@@ -54,6 +54,7 @@ if '--sin-fetch' not in sys.argv:
     run('ghl_fetch_gestion.py', '--refresh', str(REFRESH_DIAS))  # llamadas/TMO, emails, tareas, notas
 
 # 3) snapshot histórico — SIEMPRE después de los fetch y antes de los reportes
+run('ghl_score_v2.py')   # scoring enriquecido (notas, tareas, conversaciones, reciprocidad)
 run('ghl_snapshot.py')
 
 # 4) reportes (7 páginas del sitio + dashboard gerencial de oportunidades)

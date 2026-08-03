@@ -131,6 +131,36 @@ respuesta (229 en WA al corte 2026-07-18; fuente "Whatsapp" orgánica 64% abando
 Ojo: contactos (~27.900) ≠ oportunidades (~14.900): ~13.000 contactos del CRM
 nunca han entrado al PIPELINE PFS.
 
+## Regla de asesor: owner ∪ follower (solo consulta)
+Desde ago-2026, en las hojas con filtro/selector de asesor (Gestión comercial,
+Asesores comerciales, Fidelización clientes, Pérdida de leads) el asesor cuenta
+como OWNER (assignedTo) **o** SEGUIDOR (followers) del contacto — el CRM nunca
+se modifica, solo la consulta. Las filas donde solo es seguidor llevan chip
+"seguidor (· owner real)". La vista agrupada del home sin filtro sigue por owner
+para no duplicar totales. followers viene en el fetch de contactos
+(contacts.json rec['followers']); scripts/data/followers.json es el mapa puente
+del primer sondeo. En el resumen de asesores la columna Leads muestra el
+desglose (owner+seguidor).
+
+## Lead Scoring v2 (desde ago-2026)
+`ghl_score_v2.py` (corre en el orquestador antes del snapshot) calcula el score
+0-100 con TODA la evidencia del CRM y escribe `scripts/data/score_v2.json`
+({cid: {s, d:[intención, etapa, reciprocidad, recencia], fl}}). Pilares:
+① INTENCIÓN 0-35 (horizonte declarado / monto en notas-mensajes 30 / compra
+declarada 20 / presupuesto 22; APLAZAMIENTO reciente ≤120d lo congela a 15);
+② ETAPA 0-25 (lead status); ③ RECIPROCIDAD 0-20 (eco del lead: WA entrantes,
+llamadas contestadas o notas de respuesta; gestión sin respuesta máx 4);
+④ RECENCIA REAL 0-20 (mejor fecha entre lastActivity, notas, tareas, intentos y
+conversaciones — los campos lastActivity suelen estar rotos). Flags: 💰M monto ·
+🛒C compra · ✋R respondió · ⏸Z aplazado (chips en el drill-down del home).
+Las citas de mensajes SALIENTES pegadas en notas ("PFS REALTY LLC: …") se
+recortan antes de buscar evidencia (el pitch del asesor no es declaración del
+lead). Los reportes cargan _SC2 y su score_of prioriza v2 con fallback a la
+fórmula clásica; `ghl_reporte_clientes.py` queda EXCLUIDO (usa su propia fórmula
+de recompra). Casos de calibración: Jorge Sicardo 53 MCRZ (monto real, aplazado
+a octubre) y Carlos Riascos 34 sin flags (nunca respondió; su antiguo 🛒 era el
+pitch de la asesora transcrito).
+
 ## Mapeo de etapas → macro-estados (clasificación excluyente, en este orden)
 - **Cierres**: etapa "Cierre (Elite Club)" o status won.
 - **Perdidos por no-contacto**: status lost/abandoned en Nuevo Lead, Intento de Contacto o COLD.

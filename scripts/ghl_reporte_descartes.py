@@ -12,6 +12,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(__file__).resolve().parent / 'data'
 
+# ---------- score v2 precalculado (notas, tareas, conversaciones, reciprocidad, recencia real) ----------
+try:
+    _SC2 = json.load(open(DATA / 'score_v2.json'))
+except Exception:
+    _SC2 = {}
+
 contacts = json.load(open(DATA / 'contacts.json'))
 USERS = {u['id']: u['name'] for u in json.load(open(DATA / 'users.json'))}
 
@@ -57,6 +63,8 @@ def num(v):
     except (TypeError, ValueError): return 0
 
 def score_of(c):
+    _v2 = _SC2.get(c.get('id') or '')
+    if _v2 is not None: return _v2['s']
     s  = CURSO_PTS.get((c.get('enCursoPor') or '').strip(), 0)
     s += STATUS_PTS.get((c.get('leadStatus') or '').strip(), 0)
     s += min(20, num(c.get('vecesContactado')) + num(c.get('salesActivities')))
@@ -101,6 +109,15 @@ def intentos_of(_cid):
         return [len(_fs), len(set(_fs)), len(_fs), 0, 0, 0]
     return 0
 
+
+# ---------- followers: el asesor cuenta como owner O seguidor (solo lectura) ----------
+try:
+    _FWMAP = json.load(open(DATA / 'followers.json'))
+except Exception:
+    _FWMAP = {}
+def fols(c):
+    """user ids que siguen al contacto (del fetch o del mapa aparte)."""
+    return c.get('followers') or _FWMAP.get(c['id'], [])
 # ---------- filas (mismo formato del home: idx 11 = interacciones, 12 = motivo) ----------
 def dict_indexer():
     d = {}
@@ -138,7 +155,8 @@ for c in contacts:
         giA(a), giS(st), giK(ku), giR(rl), giF(fuente_of(c)),
         (c['created'] or '')[:10], score_of(c),
         [giT(t.strip()) for t in (c.get('tags') or [])[:8] if t and t.strip()],
-        inter, giMO(mo), intentos_of(c['id'])
+        inter, giMO(mo), intentos_of(c['id']),
+        [giA(USERS[u]) for u in fols(c) if u in USERS]
     ])
 
 TOTAL = len(rows)
@@ -249,7 +267,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div class="wrap">
 
 <div class="filters">
-<div><label data-tip="Filtra por el usuario del CRM al que está asignado el lead descartado — es quien lo descartó o lo tenía al descartarse. MARKETING PFS = descartado por la automatización, no por una persona.">Quién lo descartó (asesor)</label><select id="f-a" autocomplete="off"></select></div>
+<div><label data-tip="Filtra por asesor contando OWNER (quien lo tenía al descartarse) o SEGUIDOR (followers). MARKETING PFS = descartado por la automatización. Solo cambia la consulta del reporte.">Quién lo descartó (asesor)</label><select id="f-a" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'Motivo de descarte' del CRM. '(Sin motivo registrado)' = descarte sin explicación. Ordenado por volumen.">Motivo de descarte</label><select id="f-m" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el origen del lead: campo 'Fuente de contacto' del CRM, con las variantes de Google, Referidos, Prensa y Sitio Web agrupadas. Ordenado por volumen de toda la base.">Fuente del lead</label><select id="f-f" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'En curso por': el horizonte de oportunidad que registró el equipo. Un descartado con 'Oportunidad …' vigente es una contradicción a revisar.">En curso por</label><select id="f-k" autocomplete="off"></select></div>
@@ -346,7 +364,7 @@ function baseSel() {{
   const g = id => document.getElementById(id).value;
   const a = g('f-a'), f = g('f-f'), k = g('f-k'), r = g('f-r'), q = g('f-q').trim().toLowerCase();
   return D.rows.filter(x =>
-    (a === '' || x[3] == a) && (f === '' || x[7] == f) && (k === '' || x[5] == k) &&
+    (a === '' || x[3] == a || (x[14] && x[14].indexOf(+a) !== -1)) && (f === '' || x[7] == f) && (k === '' || x[5] == k) &&
     (r === '' || x[6] == r) && inFecha(x) &&
     (q === '' || (x[0] + ' ' + x[1] + ' ' + x[2]).toLowerCase().includes(q)));
 }}
