@@ -1034,7 +1034,7 @@ function masLeads() {{
   <th data-tip="Tiempo de respuesta que ha recibido este lead: mediana entre sus mensajes y la siguiente respuesta, en sus conversaciones de WhatsApp. '—' = sin conversación medible.">Resp. mediana</th>
   <th data-tip="Intentos de contacto salientes a este lead: total · en cuántos DÍAS DISTINTOS · por qué canales (💬 WhatsApp, 📞 llamada, ✉ email). '1d' con varios intentos = ráfaga de un solo día sin seguimiento posterior. Pasa el mouse para ver el detalle y las fechas.">Intentos</th>
   <th data-tip="Gestión registrada en este lead: 📞 llamadas salientes · ✉ emails salientes · 🗒 notas · ☑ tareas completadas/creadas. Pasa el mouse sobre la celda para leer la última nota. '—' = sin gestión descargada.">Gestión</th>
-  <th data-tip="Las principales acciones que el asesor debe ejecutar para CONVERTIR este lead, derivadas de su diagnóstico de score (variables débiles, flags y gestión previa). Máx 3 en orden de prioridad; pasa el mouse sobre cada una para la instrucción completa.">Para convertir</th>
+  <th data-tip="Las principales acciones que el asesor debe ejecutar para CERRAR LA VENTA con este lead, derivadas de su diagnóstico de score (variables débiles, flags y gestión previa). Máx 3 en orden de prioridad; pasa el mouse sobre cada una para la instrucción completa.">Acciones para cerrar venta</th>
   <th data-tip="Etiquetas (tags) del lead tal como están en el CRM — campañas, eventos, listas e importaciones. El chip +N muestra el resto al pasar el mouse.">Etiquetas</th>
   </tr></thead><tbody>${{filas}}</tbody></table></div>` +
   (LB.shown < LB.list.length ? `<button class="btn" style="margin-top:8px" onclick="masLeads()">Mostrar 150 más (${{fN(LB.list.length - LB.shown)}} restantes)</button>` : '');

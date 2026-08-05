@@ -849,7 +849,7 @@ function renderLeads(d) {{
      <th data-tip="Qué es: cuándo entró el contacto a la base. Cómo se calcula: fecha de creación del contacto en el CRM (dateAdded).">Creado</th>
      <th data-tip="Intentos de contacto SALIENTES a este lead: total · en cuántos días distintos. Varios intentos con 1d = ráfaga de un solo día sin seguimiento. Cobertura: todos los canales para carteras de asesores humanos; para el resto, solo WhatsApp.">Intentos</th>
      <th data-tip="Medios usados para (re)contactar a este lead: 💬 WhatsApp · 📞 llamada · ✉ email · 𝗌 SMS. Pasa el mouse sobre la celda para el detalle por canal.">Canales</th>
-     <th data-tip="Qué es: las principales acciones que el asesor debe ejecutar para CONVERTIR este lead, derivadas de su diagnóstico de score (pilares débiles, flags y gestión previa). Máx 3 en orden de prioridad; pasa el mouse sobre cada una para el detalle completo.">Para convertir</th>
+     <th data-tip="Qué es: las principales acciones que el asesor debe ejecutar para CERRAR LA VENTA con este lead, derivadas de su diagnóstico de score (pilares débiles, flags y gestión previa). Máx 3 en orden de prioridad; pasa el mouse sobre cada una para el detalle completo.">Acciones para cerrar venta</th>
      <th data-tip="Qué es: las etiquetas (tags) del contacto tal como están en el CRM — campañas, eventos, listas e importaciones. Se muestran las 2 primeras; el chip +N muestra el resto al pasar el mouse.">Etiquetas</th>
      </tr></thead>
      <tbody>${{rows}}</tbody></table>` +
