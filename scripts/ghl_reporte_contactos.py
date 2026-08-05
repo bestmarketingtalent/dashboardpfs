@@ -763,8 +763,8 @@ function scDesg(r) {{
     `② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ` +
     `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
     `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
-  return `<small class="dsg" style="display:block;color:#8A8FA3;font-size:.68rem;cursor:help" data-tip="${{tip}}">` +
-    `${{sc}}/100: compra ${{d[0]}} + etapa ${{d[1]}} + respuesta ${{d[2]}} + reciente ${{d[3]}} · ¿por qué?</small>`;
+  return `<small class="dsg" style="display:block;white-space:nowrap;color:#8A8FA3;font-size:.68rem;cursor:help;margin-top:2px" data-tip="${{tip}}">` +
+    `compra ${{d[0]}} · etapa ${{d[1]}} · resp ${{d[2]}} · rec ${{d[3]}} <span style="border-bottom:1px dotted #8A8FA3">¿por qué?</span></small>`;
 }}
 // Próximas tareas del asesor para CONVERTIR el lead, derivadas del diagnóstico (pilares + flags + gestión)
 function tareasDe(r) {{
@@ -797,7 +797,7 @@ function renderLeads(d) {{
     const ph = r[2] ? `<a href="tel:${{esc(r[2])}}">${{esc(r[2])}}</a> · <a href="https://wa.me/${{esc(r[2].replace(/[^0-9]/g, ''))}}" target="_blank">WA</a>` : '—';
     const FLG = {{M: ['💰', 'Monto de compra detectado en notas o mensajes del lead.'], C: ['🛒', 'Declaración de compra/inversión detectada en notas o conversaciones.'], R: ['✋', 'El lead HA RESPONDIDO (mensaje entrante, llamada contestada o respuesta registrada en notas).'], Z: ['⏸', 'Aplazamiento reciente detectado en notas ("retomar en…", "más adelante") — la intención está congelada.']}};
     const flg = (r[16] || '').split('').map(ch => FLG[ch] ? `<span data-tip="${{FLG[ch][1]}}" style="cursor:help">${{FLG[ch][0]}}</span>` : '').join('');
-    return `<tr><td><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}${{scDesg(r)}}</td>
+    return `<tr><td style="white-space:nowrap"><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}${{scDesg(r)}}</td>
       <td><b>${{esc(r[0])}}</b>${{(aFsel !== '' && r[3] != aFsel && r[15] && r[15].indexOf(+aFsel) !== -1) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="El asesor filtrado es SEGUIDOR de este lead; el owner es ${{esc(D.asesores[r[3]])}} (grupo donde aparece).">seguidor</span>` : ''}}</td><td>${{em}}</td><td>${{ph}}</td>
       <td>${{esc(D.fuentes[r[7]])}}</td><td>${{esc(D.cursos[r[5]])}}</td>
       <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[14])}}">${{intCell(r[14])}}</td><td data-tip="${{intTip(r[14])}}">${{canCell(r[14])}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[10])}}</td></tr>`;

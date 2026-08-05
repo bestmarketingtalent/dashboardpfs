@@ -943,7 +943,7 @@ function scDesg(r) {{
     `② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ` +
     `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
     `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
-  return ` ${{(fl || '').split('').map(ch => FLG[ch] || '').join('')}}<small style="display:block;color:#8A8FA3;font-size:.68rem;cursor:help" data-tip="${{tip}}">${{sc}}/100: compra ${{d[0]}} + etapa ${{d[1]}} + respuesta ${{d[2]}} + reciente ${{d[3]}} · ¿por qué?</small>`;
+  return ` ${{(fl || '').split('').map(ch => FLG[ch] || '').join('')}}<small style="display:block;white-space:nowrap;color:#8A8FA3;font-size:.68rem;cursor:help;margin-top:2px" data-tip="${{tip}}">compra ${{d[0]}} · etapa ${{d[1]}} · resp ${{d[2]}} · rec ${{d[3]}} <span style="border-bottom:1px dotted #8A8FA3">¿por qué?</span></small>`;
 }}
 // Próximas tareas del asesor para CONVERTIR el lead, según su diagnóstico
 function tareasDe(r) {{
@@ -979,7 +979,7 @@ function masLeads() {{
     const em = r[3] ? `<a href="mailto:${{esc(r[3])}}">${{esc(r[3])}}</a>` : '—';
     const dig = r[4].replace(/[^0-9]/g, '');
     const ph = r[4] ? `<a href="tel:${{esc(r[4])}}">${{esc(r[4])}}</a>${{dig ? ' · <a href="https://wa.me/' + dig + '" target="_blank">WA</a>' : ''}}` : '—';
-    return `<tr><td><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span>${{scDesg(r)}}</td>
+    return `<tr><td style="white-space:nowrap"><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span>${{scDesg(r)}}</td>
       <td><b>${{esc(r[2])}}</b>${{(curIdx >= 0 && r[0] !== curIdx) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="Este asesor es SEGUIDOR del lead; el owner es ${{esc(D.ase[r[0]])}}.">seguidor · owner: ${{esc(D.ase[r[0]]).slice(0, 16)}}</span>` : ''}}</td><td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
       <td>${{esc(D.fu[r[5]])}}</td><td>${{esc(D.sts[r[6]])}}</td><td>${{esc(D.cu[r[7]])}}</td><td>${{esc(r[9] || '—')}}</td><td>${{rtT(r[10])}}</td><td style="white-space:nowrap"${{r[17] ? ` data-tip="${{r[17][0]}} intentos salientes en ${{r[17][1]}} día${{r[17][1] > 1 ? 's distintos' : ' (ráfaga única)'}} — ${{[r[17][2] ? r[17][2] + ' WhatsApp' : '', r[17][3] ? r[17][3] + ' llamada(s)' : '', r[17][4] ? r[17][4] + ' email(s)' : '', r[17][5] ? r[17][5] + ' SMS' : ''].filter(Boolean).join(' · ')}}. Del ${{esc(r[17][6])}} al ${{esc(r[17][7])}}."` : ''}}>${{r[17] ? `<b>${{r[17][0]}}</b> · ${{r[17][1]}}d ${{(r[17][2] ? '💬' : '') + (r[17][3] ? '📞' : '') + (r[17][4] ? '✉' : '') + (r[17][5] ? '𝗌' : '')}}` : '—'}}</td><td style="white-space:nowrap"${{r[15] ? ` data-tip="Última nota (${{esc(r[15][0][0])}}${{r[15][0][1] ? ', ' + esc(r[15][0][1]) : ''}}): ${{esc(r[15][0][2])}}"` : ''}}>${{r[14] ? `📞 ${{r[14][0]}} · ✉ ${{r[14][4]}} · 🗒 ${{r[14][7]}} · ☑ ${{r[14][6]}}/${{r[14][5]}}` : '—'}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[11])}}</td></tr>`;
   }}).join('');
