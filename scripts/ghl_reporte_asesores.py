@@ -346,6 +346,8 @@ for i, ct in enumerate(contacts):
     else:
         LEADS[i] += [0, 0, 0, 0]
     LEADS[i].append([giASE(users[u]) for u in fols(ct) if u in users])
+    LEADS[i].append((_SC2.get(ct['id']) or {}).get('fl', ''))
+    LEADS[i].append((_SC2.get(ct['id']) or {}).get('d', []))
     CONTACT_TAGS[ct['id']] = tg
 for a in PENDS:
     for row in PENDS[a]:
@@ -915,6 +917,55 @@ function matchLf(r, f) {{
   if (f.startsWith('cu:')) return D.cu[r[7]] === f.slice(3);
   return false;
 }}
+// ¿Por qué ese score? — explicación simple para el asesor (r[19]=flags, r[20]=[compra,etapa,respuesta,reciente])
+function scDesg(r) {{
+  const d = r[20] || [];
+  if (d.length !== 4) return '';
+  const fl = r[19] || '', sc = r[8];
+  const st = D.sts[r[6]] || '(sin status)';
+  let e1;
+  if (fl.indexOf('Z') !== -1) e1 = 'dijo que quiere comprar' + (fl.indexOf('M') !== -1 ? ' y habló de monto' : '') + ', PERO pidió aplazar la decisión — por eso este punto se limita a 15';
+  else if (d[0] >= 30) e1 = 'habló de un monto de compra en notas o mensajes';
+  else if (d[0] >= 22) e1 = 'declaró intención de compra o tiene presupuesto diligenciado';
+  else if (d[0] >= 18) e1 = 'tiene horizonte de compra declarado (campo En curso por)';
+  else e1 = 'no ha dicho que quiera comprar: sin monto, sin horizonte y sin presupuesto';
+  const e3 = d[2] >= 16 ? 'responde y conversa activamente (mensajes o llamadas contestadas)'
+           : d[2] >= 8 ? 'sí ha respondido a la gestión al menos una vez'
+           : 'casi no ha respondido a la gestión — sin respuesta solo puede sumar hasta 4';
+  const e4 = d[3] >= 20 ? 'tuvo actividad esta última semana'
+           : d[3] >= 15 ? 'tuvo actividad en el último mes'
+           : d[3] >= 8 ? 'su última actividad fue hace 1 a 3 meses'
+           : d[3] >= 4 ? 'su última actividad fue hace 3 a 6 meses'
+           : 'lleva más de 6 meses sin ninguna actividad';
+  const FLG = {{M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
+  const tip = `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ` +
+    `① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ` +
+    `② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ` +
+    `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
+    `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
+  return ` ${{(fl || '').split('').map(ch => FLG[ch] || '').join('')}}<small style="display:block;color:#8A8FA3;font-size:.68rem;cursor:help" data-tip="${{tip}}">${{sc}}/100: compra ${{d[0]}} + etapa ${{d[1]}} + respuesta ${{d[2]}} + reciente ${{d[3]}} · ¿por qué?</small>`;
+}}
+// Próximas tareas del asesor para CONVERTIR el lead, según su diagnóstico
+function tareasDe(r) {{
+  const d = r[20] || [0, 0, 0, 0], fl = r[19] || '', sc = r[8], t = [];
+  const intTot = (r[17] && r[17][0]) || 0;
+  if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
+  if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);
+  else if (fl.indexOf('C') !== -1) t.push(['🎯', 'Confirmar presupuesto y forma de pago', 'Ya declaró interés de compra: confirmar presupuesto y forma de pago (cash o crédito) con una pregunta directa.']);
+  if (d[2] <= 4) t.push(intTot >= 6
+    ? ['🔀', 'Cambiar canal y horario', `Lleva ${{intTot}} intentos sin eco: cambiar canal Y horario (llamada en otra franja + WhatsApp con UNA pregunta corta); si sigue mudo, pasar a nutrición con alerta de reactivación.`]
+    : ['📞', 'Insistir multi-canal en días distintos', 'Aún no responde: insistir multi-canal en días distintos (llamada + WhatsApp + email) antes de darlo por frío.']);
+  if (d[0] === 0) t.push(['❓', 'Calificar: ¿invertir, vivir o arrendar?', 'Sin intención conocida: hacer la pregunta clave — ¿comprar para invertir, para vivir o arrendar? — y diligenciar "En curso por" y presupuesto en el CRM.']);
+  if (d[3] <= 4) t.push(['🧊', 'Reactivar con una novedad concreta', 'Sin actividad reciente: reactivar con una novedad concreta (proyecto, tasa, oportunidad) y llamar al día siguiente del mensaje.']);
+  if (d[1] >= 25) t.push(['🏁', 'Cerrar: proforma y fecha de firma', 'Negocio abierto: definir unidad, enviar proforma y proponer fecha de firma — ponerle fecha límite al cierre.']);
+  else if (sc >= 55 && d[2] >= 8) t.push(['🔥', 'Videollamada de precalificación en <48 h', 'Caliente y responde: proponer videollamada de precalificación en menos de 48 horas y presentar opciones — no dejarlo enfriar.']);
+  if (!t.length) t.push(['🌱', 'Nutrición con toque personal mensual', 'Mantener en nutrición con un toque personal al mes y re-evaluar si abre o responde algo.']);
+  return t.slice(0, 3);
+}}
+function tareasCell(r) {{
+  return tareasDe(r).map(x =>
+    `<small style="display:block;white-space:nowrap;cursor:help" data-tip="${{esc(x[2])}}">${{x[0]}} ${{esc(x[1])}}</small>`).join('');
+}}
 function verLeads(f, label) {{
   LB.list = personRows(CURK).filter(r => matchLf(r, f)).sort((x, y) => y[8] - x[8]);
   LB.shown = 0; LB.label = label;
@@ -928,16 +979,16 @@ function masLeads() {{
     const em = r[3] ? `<a href="mailto:${{esc(r[3])}}">${{esc(r[3])}}</a>` : '—';
     const dig = r[4].replace(/[^0-9]/g, '');
     const ph = r[4] ? `<a href="tel:${{esc(r[4])}}">${{esc(r[4])}}</a>${{dig ? ' · <a href="https://wa.me/' + dig + '" target="_blank">WA</a>' : ''}}` : '—';
-    return `<tr><td><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span></td>
+    return `<tr><td><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span>${{scDesg(r)}}</td>
       <td><b>${{esc(r[2])}}</b>${{(curIdx >= 0 && r[0] !== curIdx) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="Este asesor es SEGUIDOR del lead; el owner es ${{esc(D.ase[r[0]])}}.">seguidor · owner: ${{esc(D.ase[r[0]]).slice(0, 16)}}</span>` : ''}}</td><td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
-      <td>${{esc(D.fu[r[5]])}}</td><td>${{esc(D.sts[r[6]])}}</td><td>${{esc(D.cu[r[7]])}}</td><td>${{esc(r[9] || '—')}}</td><td>${{rtT(r[10])}}</td><td style="white-space:nowrap"${{r[17] ? ` data-tip="${{r[17][0]}} intentos salientes en ${{r[17][1]}} día${{r[17][1] > 1 ? 's distintos' : ' (ráfaga única)'}} — ${{[r[17][2] ? r[17][2] + ' WhatsApp' : '', r[17][3] ? r[17][3] + ' llamada(s)' : '', r[17][4] ? r[17][4] + ' email(s)' : '', r[17][5] ? r[17][5] + ' SMS' : ''].filter(Boolean).join(' · ')}}. Del ${{esc(r[17][6])}} al ${{esc(r[17][7])}}."` : ''}}>${{r[17] ? `<b>${{r[17][0]}}</b> · ${{r[17][1]}}d ${{(r[17][2] ? '💬' : '') + (r[17][3] ? '📞' : '') + (r[17][4] ? '✉' : '') + (r[17][5] ? '𝗌' : '')}}` : '—'}}</td><td style="white-space:nowrap"${{r[15] ? ` data-tip="Última nota (${{esc(r[15][0][0])}}${{r[15][0][1] ? ', ' + esc(r[15][0][1]) : ''}}): ${{esc(r[15][0][2])}}"` : ''}}>${{r[14] ? `📞 ${{r[14][0]}} · ✉ ${{r[14][4]}} · 🗒 ${{r[14][7]}} · ☑ ${{r[14][6]}}/${{r[14][5]}}` : '—'}}</td><td>${{tagsCell(r[11])}}</td></tr>`;
+      <td>${{esc(D.fu[r[5]])}}</td><td>${{esc(D.sts[r[6]])}}</td><td>${{esc(D.cu[r[7]])}}</td><td>${{esc(r[9] || '—')}}</td><td>${{rtT(r[10])}}</td><td style="white-space:nowrap"${{r[17] ? ` data-tip="${{r[17][0]}} intentos salientes en ${{r[17][1]}} día${{r[17][1] > 1 ? 's distintos' : ' (ráfaga única)'}} — ${{[r[17][2] ? r[17][2] + ' WhatsApp' : '', r[17][3] ? r[17][3] + ' llamada(s)' : '', r[17][4] ? r[17][4] + ' email(s)' : '', r[17][5] ? r[17][5] + ' SMS' : ''].filter(Boolean).join(' · ')}}. Del ${{esc(r[17][6])}} al ${{esc(r[17][7])}}."` : ''}}>${{r[17] ? `<b>${{r[17][0]}}</b> · ${{r[17][1]}}d ${{(r[17][2] ? '💬' : '') + (r[17][3] ? '📞' : '') + (r[17][4] ? '✉' : '') + (r[17][5] ? '𝗌' : '')}}` : '—'}}</td><td style="white-space:nowrap"${{r[15] ? ` data-tip="Última nota (${{esc(r[15][0][0])}}${{r[15][0][1] ? ', ' + esc(r[15][0][1]) : ''}}): ${{esc(r[15][0][2])}}"` : ''}}>${{r[14] ? `📞 ${{r[14][0]}} · ✉ ${{r[14][4]}} · 🗒 ${{r[14][7]}} · ☑ ${{r[14][6]}}/${{r[14][5]}}` : '—'}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[11])}}</td></tr>`;
   }}).join('');
   document.getElementById('leadbox').innerHTML = `
   <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">📋 Leads de ${{esc(CURK.slice(2))}} — ${{esc(LB.label)}} (${{fN(LB.list.length)}})
   <button class="btn" onclick="document.getElementById('leadbox').innerHTML=''">✕ Cerrar</button></h3>
   <div style="border:1px solid var(--gris-linea);border-radius:12px;overflow:auto;max-height:62vh">
   <table style="margin:0"><thead><tr>
-  <th data-tip="Lead scoring 0-100 (misma fórmula del reporte de contactos).">Score</th>
+  <th data-tip="Lead scoring v2 0-100 (misma fórmula del reporte de contactos), con el desglose de por qué debajo: compra + etapa + respuesta + reciente. Pasa el mouse sobre '¿por qué?' para la explicación completa. Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
   <th data-tip="Nombre del contacto en el CRM.">Contacto</th>
   <th data-tip="Email del lead registrado en el CRM.">Email</th>
   <th data-tip="Teléfono del lead; 'WA' abre su chat de WhatsApp.">Teléfono</th>
@@ -948,6 +999,7 @@ function masLeads() {{
   <th data-tip="Tiempo de respuesta que ha recibido este lead: mediana entre sus mensajes y la siguiente respuesta, en sus conversaciones de WhatsApp. '—' = sin conversación medible.">Resp. mediana</th>
   <th data-tip="Intentos de contacto salientes a este lead: total · en cuántos DÍAS DISTINTOS · por qué canales (💬 WhatsApp, 📞 llamada, ✉ email). '1d' con varios intentos = ráfaga de un solo día sin seguimiento posterior. Pasa el mouse para ver el detalle y las fechas.">Intentos</th>
   <th data-tip="Gestión registrada en este lead: 📞 llamadas salientes · ✉ emails salientes · 🗒 notas · ☑ tareas completadas/creadas. Pasa el mouse sobre la celda para leer la última nota. '—' = sin gestión descargada.">Gestión</th>
+  <th data-tip="Las principales acciones que el asesor debe ejecutar para CONVERTIR este lead, derivadas de su diagnóstico de score (variables débiles, flags y gestión previa). Máx 3 en orden de prioridad; pasa el mouse sobre cada una para la instrucción completa.">Para convertir</th>
   <th data-tip="Etiquetas (tags) del lead tal como están en el CRM — campañas, eventos, listas e importaciones. El chip +N muestra el resto al pasar el mouse.">Etiquetas</th>
   </tr></thead><tbody>${{filas}}</tbody></table></div>` +
   (LB.shown < LB.list.length ? `<button class="btn" style="margin-top:8px" onclick="masLeads()">Mostrar 150 más (${{fN(LB.list.length - LB.shown)}} restantes)</button>` : '');

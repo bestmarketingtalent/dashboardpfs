@@ -198,7 +198,8 @@ for c in contacts:
         [giT(t.strip()) for t in (c.get('tags') or [])[:8] if t and t.strip()],
         inter, giMO(mo), atn_of(c), intentos_of(c['id']),
         [giA(USERS[u]) for u in fols(c) if u in USERS],
-        (_SC2.get(c['id']) or {}).get('fl', '')
+        (_SC2.get(c['id']) or {}).get('fl', ''),
+        (_SC2.get(c['id']) or {}).get('d', [])
     ])
     scnt[st] += 1
 
@@ -736,6 +737,56 @@ function tagsCell(idxs) {{
   if (nm.length > 2) out += `<span class="tagchip" style="cursor:help" data-tip="Todas las etiquetas del lead en el CRM: ${{esc(nm.join(' · '))}}">+${{nm.length - 2}}</span>`;
   return out;
 }}
+// ¿Por qué ese score? — explicación en lenguaje simple para el asesor:
+// "tiene X de 100 puntos por estas razones", con las 4 variables y su porqué
+function scDesg(r) {{
+  const d = r[17] || [];
+  if (d.length !== 4) return '';
+  const fl = r[16] || '', sc = r[9];
+  const st = D.status[r[4]] || '(sin status)';
+  let e1;
+  if (fl.indexOf('Z') !== -1) e1 = 'dijo que quiere comprar' + (fl.indexOf('M') !== -1 ? ' y habló de monto' : '') + ', PERO pidió aplazar la decisión — por eso este punto se limita a 15';
+  else if (d[0] >= 30) e1 = 'habló de un monto de compra en notas o mensajes';
+  else if (d[0] >= 22) e1 = 'declaró intención de compra o tiene presupuesto diligenciado';
+  else if (d[0] >= 18) e1 = 'tiene horizonte de compra declarado (campo En curso por)';
+  else e1 = 'no ha dicho que quiera comprar: sin monto, sin horizonte y sin presupuesto';
+  const e3 = d[2] >= 16 ? 'responde y conversa activamente (mensajes o llamadas contestadas)'
+           : d[2] >= 8 ? 'sí ha respondido a la gestión al menos una vez'
+           : 'casi no ha respondido a la gestión — sin respuesta solo puede sumar hasta 4';
+  const e4 = d[3] >= 20 ? 'tuvo actividad esta última semana'
+           : d[3] >= 15 ? 'tuvo actividad en el último mes'
+           : d[3] >= 8 ? 'su última actividad fue hace 1 a 3 meses'
+           : d[3] >= 4 ? 'su última actividad fue hace 3 a 6 meses'
+           : 'lleva más de 6 meses sin ninguna actividad';
+  const tip = `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ` +
+    `① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ` +
+    `② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ` +
+    `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
+    `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
+  return `<small class="dsg" style="display:block;color:#8A8FA3;font-size:.68rem;cursor:help" data-tip="${{tip}}">` +
+    `${{sc}}/100: compra ${{d[0]}} + etapa ${{d[1]}} + respuesta ${{d[2]}} + reciente ${{d[3]}} · ¿por qué?</small>`;
+}}
+// Próximas tareas del asesor para CONVERTIR el lead, derivadas del diagnóstico (pilares + flags + gestión)
+function tareasDe(r) {{
+  const d = r[17] || [0, 0, 0, 0], fl = r[16] || '', sc = r[9], t = [];
+  const intTot = (r[14] && r[14][0]) || 0;
+  if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
+  if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);
+  else if (fl.indexOf('C') !== -1) t.push(['🎯', 'Confirmar presupuesto y forma de pago', 'Ya declaró interés de compra: confirmar presupuesto y forma de pago (cash o crédito) con una pregunta directa.']);
+  if (d[2] <= 4) t.push(intTot >= 6
+    ? ['🔀', 'Cambiar canal y horario', `Lleva ${{intTot}} intentos sin eco: cambiar canal Y horario (llamada en otra franja + WhatsApp con UNA pregunta corta); si sigue mudo, pasar a nutrición con alerta de reactivación.`]
+    : ['📞', 'Insistir multi-canal en días distintos', 'Aún no responde: insistir multi-canal en días distintos (llamada + WhatsApp + email) antes de darlo por frío.']);
+  if (d[0] === 0) t.push(['❓', 'Calificar: ¿invertir, vivir o arrendar?', 'Sin intención conocida: hacer la pregunta clave — ¿comprar para invertir, para vivir o arrendar? — y diligenciar "En curso por" y presupuesto en el CRM.']);
+  if (d[3] <= 4) t.push(['🧊', 'Reactivar con una novedad concreta', 'Sin actividad reciente: reactivar con una novedad concreta (proyecto, tasa, oportunidad) y llamar al día siguiente del mensaje.']);
+  if (d[1] >= 25) t.push(['🏁', 'Cerrar: proforma y fecha de firma', 'Negocio abierto: definir unidad, enviar proforma y proponer fecha de firma — ponerle fecha límite al cierre.']);
+  else if (sc >= 55 && d[2] >= 8) t.push(['🔥', 'Videollamada de precalificación en <48 h', 'Caliente y responde: proponer videollamada de precalificación en menos de 48 horas y presentar opciones — no dejarlo enfriar.']);
+  if (!t.length) t.push(['🌱', 'Nutrición con toque personal mensual', 'Mantener en nutrición con un toque personal al mes y re-evaluar si abre o responde algo.']);
+  return t.slice(0, 3);
+}}
+function tareasCell(r) {{
+  return tareasDe(r).map(x =>
+    `<small style="display:block;white-space:nowrap;cursor:help" data-tip="${{esc(x[2])}}">${{x[0]}} ${{esc(x[1])}}</small>`).join('');
+}}
 function renderLeads(d) {{
   const aFsel = document.getElementById('f-a').value;
   const ls = leadsOf(d);
@@ -746,14 +797,14 @@ function renderLeads(d) {{
     const ph = r[2] ? `<a href="tel:${{esc(r[2])}}">${{esc(r[2])}}</a> · <a href="https://wa.me/${{esc(r[2].replace(/[^0-9]/g, ''))}}" target="_blank">WA</a>` : '—';
     const FLG = {{M: ['💰', 'Monto de compra detectado en notas o mensajes del lead.'], C: ['🛒', 'Declaración de compra/inversión detectada en notas o conversaciones.'], R: ['✋', 'El lead HA RESPONDIDO (mensaje entrante, llamada contestada o respuesta registrada en notas).'], Z: ['⏸', 'Aplazamiento reciente detectado en notas ("retomar en…", "más adelante") — la intención está congelada.']}};
     const flg = (r[16] || '').split('').map(ch => FLG[ch] ? `<span data-tip="${{FLG[ch][1]}}" style="cursor:help">${{FLG[ch][0]}}</span>` : '').join('');
-    return `<tr><td><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}</td>
+    return `<tr><td><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}${{scDesg(r)}}</td>
       <td><b>${{esc(r[0])}}</b>${{(aFsel !== '' && r[3] != aFsel && r[15] && r[15].indexOf(+aFsel) !== -1) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="El asesor filtrado es SEGUIDOR de este lead; el owner es ${{esc(D.asesores[r[3]])}} (grupo donde aparece).">seguidor</span>` : ''}}</td><td>${{em}}</td><td>${{ph}}</td>
       <td>${{esc(D.fuentes[r[7]])}}</td><td>${{esc(D.cursos[r[5]])}}</td>
-      <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[14])}}">${{intCell(r[14])}}</td><td data-tip="${{intTip(r[14])}}">${{canCell(r[14])}}</td><td>${{tagsCell(r[10])}}</td></tr>`;
+      <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[14])}}">${{intCell(r[14])}}</td><td data-tip="${{intTip(r[14])}}">${{canCell(r[14])}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[10])}}</td></tr>`;
   }}).join('');
   d.querySelector('[data-holder]').innerHTML =
     `<table><thead><tr>
-     <th data-tip="Qué es: lead scoring 0-100 y su temperatura. Cómo se calcula: 'En curso por' hasta 35 pts (1-3 meses=35, 3-6=28, 6+=18) + Lead Status hasta 25 (Negocio abierto=25, En curso=15…) + interacciones registradas hasta 20 + recencia de última actividad hasta 20. Caliente ≥55, Tibio 30-54, Frío 10-29.">Score</th>
+     <th data-tip="Qué es: lead scoring v2 0-100 y su temperatura, con el DESGLOSE de por qué debajo (int=intención, eta=etapa, eco=reciprocidad, rec=recencia; pasa el mouse para el detalle). Cómo se calcula: ① Intención 0-35 (horizonte declarado, monto o compra detectados en notas y mensajes; un aplazamiento reciente la congela a 15) + ② Etapa 0-25 (lead status) + ③ Reciprocidad 0-20 (cuánto responde EL LEAD) + ④ Recencia real 0-20 (última actividad en notas, tareas, intentos o conversaciones). Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado. Caliente ≥55, Tibio 30-54, Frío 10-29.">Score</th>
      <th data-tip="Qué es: el nombre del contacto tal como está registrado en el CRM.">Contacto</th>
      <th data-tip="Qué es: el correo del contacto en el CRM; el enlace abre tu cliente de correo.">Email</th>
      <th data-tip="Qué es: el teléfono del contacto; 'WA' abre el chat de WhatsApp (wa.me + número).">Teléfono</th>
@@ -763,6 +814,7 @@ function renderLeads(d) {{
      <th data-tip="Qué es: cuándo entró el contacto a la base. Cómo se calcula: fecha de creación del contacto en el CRM (dateAdded).">Creado</th>
      <th data-tip="Intentos de contacto SALIENTES a este lead: total · en cuántos días distintos. Varios intentos con 1d = ráfaga de un solo día sin seguimiento. Cobertura: todos los canales para carteras de asesores humanos; para el resto, solo WhatsApp.">Intentos</th>
      <th data-tip="Medios usados para (re)contactar a este lead: 💬 WhatsApp · 📞 llamada · ✉ email · 𝗌 SMS. Pasa el mouse sobre la celda para el detalle por canal.">Canales</th>
+     <th data-tip="Qué es: las principales acciones que el asesor debe ejecutar para CONVERTIR este lead, derivadas de su diagnóstico de score (pilares débiles, flags y gestión previa). Máx 3 en orden de prioridad; pasa el mouse sobre cada una para el detalle completo.">Para convertir</th>
      <th data-tip="Qué es: las etiquetas (tags) del contacto tal como están en el CRM — campañas, eventos, listas e importaciones. Se muestran las 2 primeras; el chip +N muestra el resto al pasar el mouse.">Etiquetas</th>
      </tr></thead>
      <tbody>${{rows}}</tbody></table>` +
