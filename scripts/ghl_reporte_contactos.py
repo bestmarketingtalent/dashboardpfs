@@ -784,13 +784,11 @@ function scDesg(r) {{
            : d[3] >= 8 ? 'su última actividad fue hace 1 a 3 meses'
            : d[3] >= 4 ? 'su última actividad fue hace 3 a 6 meses'
            : 'lleva más de 6 meses sin ninguna actividad';
-  const tip = `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ` +
+  return `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ` +
     `① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ` +
     `② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ` +
     `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
     `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
-  return `<small class="dsg" style="display:block;white-space:nowrap;color:#8A8FA3;font-size:.68rem;cursor:help;margin-top:2px" data-tip="${{tip}}">` +
-    `compra ${{d[0]}} · etapa ${{d[1]}} · resp ${{d[2]}} · rec ${{d[3]}} <span style="border-bottom:1px dotted #8A8FA3">¿por qué?</span></small>`;
 }}
 // Oportunidad en el pipeline: r[18] = [etapaIdx, estado, fecha último cambio] ó 0 si nunca entró
 function opCell(r) {{
@@ -831,20 +829,21 @@ function renderLeads(d) {{
     const ph = r[2] ? `<a href="tel:${{esc(r[2])}}">${{esc(r[2])}}</a> · <a href="https://wa.me/${{esc(r[2].replace(/[^0-9]/g, ''))}}" target="_blank">WA</a>` : '—';
     const FLG = {{M: ['💰', 'Monto de compra detectado en notas o mensajes del lead.'], C: ['🛒', 'Declaración de compra/inversión detectada en notas o conversaciones.'], R: ['✋', 'El lead HA RESPONDIDO (mensaje entrante, llamada contestada o respuesta registrada en notas).'], Z: ['⏸', 'Aplazamiento reciente detectado en notas ("retomar en…", "más adelante") — la intención está congelada.']}};
     const flg = (r[16] || '').split('').map(ch => FLG[ch] ? `<span data-tip="${{FLG[ch][1]}}" style="cursor:help">${{FLG[ch][0]}}</span>` : '').join('');
-    return `<tr><td style="white-space:nowrap"><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}${{scDesg(r)}}</td>
+    const sTip = scDesg(r);
+    return `<tr><td style="white-space:nowrap${{sTip ? ';cursor:help' : ''}}"${{sTip ? ` data-tip="${{sTip}}"` : ''}}><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}</td>
       <td><b>${{esc(r[0])}}</b>${{(aFsel !== '' && r[3] != aFsel && r[15] && r[15].indexOf(+aFsel) !== -1) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="El asesor filtrado es SEGUIDOR de este lead; el owner es ${{esc(D.asesores[r[3]])}} (grupo donde aparece).">seguidor</span>` : ''}}</td><td>${{em}}</td><td>${{ph}}</td>
       <td>${{esc(D.fuentes[r[7]])}}</td><td>${{esc(D.cursos[r[5]])}}</td><td>${{opCell(r)}}</td>
       <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[14])}}">${{intCell(r[14])}}</td><td data-tip="${{intTip(r[14])}}">${{canCell(r[14])}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[10])}}</td></tr>`;
   }}).join('');
   d.querySelector('[data-holder]').innerHTML =
     `<table><thead><tr>
-     <th data-tip="Qué es: lead scoring v2 0-100 y su temperatura, con el DESGLOSE de por qué debajo (int=intención, eta=etapa, eco=reciprocidad, rec=recencia; pasa el mouse para el detalle). Cómo se calcula: ① Intención 0-35 (horizonte declarado, monto o compra detectados en notas y mensajes; un aplazamiento reciente la congela a 15) + ② Etapa 0-25 (lead status) + ③ Reciprocidad 0-20 (cuánto responde EL LEAD) + ④ Recencia real 0-20 (última actividad en notas, tareas, intentos o conversaciones). Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado. Caliente ≥55, Tibio 30-54, Frío 10-29.">Score</th>
+     <th data-tip="Qué es: lead scoring v2 0-100 y su temperatura. PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Cómo se calcula: ① Intención 0-35 (horizonte declarado, monto o compra detectados en notas y mensajes; un aplazamiento reciente la congela a 15) + ② Etapa 0-25 (lead status) + ③ Reciprocidad 0-20 (cuánto responde EL LEAD) + ④ Recencia real 0-20 (última actividad en notas, tareas, intentos o conversaciones). Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado. Caliente ≥55, Tibio 30-54, Frío 10-29.">Score</th>
      <th data-tip="Qué es: el nombre del contacto tal como está registrado en el CRM.">Contacto</th>
      <th data-tip="Qué es: el correo del contacto en el CRM; el enlace abre tu cliente de correo.">Email</th>
      <th data-tip="Qué es: el teléfono del contacto; 'WA' abre el chat de WhatsApp (wa.me + número).">Teléfono</th>
      <th data-tip="Qué es: de dónde llegó el lead. Cómo se calcula: campo 'Fuente de contacto' del CRM tal cual, con las variantes de Google, Referidos, Prensa y Sitio Web agrupadas.">Origen</th>
      <th data-tip="Qué es: el horizonte de oportunidad que el equipo registró. Cómo se calcula: campo 'En curso por' del CRM (Oportunidad 1-3 / 3-6 / 6+ meses, Sin Oportunidad).">En curso por</th>
-     <th data-tip="Qué es: si el lead tiene OPORTUNIDAD creada en el pipeline de ventas y en qué etapa del embudo está (Nuevo Lead, Intento de Contacto, WARM, HOT, Cierre…), con su estado: abierta, ganada, perdida o abandonada, y la fecha del último cambio de etapa. Cómo se calcula: cruce por email/teléfono contra las oportunidades del PIPELINE; si tiene varias se muestra la abierta más reciente. '—' = nunca ha entrado al pipeline.">Oportunidad</th>
+     <th data-tip="Qué es: si el lead tiene OPORTUNIDAD creada en el pipeline de ventas y en qué etapa del embudo está (Nuevo Lead, Intento de Contacto, WARM, HOT, Cierre…), con su estado: abierta, ganada, perdida o abandonada, y la fecha del último cambio de etapa. Cómo se calcula: cruce por email/teléfono contra las oportunidades del PIPELINE; si tiene varias se muestra la abierta más reciente. '—' = nunca ha entrado al pipeline.">Etapa de oportunidad</th>
      <th data-tip="Qué es: el realtor vinculado al contacto. Cómo se calcula: campo 'Realtor' del CRM.">Realtor</th>
      <th data-tip="Qué es: cuándo entró el contacto a la base. Cómo se calcula: fecha de creación del contacto en el CRM (dateAdded).">Creado</th>
      <th data-tip="Intentos de contacto SALIENTES a este lead: total · en cuántos días distintos. Varios intentos con 1d = ráfaga de un solo día sin seguimiento. Cobertura: todos los canales para carteras de asesores humanos; para el resto, solo WhatsApp.">Intentos</th>
