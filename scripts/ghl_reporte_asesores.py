@@ -85,6 +85,28 @@ DRL, giRL = dict_indexer()     # realtors
 DFU, giFU = dict_indexer()     # fuentes
 DCU, giCU = dict_indexer()     # en curso por
 DTG, giTG = dict_indexer()     # etiquetas (tags del CRM)
+DOP, giOP = dict_indexer()     # etapa de oportunidad en el pipeline
+
+# ---------- oportunidad en el pipeline (opps.json; match por email/teléfono) ----------
+try:
+    _OPPS = json.load(open(DATA / 'opps.json'))
+    _STG = {s['id']: s['name'] for p in json.load(open(DATA / 'pipelines.json'))['pipelines'] for s in p['stages']}
+except Exception:
+    _OPPS, _STG = [], {}
+_ST_ES = {'open': 'abierta', 'won': 'ganada', 'lost': 'perdida', 'abandoned': 'abandonada'}
+def _mejor_opp(nuevo, prev):
+    if prev is None: return True
+    no, po = nuevo.get('status') == 'open', prev.get('status') == 'open'
+    if no != po: return no
+    return (nuevo.get('stageChange') or nuevo.get('created') or '') > (prev.get('stageChange') or prev.get('created') or '')
+_OPP_BY = {}
+for _o in _OPPS:
+    for _k in ((_o.get('email') or '').strip().lower(), re.sub(r'\D', '', _o.get('phone') or '')):
+        if _k and _mejor_opp(_o, _OPP_BY.get(_k)): _OPP_BY[_k] = _o
+def opp_of(c):
+    for _k in ((c.get('email') or '').strip().lower(), re.sub(r'\D', '', c.get('phone') or '')):
+        if _k and _k in _OPP_BY: return _OPP_BY[_k]
+    return None
 LEADS = []   # [aIdx, [rIdx...], nombre, email, phone, fuIdx, stIdx, cuIdx, score]
 
 for ct in contacts:
@@ -348,6 +370,10 @@ for i, ct in enumerate(contacts):
     LEADS[i].append([giASE(users[u]) for u in fols(ct) if u in users])
     LEADS[i].append((_SC2.get(ct['id']) or {}).get('fl', ''))
     LEADS[i].append((_SC2.get(ct['id']) or {}).get('d', []))
+    _op = opp_of(ct)
+    LEADS[i].append([giOP(_STG.get(_op['stage'], '(etapa desconocida)')),
+                     _ST_ES.get((_op.get('status') or '').lower(), _op.get('status') or ''),
+                     (_op.get('stageChange') or _op.get('created') or '')[:10]] if _op else 0)
     CONTACT_TAGS[ct['id']] = tg
 for a in PENDS:
     for row in PENDS[a]:
@@ -513,7 +539,7 @@ PAYLOAD = json.dumps({'p': PEOPLE, 'ordenA': orden_a, 'ordenR': orden_r,
                       'bench': {'conv': round(G_CONV, 1), 'wpct': round(G_WPCT, 1), 'sc': round(G_SC, 1), 'cont': round(_G_CONT, 1), 'cxl': round(_G_CXL, 1), 'atn': round(_G_ATN, 1) if _G_ATN is not None else None},
                       'leads': LEADS, 'ase': ordered(DASE), 'rl': ordered(DRL),
                       'fu': ordered(DFU), 'cu': ordered(DCU), 'sts': STATUS_ORDER,
-                      'tg': ordered(DTG)},
+                      'tg': ordered(DTG), 'opp': ordered(DOP)},
                      ensure_ascii=False)
 
 HTML = f'''<!DOCTYPE html>
@@ -945,6 +971,14 @@ function scDesg(r) {{
     `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
   return ` ${{(fl || '').split('').map(ch => FLG[ch] || '').join('')}}<small style="display:block;white-space:nowrap;color:#8A8FA3;font-size:.68rem;cursor:help;margin-top:2px" data-tip="${{tip}}">compra ${{d[0]}} · etapa ${{d[1]}} · resp ${{d[2]}} · rec ${{d[3]}} <span style="border-bottom:1px dotted #8A8FA3">¿por qué?</span></small>`;
 }}
+// Oportunidad en el pipeline: r[21] = [etapaIdx, estado, fecha último cambio] ó 0 si nunca entró
+function opCell(r) {{
+  const o = r[21];
+  if (!o) return '<span style="color:#B9BDCC" data-tip="Este lead NO tiene oportunidad creada en el pipeline de ventas: nunca ha entrado al embudo comercial.">—</span>';
+  const col = o[1] === 'abierta' ? '#1D7A46' : o[1] === 'ganada' ? '#0F6E56' : '#A33B3B';
+  return `<span style="white-space:nowrap;cursor:help" data-tip="Tiene OPORTUNIDAD en el pipeline de ventas: etapa «${{esc(D.opp[o[0]])}}» (${{esc(o[1])}}). Último cambio de etapa: ${{esc(o[2] || 'sin fecha')}}.">` +
+    `<b>${{esc(D.opp[o[0]])}}</b><small style="display:block;color:${{col}};font-size:.68rem">${{esc(o[1])}} · ${{esc(o[2] || '')}}</small></span>`;
+}}
 // Próximas tareas del asesor para CONVERTIR el lead, según su diagnóstico
 function tareasDe(r) {{
   const d = r[20] || [0, 0, 0, 0], fl = r[19] || '', sc = r[8], t = [];
@@ -981,7 +1015,7 @@ function masLeads() {{
     const ph = r[4] ? `<a href="tel:${{esc(r[4])}}">${{esc(r[4])}}</a>${{dig ? ' · <a href="https://wa.me/' + dig + '" target="_blank">WA</a>' : ''}}` : '—';
     return `<tr><td style="white-space:nowrap"><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span>${{scDesg(r)}}</td>
       <td><b>${{esc(r[2])}}</b>${{(curIdx >= 0 && r[0] !== curIdx) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="Este asesor es SEGUIDOR del lead; el owner es ${{esc(D.ase[r[0]])}}.">seguidor · owner: ${{esc(D.ase[r[0]]).slice(0, 16)}}</span>` : ''}}</td><td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
-      <td>${{esc(D.fu[r[5]])}}</td><td>${{esc(D.sts[r[6]])}}</td><td>${{esc(D.cu[r[7]])}}</td><td>${{esc(r[9] || '—')}}</td><td>${{rtT(r[10])}}</td><td style="white-space:nowrap"${{r[17] ? ` data-tip="${{r[17][0]}} intentos salientes en ${{r[17][1]}} día${{r[17][1] > 1 ? 's distintos' : ' (ráfaga única)'}} — ${{[r[17][2] ? r[17][2] + ' WhatsApp' : '', r[17][3] ? r[17][3] + ' llamada(s)' : '', r[17][4] ? r[17][4] + ' email(s)' : '', r[17][5] ? r[17][5] + ' SMS' : ''].filter(Boolean).join(' · ')}}. Del ${{esc(r[17][6])}} al ${{esc(r[17][7])}}."` : ''}}>${{r[17] ? `<b>${{r[17][0]}}</b> · ${{r[17][1]}}d ${{(r[17][2] ? '💬' : '') + (r[17][3] ? '📞' : '') + (r[17][4] ? '✉' : '') + (r[17][5] ? '𝗌' : '')}}` : '—'}}</td><td style="white-space:nowrap"${{r[15] ? ` data-tip="Última nota (${{esc(r[15][0][0])}}${{r[15][0][1] ? ', ' + esc(r[15][0][1]) : ''}}): ${{esc(r[15][0][2])}}"` : ''}}>${{r[14] ? `📞 ${{r[14][0]}} · ✉ ${{r[14][4]}} · 🗒 ${{r[14][7]}} · ☑ ${{r[14][6]}}/${{r[14][5]}}` : '—'}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[11])}}</td></tr>`;
+      <td>${{esc(D.fu[r[5]])}}</td><td>${{esc(D.sts[r[6]])}}</td><td>${{esc(D.cu[r[7]])}}</td><td>${{opCell(r)}}</td><td>${{esc(r[9] || '—')}}</td><td>${{rtT(r[10])}}</td><td style="white-space:nowrap"${{r[17] ? ` data-tip="${{r[17][0]}} intentos salientes en ${{r[17][1]}} día${{r[17][1] > 1 ? 's distintos' : ' (ráfaga única)'}} — ${{[r[17][2] ? r[17][2] + ' WhatsApp' : '', r[17][3] ? r[17][3] + ' llamada(s)' : '', r[17][4] ? r[17][4] + ' email(s)' : '', r[17][5] ? r[17][5] + ' SMS' : ''].filter(Boolean).join(' · ')}}. Del ${{esc(r[17][6])}} al ${{esc(r[17][7])}}."` : ''}}>${{r[17] ? `<b>${{r[17][0]}}</b> · ${{r[17][1]}}d ${{(r[17][2] ? '💬' : '') + (r[17][3] ? '📞' : '') + (r[17][4] ? '✉' : '') + (r[17][5] ? '𝗌' : '')}}` : '—'}}</td><td style="white-space:nowrap"${{r[15] ? ` data-tip="Última nota (${{esc(r[15][0][0])}}${{r[15][0][1] ? ', ' + esc(r[15][0][1]) : ''}}): ${{esc(r[15][0][2])}}"` : ''}}>${{r[14] ? `📞 ${{r[14][0]}} · ✉ ${{r[14][4]}} · 🗒 ${{r[14][7]}} · ☑ ${{r[14][6]}}/${{r[14][5]}}` : '—'}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[11])}}</td></tr>`;
   }}).join('');
   document.getElementById('leadbox').innerHTML = `
   <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">📋 Leads de ${{esc(CURK.slice(2))}} — ${{esc(LB.label)}} (${{fN(LB.list.length)}})
@@ -995,6 +1029,7 @@ function masLeads() {{
   <th data-tip="Origen del lead: campo 'Fuente de contacto' del CRM con las agrupaciones de Google, Referidos, Prensa y Sitio Web.">Origen</th>
   <th data-tip="Campo Lead Status del CRM.">Lead Status</th>
   <th data-tip="Campo 'En curso por' del CRM (horizonte de oportunidad).">En curso por</th>
+  <th data-tip="Si el lead tiene OPORTUNIDAD creada en el pipeline de ventas y en qué etapa del embudo está (Nuevo Lead, WARM, HOT, Cierre…), con su estado (abierta/ganada/perdida/abandonada) y la fecha del último cambio de etapa. Cruce por email/teléfono; si tiene varias, la abierta más reciente. '—' = nunca entró al pipeline.">Oportunidad</th>
   <th data-tip="Fecha de creación del lead en el CRM (dateAdded).">Creado</th>
   <th data-tip="Tiempo de respuesta que ha recibido este lead: mediana entre sus mensajes y la siguiente respuesta, en sus conversaciones de WhatsApp. '—' = sin conversación medible.">Resp. mediana</th>
   <th data-tip="Intentos de contacto salientes a este lead: total · en cuántos DÍAS DISTINTOS · por qué canales (💬 WhatsApp, 📞 llamada, ✉ email). '1d' con varios intentos = ráfaga de un solo día sin seguimiento posterior. Pasa el mouse para ver el detalle y las fechas.">Intentos</th>

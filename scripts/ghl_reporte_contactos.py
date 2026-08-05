@@ -4,7 +4,7 @@
 Asesor → Lead Status → leads ordenados por lead scoring (más caliente a la venta,
 calculado por interacción). HTML autocontenido. Lee scripts/data/{contacts,users}.json
 (descarga previa de ghl_fetch_contactos.py — solo consulta, cero escritura en el CRM)."""
-import json, html
+import json, html, re
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
@@ -153,6 +153,26 @@ except Exception:
 def fols(c):
     """user ids que siguen al contacto (del fetch o del mapa aparte)."""
     return c.get('followers') or _FWMAP.get(c['id'], [])
+# ---------- oportunidad en el pipeline (opps.json; match por email/teléfono) ----------
+try:
+    _OPPS = json.load(open(DATA / 'opps.json'))
+    _STG = {s['id']: s['name'] for p in json.load(open(DATA / 'pipelines.json'))['pipelines'] for s in p['stages']}
+except Exception:
+    _OPPS, _STG = [], {}
+_ST_ES = {'open': 'abierta', 'won': 'ganada', 'lost': 'perdida', 'abandoned': 'abandonada'}
+def _mejor_opp(nuevo, prev):
+    if prev is None: return True
+    no, po = nuevo.get('status') == 'open', prev.get('status') == 'open'
+    if no != po: return no
+    return (nuevo.get('stageChange') or nuevo.get('created') or '') > (prev.get('stageChange') or prev.get('created') or '')
+_OPP_BY = {}
+for _o in _OPPS:
+    for _k in ((_o.get('email') or '').strip().lower(), re.sub(r'\D', '', _o.get('phone') or '')):
+        if _k and _mejor_opp(_o, _OPP_BY.get(_k)): _OPP_BY[_k] = _o
+def opp_of(c):
+    for _k in ((c.get('email') or '').strip().lower(), re.sub(r'\D', '', c.get('phone') or '')):
+        if _k and _k in _OPP_BY: return _OPP_BY[_k]
+    return None
 # ---------- construir filas ----------
 def dict_indexer():
     d = {}
@@ -168,6 +188,7 @@ DR, giR = dict_indexer()   # realtor
 DF, giF = dict_indexer()   # fuente
 DT, giT = dict_indexer()   # etiquetas (tags del CRM)
 DMO, giMO = dict_indexer()  # motivo de descarte
+DOP, giOP = dict_indexer()  # etapa de oportunidad en el pipeline
 
 for s in STATUS_ORDER: giS(s)
 for k in CURSO_ORDER:  giK(k)
@@ -199,7 +220,11 @@ for c in contacts:
         inter, giMO(mo), atn_of(c), intentos_of(c['id']),
         [giA(USERS[u]) for u in fols(c) if u in USERS],
         (_SC2.get(c['id']) or {}).get('fl', ''),
-        (_SC2.get(c['id']) or {}).get('d', [])
+        (_SC2.get(c['id']) or {}).get('d', []),
+        ([giOP(_STG.get(_op['stage'], '(etapa desconocida)')),
+          _ST_ES.get((_op.get('status') or '').lower(), _op.get('status') or ''),
+          (_op.get('stageChange') or _op.get('created') or '')[:10]]
+         if (_op := opp_of(c)) else 0)
     ])
     scnt[st] += 1
 
@@ -216,6 +241,7 @@ PAYLOAD = json.dumps({
     'fuenteOrden': [i for i, _ in fuente_vol.most_common()],
     'tags': ordered(DT),
     'motivos': ordered(DMO),
+    'opps': ordered(DOP),
 }, ensure_ascii=False)
 
 def fmt(n): return f'{n:,}'.replace(',', '.')
@@ -766,6 +792,14 @@ function scDesg(r) {{
   return `<small class="dsg" style="display:block;white-space:nowrap;color:#8A8FA3;font-size:.68rem;cursor:help;margin-top:2px" data-tip="${{tip}}">` +
     `compra ${{d[0]}} · etapa ${{d[1]}} · resp ${{d[2]}} · rec ${{d[3]}} <span style="border-bottom:1px dotted #8A8FA3">¿por qué?</span></small>`;
 }}
+// Oportunidad en el pipeline: r[18] = [etapaIdx, estado, fecha último cambio] ó 0 si nunca entró
+function opCell(r) {{
+  const o = r[18];
+  if (!o) return '<span style="color:#B9BDCC" data-tip="Este lead NO tiene oportunidad creada en el pipeline de ventas: nunca ha entrado al embudo comercial.">—</span>';
+  const col = o[1] === 'abierta' ? '#1D7A46' : o[1] === 'ganada' ? '#0F6E56' : '#A33B3B';
+  return `<span style="white-space:nowrap;cursor:help" data-tip="Tiene OPORTUNIDAD en el pipeline de ventas: etapa «${{esc(D.opps[o[0]])}}» (${{esc(o[1])}}). Último cambio de etapa: ${{esc(o[2] || 'sin fecha')}}.">` +
+    `<b>${{esc(D.opps[o[0]])}}</b><small style="display:block;color:${{col}};font-size:.68rem">${{esc(o[1])}} · ${{esc(o[2] || '')}}</small></span>`;
+}}
 // Próximas tareas del asesor para CONVERTIR el lead, derivadas del diagnóstico (pilares + flags + gestión)
 function tareasDe(r) {{
   const d = r[17] || [0, 0, 0, 0], fl = r[16] || '', sc = r[9], t = [];
@@ -799,7 +833,7 @@ function renderLeads(d) {{
     const flg = (r[16] || '').split('').map(ch => FLG[ch] ? `<span data-tip="${{FLG[ch][1]}}" style="cursor:help">${{FLG[ch][0]}}</span>` : '').join('');
     return `<tr><td style="white-space:nowrap"><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}${{scDesg(r)}}</td>
       <td><b>${{esc(r[0])}}</b>${{(aFsel !== '' && r[3] != aFsel && r[15] && r[15].indexOf(+aFsel) !== -1) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="El asesor filtrado es SEGUIDOR de este lead; el owner es ${{esc(D.asesores[r[3]])}} (grupo donde aparece).">seguidor</span>` : ''}}</td><td>${{em}}</td><td>${{ph}}</td>
-      <td>${{esc(D.fuentes[r[7]])}}</td><td>${{esc(D.cursos[r[5]])}}</td>
+      <td>${{esc(D.fuentes[r[7]])}}</td><td>${{esc(D.cursos[r[5]])}}</td><td>${{opCell(r)}}</td>
       <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[14])}}">${{intCell(r[14])}}</td><td data-tip="${{intTip(r[14])}}">${{canCell(r[14])}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[10])}}</td></tr>`;
   }}).join('');
   d.querySelector('[data-holder]').innerHTML =
@@ -810,6 +844,7 @@ function renderLeads(d) {{
      <th data-tip="Qué es: el teléfono del contacto; 'WA' abre el chat de WhatsApp (wa.me + número).">Teléfono</th>
      <th data-tip="Qué es: de dónde llegó el lead. Cómo se calcula: campo 'Fuente de contacto' del CRM tal cual, con las variantes de Google, Referidos, Prensa y Sitio Web agrupadas.">Origen</th>
      <th data-tip="Qué es: el horizonte de oportunidad que el equipo registró. Cómo se calcula: campo 'En curso por' del CRM (Oportunidad 1-3 / 3-6 / 6+ meses, Sin Oportunidad).">En curso por</th>
+     <th data-tip="Qué es: si el lead tiene OPORTUNIDAD creada en el pipeline de ventas y en qué etapa del embudo está (Nuevo Lead, Intento de Contacto, WARM, HOT, Cierre…), con su estado: abierta, ganada, perdida o abandonada, y la fecha del último cambio de etapa. Cómo se calcula: cruce por email/teléfono contra las oportunidades del PIPELINE; si tiene varias se muestra la abierta más reciente. '—' = nunca ha entrado al pipeline.">Oportunidad</th>
      <th data-tip="Qué es: el realtor vinculado al contacto. Cómo se calcula: campo 'Realtor' del CRM.">Realtor</th>
      <th data-tip="Qué es: cuándo entró el contacto a la base. Cómo se calcula: fecha de creación del contacto en el CRM (dateAdded).">Creado</th>
      <th data-tip="Intentos de contacto SALIENTES a este lead: total · en cuántos días distintos. Varios intentos con 1d = ráfaga de un solo día sin seguimiento. Cobertura: todos los canales para carteras de asesores humanos; para el resto, solo WhatsApp.">Intentos</th>
