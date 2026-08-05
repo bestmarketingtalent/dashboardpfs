@@ -5,7 +5,7 @@ todas las segmentaciones (recompra declarada, Elite, mercado, realtor, fuente,
 último contacto real por conversaciones, antigüedad, temperatura), filtros
 combinables, distribuciones con barras y playbook de venta cruzada.
 Solo lectura del CRM."""
-import json
+import json, re
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -119,6 +119,30 @@ except Exception:
 def fols(c):
     """user ids que siguen al contacto (del fetch o del mapa aparte)."""
     return c.get('followers') or _FWMAP.get(c['id'], [])
+DOP, giOP = dict_indexer()  # etapa de oportunidad en el pipeline
+try:
+    _OPPS = json.load(open(DATA / 'opps.json'))
+    _STG = {s['id']: s['name'] for p in json.load(open(DATA / 'pipelines.json'))['pipelines'] for s in p['stages']}
+except Exception:
+    _OPPS, _STG = [], {}
+_ST_ES = {'open': 'abierta', 'won': 'ganada', 'lost': 'perdida', 'abandoned': 'abandonada'}
+def _mejor_opp(nuevo, prev):
+    if prev is None: return True
+    no, po = nuevo.get('status') == 'open', prev.get('status') == 'open'
+    if no != po: return no
+    return (nuevo.get('stageChange') or nuevo.get('created') or '') > (prev.get('stageChange') or prev.get('created') or '')
+_OPP_BY = {}
+for _o in _OPPS:
+    for _k in ((_o.get('email') or '').strip().lower(), re.sub(r'\D', '', _o.get('phone') or '')):
+        if _k and _mejor_opp(_o, _OPP_BY.get(_k)): _OPP_BY[_k] = _o
+def opp_row(c):
+    _op = None
+    for _k in ((c.get('email') or '').strip().lower(), re.sub(r'\D', '', c.get('phone') or '')):
+        if _k and _k in _OPP_BY: _op = _OPP_BY[_k]; break
+    return ([giOP(_STG.get(_op['stage'], '(etapa desconocida)')),
+             _ST_ES.get((_op.get('status') or '').lower(), _op.get('status') or ''),
+             (_op.get('stageChange') or _op.get('created') or '')[:10]] if _op else 0)
+
 ROWS = []
 for ct in clientes:
     rl = ct.get('realtor') or []
@@ -137,7 +161,8 @@ for ct in clientes:
                  giK(ku), score_of(ct), (ct.get('created') or '')[:10],
                  ultimo, wait_dias.get(ct['id']), elite, inter,
                  [giTG(t) for t in tags[:8]], intentos_of(ct['id']),
-                 [giA(users[u]) for u in fols(ct) if u in users]])
+                 [giA(users[u]) for u in fols(ct) if u in users],
+                 opp_row(ct)])
 
 TOTAL = len(ROWS)
 n_oport = sum(1 for r in ROWS if 'Oportunidad' in list(DK)[r[7]] if True) if False else 0
@@ -154,7 +179,8 @@ top_merc = Counter(M_LIST[r[5]] for r in ROWS).most_common(1)[0]
 
 def ordered(d): return [k for k, _ in sorted(d.items(), key=lambda x: x[1])]
 PAYLOAD = json.dumps({'rows': ROWS, 'rl': ordered(DR), 'ase': ordered(DA), 'me': ordered(DM),
-                      'fu': ordered(DF), 'cu': ordered(DK), 'tg': ordered(DTG)}, ensure_ascii=False)
+                      'fu': ordered(DF), 'cu': ordered(DK), 'tg': ordered(DTG),
+                      'opps': ordered(DOP)}, ensure_ascii=False)
 
 
 HTML = f'''<!DOCTYPE html>
@@ -293,10 +319,12 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="Fuente original por la que llegó como lead.">Fuente</th>
 <th data-tip="Nueva oportunidad registrada (campo En curso por).">En curso por</th>
 <th data-tip="Días desde su última conversación en cualquier canal. '—' = nunca registrada.">Últ. contacto</th>
+<th data-tip="Si el cliente tiene OPORTUNIDAD en el pipeline de ventas (p.ej. recompra en curso) y en qué etapa está, con su estado y fecha del último cambio. '—' = sin oportunidad en el pipeline.">Etapa de oportunidad</th>
 <th>Email</th><th data-tip="Teléfono con enlace de llamada y WhatsApp.">Teléfono</th>
 <th data-tip="Intentos de contacto SALIENTES a este lead: total · en cuántos días distintos. Varios intentos con 1d = ráfaga de un solo día sin seguimiento. Cobertura: todos los canales para carteras de asesores humanos; para el resto, solo WhatsApp.">Intentos</th>
 <th data-tip="Medios usados para (re)contactar a este lead: 💬 WhatsApp · 📞 llamada · ✉ email · 𝗌 SMS. Pasa el mouse sobre la celda para el detalle por canal.">Canales</th>
 <th data-tip="Etiquetas del CRM (Elite, eventos, campañas).">Etiquetas</th>
+<th data-tip="Escribirle directamente por WhatsApp.">WA</th>
 </tr></thead><tbody id="tb"></tbody></table></div>
 <div class="fbar" id="pag"></div>
 
@@ -418,6 +446,14 @@ function dists() {{
     apply();
   }}));
 }}
+function opCellG(o) {{
+  if (!o) return '<span style="color:#B9BDCC" data-tip="Este cliente NO tiene oportunidad activa en el pipeline de ventas.">—</span>';
+  const col = o[1] === 'abierta' ? '#1D7A46' : o[1] === 'ganada' ? '#0F6E56' : '#A33B3B';
+  return `<span style="white-space:nowrap;cursor:help" data-tip="OPORTUNIDAD en el pipeline de ventas: etapa «${{esc(D.opps[o[0]])}}» (${{esc(o[1])}}). Último cambio de etapa: ${{esc(o[2] || 'sin fecha')}}."><b>${{esc(D.opps[o[0]])}}</b><small style="display:block;color:${{col}};font-size:.68rem">${{esc(o[1])}} · ${{esc(o[2] || '')}}</small></span>`;
+}}
+function waBtn(dig) {{
+  return dig ? `<a href="https://wa.me/${{dig}}" target="_blank" style="display:inline-block;background:#25D366;color:#fff;border-radius:8px;padding:4px 9px;white-space:nowrap;font-size:.74rem;font-weight:700;text-decoration:none" data-tip="Escribirle directamente por WhatsApp (abre wa.me con su número).">💬 WhatsApp</a>` : '<span style="color:#B9BDCC">—</span>';
+}}
 function tabla() {{
   const P = 100;
   const pages = Math.max(1, Math.ceil(view.length / P));
@@ -432,7 +468,8 @@ function tabla() {{
     <td>${{esc(D.me[r[5]])}}</td><td>${{esc(D.fu[r[6]])}}</td>
     <td>${{ec.startsWith('Oportunidad') ? '<b style="color:var(--verde)">' + esc(ec) + '</b>' : esc(ec)}}</td>
     <td>${{r[10] === null ? '—' : fmtN(r[10]) + ' d'}}</td>
-    <td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[15])}}">${{intCell(r[15])}}</td><td data-tip="${{intTip(r[15])}}">${{canCell(r[15])}}</td><td>${{tagsCell(r[14])}}</td></tr>`;
+    <td>${{opCellG(r[17])}}</td>
+    <td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[15])}}">${{intCell(r[15])}}</td><td data-tip="${{intTip(r[15])}}">${{canCell(r[15])}}</td><td>${{tagsCell(r[14])}}</td><td>${{waBtn(dig)}}</td></tr>`;
   }}).join('');
   document.getElementById('pag').innerHTML = pages > 1
     ? `<button class="btn sec" onclick="page--;tabla()" ${{page === 0 ? 'disabled' : ''}}>‹ Anterior</button>

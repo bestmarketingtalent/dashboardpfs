@@ -4,7 +4,7 @@
 cuánta gestión recibieron antes, cuáles son rescatables y qué aprender para optimizar
 el proceso comercial. HTML autocontenido. Lee scripts/data/{contacts,users}.json
 (descarga previa de ghl_fetch_contactos.py — solo consulta, cero escritura en el CRM)."""
-import json, html
+import json, html, re
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -136,6 +136,30 @@ DMO, giMO = dict_indexer()
 for s in STATUS_ORDER: giS(s)
 for k in CURSO_ORDER:  giK(k)
 
+DOP, giOP = dict_indexer()  # etapa de oportunidad en el pipeline
+try:
+    _OPPS = json.load(open(DATA / 'opps.json'))
+    _STG = {s['id']: s['name'] for p in json.load(open(DATA / 'pipelines.json'))['pipelines'] for s in p['stages']}
+except Exception:
+    _OPPS, _STG = [], {}
+_ST_ES = {'open': 'abierta', 'won': 'ganada', 'lost': 'perdida', 'abandoned': 'abandonada'}
+def _mejor_opp(nuevo, prev):
+    if prev is None: return True
+    no, po = nuevo.get('status') == 'open', prev.get('status') == 'open'
+    if no != po: return no
+    return (nuevo.get('stageChange') or nuevo.get('created') or '') > (prev.get('stageChange') or prev.get('created') or '')
+_OPP_BY = {}
+for _o in _OPPS:
+    for _k in ((_o.get('email') or '').strip().lower(), re.sub(r'\D', '', _o.get('phone') or '')):
+        if _k and _mejor_opp(_o, _OPP_BY.get(_k)): _OPP_BY[_k] = _o
+def opp_row(c):
+    _op = None
+    for _k in ((c.get('email') or '').strip().lower(), re.sub(r'\D', '', c.get('phone') or '')):
+        if _k and _k in _OPP_BY: _op = _OPP_BY[_k]; break
+    return ([giOP(_STG.get(_op['stage'], '(etapa desconocida)')),
+             _ST_ES.get((_op.get('status') or '').lower(), _op.get('status') or ''),
+             (_op.get('stageChange') or _op.get('created') or '')[:10]] if _op else 0)
+
 rows = []
 for c in contacts:
     a  = USERS.get(c['assigned'], '(Sin asesor asignado)') if c['assigned'] else '(Sin asesor asignado)'
@@ -156,7 +180,10 @@ for c in contacts:
         (c['created'] or '')[:10], score_of(c),
         [giT(t.strip()) for t in (c.get('tags') or [])[:8] if t and t.strip()],
         inter, giMO(mo), intentos_of(c['id']),
-        [giA(USERS[u]) for u in fols(c) if u in USERS]
+        [giA(USERS[u]) for u in fols(c) if u in USERS],
+        (_SC2.get(c['id']) or {}).get('fl', ''),
+        (_SC2.get(c['id']) or {}).get('d', []),
+        opp_row(c)
     ])
 
 TOTAL = len(rows)
@@ -174,7 +201,7 @@ PAYLOAD = json.dumps({
     'rows': rows,
     'asesores': ordered(DA), 'status': ordered(DS), 'cursos': ordered(DK),
     'realtors': ordered(DR), 'fuentes': ordered(DF), 'tags': ordered(DT),
-    'motivos': ordered(DMO),
+    'motivos': ordered(DMO), 'opps': ordered(DOP),
     'motivoOrden':  [i for i, _ in motivo_vol.most_common()],
     'asesorOrden':  [i for i, _ in asesor_vol.most_common()],
     'fuenteOrden':  [i for i, _ in fuente_vol.most_common()],
@@ -541,12 +568,55 @@ function tagsCell(idxs) {{
   if (nm.length > 2) out += `<span class="tagchip" style="cursor:help" data-tip="Todas las etiquetas del lead en el CRM: ${{esc(nm.join(' · '))}}">+${{nm.length - 2}}</span>`;
   return out;
 }}
+function scTip(r, d, fl, sc, st) {{
+  if (!d || d.length !== 4) return '';
+  let e1;
+  if (fl.indexOf('Z') !== -1) e1 = 'dijo que quiere comprar' + (fl.indexOf('M') !== -1 ? ' y habló de monto' : '') + ', PERO pidió aplazar la decisión — por eso este punto se limita a 15';
+  else if (d[0] >= 30) e1 = 'habló de un monto de compra en notas o mensajes';
+  else if (d[0] >= 22) e1 = 'declaró intención de compra o tiene presupuesto diligenciado';
+  else if (d[0] >= 18) e1 = 'tiene horizonte de compra declarado (campo En curso por)';
+  else e1 = 'no ha dicho que quiera comprar: sin monto, sin horizonte y sin presupuesto';
+  const e3 = d[2] >= 16 ? 'responde y conversa activamente (mensajes o llamadas contestadas)'
+           : d[2] >= 8 ? 'sí ha respondido a la gestión al menos una vez'
+           : 'casi no ha respondido a la gestión — sin respuesta solo puede sumar hasta 4';
+  const e4 = d[3] >= 20 ? 'tuvo actividad esta última semana' : d[3] >= 15 ? 'tuvo actividad en el último mes'
+           : d[3] >= 8 ? 'su última actividad fue hace 1 a 3 meses' : d[3] >= 4 ? 'su última actividad fue hace 3 a 6 meses'
+           : 'lleva más de 6 meses sin ninguna actividad';
+  return `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
+}}
+const FLGV = {{M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
+function opCellG(o) {{
+  if (!o) return '<span style="color:#B9BDCC" data-tip="Este lead NO tiene oportunidad creada en el pipeline de ventas: nunca ha entrado al embudo comercial.">—</span>';
+  const col = o[1] === 'abierta' ? '#1D7A46' : o[1] === 'ganada' ? '#0F6E56' : '#A33B3B';
+  return `<span style="white-space:nowrap;cursor:help" data-tip="Tiene OPORTUNIDAD en el pipeline de ventas: etapa «${{esc(D.opps[o[0]])}}» (${{esc(o[1])}}). Último cambio de etapa: ${{esc(o[2] || 'sin fecha')}}."><b>${{esc(D.opps[o[0]])}}</b><small style="display:block;color:${{col}};font-size:.68rem">${{esc(o[1])}} · ${{esc(o[2] || '')}}</small></span>`;
+}}
+function tareasG(d, fl, sc, intTot) {{
+  d = d && d.length === 4 ? d : [0, 0, 0, 0]; fl = fl || ''; const t = [];
+  if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
+  if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);
+  else if (fl.indexOf('C') !== -1) t.push(['🎯', 'Confirmar presupuesto y forma de pago', 'Ya declaró interés de compra: confirmar presupuesto y forma de pago (cash o crédito) con una pregunta directa.']);
+  if (d[2] <= 4) t.push(intTot >= 6
+    ? ['🔀', 'Cambiar canal y horario', `Lleva ${{intTot}} intentos sin eco: cambiar canal Y horario (llamada en otra franja + WhatsApp con UNA pregunta corta); si sigue mudo, pasar a nutrición con alerta de reactivación.`]
+    : ['📞', 'Insistir multi-canal en días distintos', 'Aún no responde: insistir multi-canal en días distintos (llamada + WhatsApp + email) antes de darlo por frío.']);
+  if (d[0] === 0) t.push(['❓', 'Calificar: ¿invertir, vivir o arrendar?', 'Sin intención conocida: hacer la pregunta clave — ¿comprar para invertir, para vivir o arrendar? — y diligenciar "En curso por" y presupuesto en el CRM.']);
+  if (d[3] <= 4) t.push(['🧊', 'Reactivar con una novedad concreta', 'Sin actividad reciente: reactivar con una novedad concreta (proyecto, tasa, oportunidad) y llamar al día siguiente del mensaje.']);
+  if (d[1] >= 25) t.push(['🏁', 'Cerrar: proforma y fecha de firma', 'Negocio abierto: definir unidad, enviar proforma y proponer fecha de firma — ponerle fecha límite al cierre.']);
+  else if (sc >= 55 && d[2] >= 8) t.push(['🔥', 'Videollamada de precalificación en <48 h', 'Caliente y responde: proponer videollamada de precalificación en menos de 48 horas y presentar opciones — no dejarlo enfriar.']);
+  if (!t.length) t.push(['🌱', 'Nutrición con toque personal mensual', 'Mantener en nutrición con un toque personal al mes y re-evaluar si abre o responde algo.']);
+  return t.slice(0, 3).map(x => `<small style="display:block;white-space:nowrap;cursor:help" data-tip="${{esc(x[2])}}">${{x[0]}} ${{esc(x[1])}}</small>`).join('');
+}}
+function waBtn(dig) {{
+  return dig ? `<a href="https://wa.me/${{dig}}" target="_blank" style="display:inline-block;background:#25D366;color:#fff;border-radius:8px;padding:4px 9px;white-space:nowrap;font-size:.74rem;font-weight:700;text-decoration:none" data-tip="Escribirle directamente por WhatsApp (abre wa.me con su número).">💬 WhatsApp</a>` : '<span style="color:#B9BDCC">—</span>';
+}}
 function renderTabla() {{
   const ls = view.slice(0, shown);
   const filas = ls.map(r => {{
     const em = r[1] ? `<a href="mailto:${{esc(r[1])}}">${{esc(r[1])}}</a>` : '—';
-    const ph = r[2] ? `<a href="tel:${{esc(r[2])}}">${{esc(r[2])}}</a> · <a href="https://wa.me/${{esc(r[2].replace(/[^0-9]/g, ''))}}" target="_blank">WA</a>` : '—';
-    return `<tr><td><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small></td>
+    const dig = (r[2] || '').replace(/[^0-9]/g, '');
+    const ph = r[2] ? `<a href="tel:${{esc(r[2])}}">${{esc(r[2])}}</a> · <a href="https://wa.me/${{dig}}" target="_blank">WA</a>` : '—';
+    const sTip = scTip(r, r[16], r[15] || '', r[9], D.status[r[4]]);
+    const flgs = (r[15] || '').split('').map(ch => FLGV[ch] || '').join('');
+    return `<tr><td style="white-space:nowrap${{sTip ? ';cursor:help' : ''}}"${{sTip ? ` data-tip="${{sTip}}"` : ''}}><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flgs}}</td>
       <td><b>${{esc(r[0])}}</b></td>
       <td><span class="mchip">${{esc(D.motivos[r[12]])}}</span></td>
       <td>${{esc(D.asesores[r[3]])}}</td>
@@ -554,11 +624,14 @@ function renderTabla() {{
       <td style="white-space:nowrap" data-tip="${{intTip(r[13])}}">${{intCell(r[13])}}</td><td data-tip="${{intTip(r[13])}}">${{canCell(r[13])}}</td>
       <td>${{em}}</td><td>${{ph}}</td>
       <td>${{esc(D.fuentes[r[7]])}}</td><td>${{esc(D.cursos[r[5]])}}</td>
-      <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td>${{tagsCell(r[10])}}</td></tr>`;
+      <td>${{opCellG(r[17])}}</td>
+      <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td>
+      <td>${{tareasG(r[16], r[15], r[9], (r[13] && r[13][0]) || 0)}}</td>
+      <td>${{tagsCell(r[10])}}</td><td>${{waBtn(dig)}}</td></tr>`;
   }}).join('');
   document.getElementById('ltab').innerHTML =
     `<table style="min-width:1150px"><thead><tr>
-     <th data-tip="Lead scoring 0-100 (misma fórmula del home: En curso por + Lead Status + interacciones + recencia). En descartados, un score alto = señal viva pese al descarte: candidato a rescate.">Score</th>
+     <th data-tip="Lead scoring v2 0-100 (misma fórmula del home). PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos. En descartados, un score alto = señal viva pese al descarte: candidato a rescate. Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
      <th data-tip="Nombre del contacto tal como está en el CRM.">Contacto</th>
      <th data-tip="Campo 'Motivo de descarte' del CRM. '(Sin motivo registrado)' = descarte sin explicación.">Motivo de descarte</th>
      <th data-tip="Usuario asignado al lead: quien lo descartó o lo tenía al descartarse. MARKETING PFS = automatización.">Quién lo descartó</th>
@@ -569,9 +642,12 @@ function renderTabla() {{
      <th data-tip="Teléfono del contacto; 'WA' abre el chat de WhatsApp.">Teléfono</th>
      <th data-tip="Origen del lead: campo 'Fuente de contacto' del CRM con las familias agrupadas.">Origen</th>
      <th data-tip="Campo 'En curso por': si dice 'Oportunidad …' el lead tenía horizonte de compra vigente — contradicción con el descarte.">En curso por</th>
+     <th data-tip="Si el lead tiene OPORTUNIDAD en el pipeline de ventas y en qué etapa quedó, con su estado y fecha del último cambio. '—' = nunca entró al pipeline.">Etapa de oportunidad</th>
      <th data-tip="Realtor vinculado al contacto.">Realtor</th>
      <th data-tip="Fecha de creación del lead en el CRM (dateAdded).">Creado</th>
+     <th data-tip="Las principales acciones para RESCATAR/CERRAR este lead, según su diagnóstico de score. Pasa el mouse para el detalle.">Acciones para cerrar venta</th>
      <th data-tip="Etiquetas del contacto en el CRM. Se muestran 2; el chip +N muestra el resto al pasar el mouse.">Etiquetas</th>
+     <th data-tip="Escribirle directamente por WhatsApp.">WA</th>
      </tr></thead><tbody>${{filas}}</tbody></table>` +
     (shown < view.length ? `<button class="btn sec more" onclick="masFilas()">Mostrar ${{fmtN(Math.min(PAGE, view.length - shown))}} más (${{fmtN(view.length - shown)}} restantes)</button>` : '') +
     (view.length === 0 ? '<p style="color:var(--gris);margin:14px 0">Sin leads descartados con los filtros actuales.</p>' : '');

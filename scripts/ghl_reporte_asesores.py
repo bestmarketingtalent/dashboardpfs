@@ -969,6 +969,9 @@ function scDesg(r) {{
     `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
     `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
 }}
+function waBtn(dig) {{
+  return dig ? `<a href="https://wa.me/${{dig}}" target="_blank" style="display:inline-block;background:#25D366;color:#fff;border-radius:8px;padding:4px 9px;white-space:nowrap;font-size:.74rem;font-weight:700;text-decoration:none" data-tip="Escribirle directamente por WhatsApp (abre wa.me con su número).">💬 WhatsApp</a>` : '<span style="color:#B9BDCC">—</span>';
+}}
 // Oportunidad en el pipeline: r[21] = [etapaIdx, estado, fecha último cambio] ó 0 si nunca entró
 function opCell(r) {{
   const o = r[21];
@@ -1016,7 +1019,7 @@ function masLeads() {{
     const flgs = (r[19] || '').split('').map(ch => FLGV[ch] || '').join('');
     return `<tr><td style="white-space:nowrap${{sTip ? ';cursor:help' : ''}}"${{sTip ? ` data-tip="${{sTip}}"` : ''}}><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span> ${{flgs}}</td>
       <td><b>${{esc(r[2])}}</b>${{(curIdx >= 0 && r[0] !== curIdx) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="Este asesor es SEGUIDOR del lead; el owner es ${{esc(D.ase[r[0]])}}.">seguidor · owner: ${{esc(D.ase[r[0]]).slice(0, 16)}}</span>` : ''}}</td><td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
-      <td>${{esc(D.fu[r[5]])}}</td><td>${{esc(D.sts[r[6]])}}</td><td>${{esc(D.cu[r[7]])}}</td><td>${{opCell(r)}}</td><td>${{esc(r[9] || '—')}}</td><td>${{rtT(r[10])}}</td><td style="white-space:nowrap"${{r[17] ? ` data-tip="${{r[17][0]}} intentos salientes en ${{r[17][1]}} día${{r[17][1] > 1 ? 's distintos' : ' (ráfaga única)'}} — ${{[r[17][2] ? r[17][2] + ' WhatsApp' : '', r[17][3] ? r[17][3] + ' llamada(s)' : '', r[17][4] ? r[17][4] + ' email(s)' : '', r[17][5] ? r[17][5] + ' SMS' : ''].filter(Boolean).join(' · ')}}. Del ${{esc(r[17][6])}} al ${{esc(r[17][7])}}."` : ''}}>${{r[17] ? `<b>${{r[17][0]}}</b> · ${{r[17][1]}}d ${{(r[17][2] ? '💬' : '') + (r[17][3] ? '📞' : '') + (r[17][4] ? '✉' : '') + (r[17][5] ? '𝗌' : '')}}` : '—'}}</td><td style="white-space:nowrap"${{r[15] ? ` data-tip="Última nota (${{esc(r[15][0][0])}}${{r[15][0][1] ? ', ' + esc(r[15][0][1]) : ''}}): ${{esc(r[15][0][2])}}"` : ''}}>${{r[14] ? `📞 ${{r[14][0]}} · ✉ ${{r[14][4]}} · 🗒 ${{r[14][7]}} · ☑ ${{r[14][6]}}/${{r[14][5]}}` : '—'}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[11])}}</td></tr>`;
+      <td>${{esc(D.fu[r[5]])}}</td><td>${{esc(D.sts[r[6]])}}</td><td>${{esc(D.cu[r[7]])}}</td><td>${{opCell(r)}}</td><td>${{esc(r[9] || '—')}}</td><td>${{rtT(r[10])}}</td><td style="white-space:nowrap"${{r[17] ? ` data-tip="${{r[17][0]}} intentos salientes en ${{r[17][1]}} día${{r[17][1] > 1 ? 's distintos' : ' (ráfaga única)'}} — ${{[r[17][2] ? r[17][2] + ' WhatsApp' : '', r[17][3] ? r[17][3] + ' llamada(s)' : '', r[17][4] ? r[17][4] + ' email(s)' : '', r[17][5] ? r[17][5] + ' SMS' : ''].filter(Boolean).join(' · ')}}. Del ${{esc(r[17][6])}} al ${{esc(r[17][7])}}."` : ''}}>${{r[17] ? `<b>${{r[17][0]}}</b> · ${{r[17][1]}}d ${{(r[17][2] ? '💬' : '') + (r[17][3] ? '📞' : '') + (r[17][4] ? '✉' : '') + (r[17][5] ? '𝗌' : '')}}` : '—'}}</td><td style="white-space:nowrap"${{r[15] ? ` data-tip="Última nota (${{esc(r[15][0][0])}}${{r[15][0][1] ? ', ' + esc(r[15][0][1]) : ''}}): ${{esc(r[15][0][2])}}"` : ''}}>${{r[14] ? `📞 ${{r[14][0]}} · ✉ ${{r[14][4]}} · 🗒 ${{r[14][7]}} · ☑ ${{r[14][6]}}/${{r[14][5]}}` : '—'}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[11])}}</td><td>${{waBtn((r[4] || '').replace(/[^0-9]/g, ''))}}</td></tr>`;
   }}).join('');
   document.getElementById('leadbox').innerHTML = `
   <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">📋 Leads de ${{esc(CURK.slice(2))}} — ${{esc(LB.label)}} (${{fN(LB.list.length)}})
@@ -1037,6 +1040,7 @@ function masLeads() {{
   <th data-tip="Gestión registrada en este lead: 📞 llamadas salientes · ✉ emails salientes · 🗒 notas · ☑ tareas completadas/creadas. Pasa el mouse sobre la celda para leer la última nota. '—' = sin gestión descargada.">Gestión</th>
   <th data-tip="Las principales acciones que el asesor debe ejecutar para CERRAR LA VENTA con este lead, derivadas de su diagnóstico de score (variables débiles, flags y gestión previa). Máx 3 en orden de prioridad; pasa el mouse sobre cada una para la instrucción completa.">Acciones para cerrar venta</th>
   <th data-tip="Etiquetas (tags) del lead tal como están en el CRM — campañas, eventos, listas e importaciones. El chip +N muestra el resto al pasar el mouse.">Etiquetas</th>
+  <th data-tip="Escribirle directamente por WhatsApp.">WA</th>
   </tr></thead><tbody>${{filas}}</tbody></table></div>` +
   (LB.shown < LB.list.length ? `<button class="btn" style="margin-top:8px" onclick="masLeads()">Mostrar 150 más (${{fN(LB.list.length - LB.shown)}} restantes)</button>` : '');
 }}

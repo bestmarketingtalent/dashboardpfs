@@ -790,6 +790,9 @@ function scDesg(r) {{
     `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
     `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
 }}
+function waBtn(dig) {{
+  return dig ? `<a href="https://wa.me/${{dig}}" target="_blank" style="display:inline-block;background:#25D366;color:#fff;border-radius:8px;padding:4px 9px;white-space:nowrap;font-size:.74rem;font-weight:700;text-decoration:none" data-tip="Escribirle directamente por WhatsApp (abre wa.me con su número).">💬 WhatsApp</a>` : '<span style="color:#B9BDCC">—</span>';
+}}
 // Oportunidad en el pipeline: r[18] = [etapaIdx, estado, fecha último cambio] ó 0 si nunca entró
 function opCell(r) {{
   const o = r[18];
@@ -833,7 +836,7 @@ function renderLeads(d) {{
     return `<tr><td style="white-space:nowrap${{sTip ? ';cursor:help' : ''}}"${{sTip ? ` data-tip="${{sTip}}"` : ''}}><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}</td>
       <td><b>${{esc(r[0])}}</b>${{(aFsel !== '' && r[3] != aFsel && r[15] && r[15].indexOf(+aFsel) !== -1) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="El asesor filtrado es SEGUIDOR de este lead; el owner es ${{esc(D.asesores[r[3]])}} (grupo donde aparece).">seguidor</span>` : ''}}</td><td>${{em}}</td><td>${{ph}}</td>
       <td>${{esc(D.fuentes[r[7]])}}</td><td>${{esc(D.cursos[r[5]])}}</td><td>${{opCell(r)}}</td>
-      <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[14])}}">${{intCell(r[14])}}</td><td data-tip="${{intTip(r[14])}}">${{canCell(r[14])}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[10])}}</td></tr>`;
+      <td>${{esc(D.realtors[r[6]])}}</td><td>${{esc(r[8] || '—')}}</td><td style="white-space:nowrap" data-tip="${{intTip(r[14])}}">${{intCell(r[14])}}</td><td data-tip="${{intTip(r[14])}}">${{canCell(r[14])}}</td><td>${{tareasCell(r)}}</td><td>${{tagsCell(r[10])}}</td><td>${{waBtn((r[2] || '').replace(/[^0-9]/g, ''))}}</td></tr>`;
   }}).join('');
   d.querySelector('[data-holder]').innerHTML =
     `<table><thead><tr>
@@ -850,6 +853,7 @@ function renderLeads(d) {{
      <th data-tip="Medios usados para (re)contactar a este lead: 💬 WhatsApp · 📞 llamada · ✉ email · 𝗌 SMS. Pasa el mouse sobre la celda para el detalle por canal.">Canales</th>
      <th data-tip="Qué es: las principales acciones que el asesor debe ejecutar para CERRAR LA VENTA con este lead, derivadas de su diagnóstico de score (pilares débiles, flags y gestión previa). Máx 3 en orden de prioridad; pasa el mouse sobre cada una para el detalle completo.">Acciones para cerrar venta</th>
      <th data-tip="Qué es: las etiquetas (tags) del contacto tal como están en el CRM — campañas, eventos, listas e importaciones. Se muestran las 2 primeras; el chip +N muestra el resto al pasar el mouse.">Etiquetas</th>
+     <th data-tip="Escribirle directamente por WhatsApp.">WA</th>
      </tr></thead>
      <tbody>${{rows}}</tbody></table>` +
     (shown < ls.length ? `<button class="btn sec more" onclick="moreLeads(this)">Mostrar ${{fmtN(Math.min(PAGE, ls.length - shown))}} más (${{fmtN(ls.length - shown)}} restantes)</button>` : '');

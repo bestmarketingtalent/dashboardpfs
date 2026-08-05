@@ -415,6 +415,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="Intentos de contacto SALIENTES a este lead: total · en cuántos días distintos. Varios intentos con 1d = ráfaga de un solo día sin seguimiento. Cobertura: todos los canales para carteras de asesores humanos; para el resto, solo WhatsApp.">Intentos</th>
 <th data-tip="Medios usados para (re)contactar a este lead: 💬 WhatsApp · 📞 llamada · ✉ email · 𝗌 SMS. Pasa el mouse sobre la celda para el detalle por canal.">Canales</th>
 <th data-tip="Qué es: las etiquetas (tags) del lead tal como están en el CRM — campañas, eventos, listas e importaciones (se muestran hasta 3).">Etiquetas</th>
+<th data-tip="Escribirle directamente por WhatsApp.">WA</th>
 </tr></thead>
 <tbody id="tb-p"></tbody></table></div>
 
@@ -560,8 +561,9 @@ function render() {{
       `<td style="color:var(--gris);font-size:12px">${{esc(p[7])}}</td>` +
       `<td style="white-space:nowrap" data-tip="${{intTip(p[12])}}">${{intCell(p[12])}}</td>` +
       `<td data-tip="${{intTip(p[12])}}">${{canCell(p[12])}}</td>` +
-      `<td style="font-size:11px;color:var(--azul-oscuro)">${{esc(p[11] || '—')}}</td></tr>`;
-  }}).join('') || '<tr><td colspan="12" style="color:var(--gris)">Ningún lead de esta fuente está esperando respuesta. 👏</td></tr>';
+      `<td style="font-size:11px;color:var(--azul-oscuro)">${{esc(p[11] || '—')}}</td>` +
+      `<td>${{p[2] ? `<a href="https://wa.me/${{p[2]}}" target="_blank" style="display:inline-block;background:#25D366;color:#fff;border-radius:8px;padding:4px 9px;white-space:nowrap;font-size:.74rem;font-weight:700;text-decoration:none" data-tip="Escribirle directamente por WhatsApp.">💬 WhatsApp</a>` : '—'}}</td></tr>`;
+  }}).join('') || '<tr><td colspan="13" style="color:var(--gris)">Ningún lead de esta fuente está esperando respuesta. 👏</td></tr>';
 }}
 /* arranque limpio: el navegador restaura valores de formulario entre visitas */
 function arranqueWA() {{

@@ -110,6 +110,30 @@ def dict_indexer():
 DA, giA = dict_indexer()
 DF, giF = dict_indexer()
 
+DOP, giOP = dict_indexer()  # etapa de oportunidad en el pipeline
+try:
+    _OPPS = json.load(open(DATA / 'opps.json'))
+    _STG = {s['id']: s['name'] for p in json.load(open(DATA / 'pipelines.json'))['pipelines'] for s in p['stages']}
+except Exception:
+    _OPPS, _STG = [], {}
+_ST_ES = {'open': 'abierta', 'won': 'ganada', 'lost': 'perdida', 'abandoned': 'abandonada'}
+def _mejor_opp(nuevo, prev):
+    if prev is None: return True
+    no, po = nuevo.get('status') == 'open', prev.get('status') == 'open'
+    if no != po: return no
+    return (nuevo.get('stageChange') or nuevo.get('created') or '') > (prev.get('stageChange') or prev.get('created') or '')
+_OPP_BY = {}
+for _o in _OPPS:
+    for _k in ((_o.get('email') or '').strip().lower(), re.sub(r'\D', '', _o.get('phone') or '')):
+        if _k and _mejor_opp(_o, _OPP_BY.get(_k)): _OPP_BY[_k] = _o
+def opp_row(c):
+    _op = None
+    for _k in ((c.get('email') or '').strip().lower(), re.sub(r'\D', '', c.get('phone') or '')):
+        if _k and _k in _OPP_BY: _op = _OPP_BY[_k]; break
+    return ([giOP(_STG.get(_op['stage'], '(etapa desconocida)')),
+             _ST_ES.get((_op.get('status') or '').lower(), _op.get('status') or ''),
+             (_op.get('stageChange') or _op.get('created') or '')[:10]] if _op else 0)
+
 ROWS = []
 SEG = {k: [] for k in ('r_convo', 'r_declarado', 'r_tenant', 'r_capital',
                        'c_convo', 'c_visa', 'c_capital', 'c_futuro')}
@@ -166,7 +190,10 @@ for c in contacts:
         (c.get('created') or '')[:10],
         pa, pc, ' + '.join(señales_a), ' + '.join(señales_c),
         '/'.join(sorted(set(sub))) or '—',
-        WA_EJ.get(cid, '')
+        WA_EJ.get(cid, ''),
+        (_SC2.get(cid) or {}).get('fl', ''),
+        (_SC2.get(cid) or {}).get('d', []),
+        opp_row(c)
     ])
     if pa >= 20: PA_IDS.add(cid)
     if pc >= 20: PC_IDS.add(cid)
@@ -189,7 +216,7 @@ def fmt(n): return f'{n:,}'.replace(',', '.')
 N = {k: len(v) for k, v in SEG.items()}
 AMBAS = len(PA_IDS & PC_IDS)
 
-PAYLOAD = json.dumps({'rows': ROWS, 'seg': SEG, 'ase': ordered(DA), 'fu': ordered(DF)},
+PAYLOAD = json.dumps({'rows': ROWS, 'seg': SEG, 'ase': ordered(DA), 'fu': ordered(DF), 'opps': ordered(DOP)},
                      ensure_ascii=False)
 
 def card(key, icono, titulo, n, diag, pitch, tip):
@@ -361,6 +388,31 @@ document.addEventListener('mousemove', e => {{
   vtip.style.left = x + 'px'; vtip.style.top = y + 'px';
 }});
 
+function scTip(r, d, fl, sc, st) {{
+  if (!d || d.length !== 4) return '';
+  let e1;
+  if (fl.indexOf('Z') !== -1) e1 = 'dijo que quiere comprar' + (fl.indexOf('M') !== -1 ? ' y habló de monto' : '') + ', PERO pidió aplazar la decisión — por eso este punto se limita a 15';
+  else if (d[0] >= 30) e1 = 'habló de un monto de compra en notas o mensajes';
+  else if (d[0] >= 22) e1 = 'declaró intención de compra o tiene presupuesto diligenciado';
+  else if (d[0] >= 18) e1 = 'tiene horizonte de compra declarado (campo En curso por)';
+  else e1 = 'no ha dicho que quiera comprar: sin monto, sin horizonte y sin presupuesto';
+  const e3 = d[2] >= 16 ? 'responde y conversa activamente (mensajes o llamadas contestadas)'
+           : d[2] >= 8 ? 'sí ha respondido a la gestión al menos una vez'
+           : 'casi no ha respondido a la gestión — sin respuesta solo puede sumar hasta 4';
+  const e4 = d[3] >= 20 ? 'tuvo actividad esta última semana' : d[3] >= 15 ? 'tuvo actividad en el último mes'
+           : d[3] >= 8 ? 'su última actividad fue hace 1 a 3 meses' : d[3] >= 4 ? 'su última actividad fue hace 3 a 6 meses'
+           : 'lleva más de 6 meses sin ninguna actividad';
+  return `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
+}}
+const FLGV = {{M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
+function opCellG(o) {{
+  if (!o) return '<span style="color:#B9BDCC" data-tip="Este lead NO tiene oportunidad creada en el pipeline de ventas: nunca ha entrado al embudo comercial.">—</span>';
+  const col = o[1] === 'abierta' ? '#1D7A46' : o[1] === 'ganada' ? '#0F6E56' : '#A33B3B';
+  return `<span style="white-space:nowrap;cursor:help" data-tip="Tiene OPORTUNIDAD en el pipeline de ventas: etapa «${{esc(D.opps[o[0]])}}» (${{esc(o[1])}}). Último cambio de etapa: ${{esc(o[2] || 'sin fecha')}}."><b>${{esc(D.opps[o[0]])}}</b><small style="display:block;color:${{col}};font-size:.68rem">${{esc(o[1])}} · ${{esc(o[2] || '')}}</small></span>`;
+}}
+function waBtn(dig) {{
+  return dig ? `<a href="https://wa.me/${{dig}}" target="_blank" style="display:inline-block;background:#25D366;color:#fff;border-radius:8px;padding:4px 9px;white-space:nowrap;font-size:.74rem;font-weight:700;text-decoration:none" data-tip="Escribirle directamente por WhatsApp (abre wa.me con su número).">💬 WhatsApp</a>` : '<span style="color:#B9BDCC">—</span>';
+}}
 function renderSeg(seg) {{
   const esR = seg.startsWith('r_');
   const box = document.getElementById('st-' + seg);
@@ -380,9 +432,10 @@ function renderSeg(seg) {{
     <td>${{esc(D.ase[r[3]])}}</td>
     <td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
     <td>${{esc(D.fu[r[4]])}}</td><td>${{esc(r[5])}}</td>
-    <td><span class="sc" style="background:${{scCol(r[6])}}">${{r[6]}}</span></td>
+    <td style="white-space:nowrap${{scTip(r, r[15], r[14] || '', r[6], r[5]) ? ';cursor:help' : ''}}"${{scTip(r, r[15], r[14] || '', r[6], r[5]) ? ` data-tip="${{scTip(r, r[15], r[14] || '', r[6], r[5])}}"` : ''}}><span class="sc" style="background:${{scCol(r[6])}}">${{r[6]}}</span> ${{(r[14] || '').split('').map(ch => FLGV[ch] || '').join('')}}</td>
+    <td>${{opCellG(r[16])}}</td>
     <td>${{esc(r[7] || '—')}}</td>
-    <td style="color:var(--gris);font-size:11.5px">${{esc(r[13] || '')}}</td></tr>`;
+    <td style="color:var(--gris);font-size:11.5px">${{esc(r[13] || '')}}</td><td>${{waBtn(dig)}}</td></tr>`;
   }}).join('');
   box.innerHTML = `<div style="display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap">
     <button class="btn sec" onclick="cerrarSeg('${{seg}}')">✕ Cerrar</button>
@@ -395,9 +448,11 @@ function renderSeg(seg) {{
   <th data-tip="Asesor de VENTAS que lo tiene hoy: coordinar la entrega con él/ella.">Asesor origen</th>
   <th>Email</th><th data-tip="Teléfono con enlace de llamada y WhatsApp.">Teléfono</th>
   <th data-tip="Medio por el que se adquirió.">Fuente</th><th>Lead Status</th>
-  <th data-tip="Lead score de VENTAS (0-100) — referencia de temperatura general.">Score venta</th>
+  <th data-tip="Lead score de VENTAS v2 (0-100) — referencia de temperatura general. PASA EL MOUSE sobre el score para ver POR QUÉ tiene esos puntos. Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score venta</th>
+  <th data-tip="Si el lead tiene OPORTUNIDAD en el pipeline de ventas y en qué etapa está, con su estado y fecha del último cambio. '—' = nunca entró al pipeline.">Etapa de oportunidad</th>
   <th>Creado</th>
   <th data-tip="Frase textual del lead en WhatsApp que disparó la señal (recortada a 120 caracteres).">Lo que dijo</th>
+  <th data-tip="Escribirle directamente por WhatsApp.">WA</th>
   </tr></thead><tbody>${{filas}}</tbody></table></div>` +
   (ST[seg] < idxs.length ? `<button class="btn sec" style="margin-top:6px" onclick="renderSeg('${{seg}}')">Mostrar 100 más (${{fN(idxs.length - ST[seg])}} restantes)</button>` : '');
 }}
