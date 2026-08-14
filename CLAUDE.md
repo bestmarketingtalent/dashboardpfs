@@ -117,7 +117,11 @@ iframe, generado por ghl_reporte_asesores_hub.py), estrategia.html (Estrategia
 comercial: mismo patrón, carga estrategia-plan.html, insights-full.html y
 recuperacion-full.html (plan de recuperación de leads en 6 segmentos con
 playbook y guiones, generado por ghl_reporte_recuperacion.py; sub-pestaña
-?tab=recuperacion), generado por ghl_reporte_estrategia_comercial.py) y
+?tab=recuperacion) y reactivaciones-full.html (informe de REACTIVACIONES:
+leads con etiqueta «reactivo - flujo nutricion» que el flujo de nutrición
+despertó — KPIs, filtros, barras por status/asesor/etapa de oportunidad,
+ficha unificada del lead y recomendaciones; ghl_reporte_reactivaciones.py;
+sub-pestaña ?tab=reactivaciones), generado por ghl_reporte_estrategia_comercial.py) y
 clientes.html (pestaña: Fidelización clientes).
 insights.html, auditoria-whatsapp.html y descartados.html quedaron como
 redirects (a estrategia.html?tab=insights, asesores.html?tab=conversaciones y

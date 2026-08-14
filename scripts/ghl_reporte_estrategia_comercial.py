@@ -66,6 +66,7 @@ iframe{{display:block;width:100%;height:calc(100vh - 208px);min-height:640px;bor
 <button class="subtab on" id="t-ins" data-src="insights-full.html">🧠 Insights y buyer personas</button>
 <button class="subtab" id="t-plan" data-src="estrategia-plan.html">🎯 Plan de acción por segmentos</button>
 <button class="subtab" id="t-rec" data-src="recuperacion-full.html">🚑 Recuperación de leads</button>
+<button class="subtab" id="t-rea" data-src="reactivaciones-full.html">⚡ Reactivaciones</button>
 </div>
 <div class="frwrap"><iframe id="fr" src="insights-full.html" title="Contenido de estrategia comercial"></iframe></div>
 <script>
@@ -97,6 +98,7 @@ const _tab2 = new URLSearchParams(location.search).get('tab');
 if (_tab2 === 'insights') abrir(document.getElementById('t-ins'));
 if (_tab2 === 'plan') abrir(document.getElementById('t-plan'));
 if (_tab2 === 'recuperacion') abrir(document.getElementById('t-rec'));
+if (_tab2 === 'reactivaciones') abrir(document.getElementById('t-rea'));
 </script>
 </body></html>'''
 

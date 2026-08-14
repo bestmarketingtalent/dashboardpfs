@@ -62,7 +62,7 @@ for rep in ['ghl_build_dashboard.py', 'ghl_reporte_contactos.py', 'ghl_reporte_d
             'ghl_reporte_wa.py', 'ghl_reporte_asesores.py', 'ghl_reporte_estrategia.py',
             'ghl_reporte_clientes.py', 'ghl_reporte_insights.py', 'ghl_reporte_adquisicion.py',
             'ghl_reporte_estrategia_comercial.py', 'ghl_reporte_asesores_hub.py', 'ghl_reporte_recuperacion.py',
-            'ghl_reporte_lineas.py']:
+            'ghl_reporte_lineas.py', 'ghl_reporte_reactivaciones.py']:
     run(rep)
 
 # 4b) kits de copy en Word (estáticos, van al staging docs/)
@@ -84,6 +84,7 @@ MAPA = {
     f'lineas-pfs-{HOY}.html':              'lineas.html',
     f'insights-pfs-{HOY}.html':            'insights-full.html',
     f'recuperacion-pfs-{HOY}.html':        'recuperacion-full.html',
+    f'reactivaciones-pfs-{HOY}.html':      'reactivaciones-full.html',
     f'insights-redirect-pfs-{HOY}.html':   'insights.html',
 }
 stage = ROOT / 'netlify-pfs'
