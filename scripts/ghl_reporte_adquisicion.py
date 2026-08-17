@@ -66,6 +66,8 @@ def fuente_of(c):
         return 'LinkedIn Orgánico'
     if sl in ('facebook', 'meta / facebook_mobile_feed', 'paid social', 'fb', 'facebook ads', 'meta ads'):
         return 'Facebook'
+    if ('instagram' in sl or 'tiktok' in sl or 'social media' in sl or 'redes' in sl) and ('organic' in sl or 'orgánic' in sl or 'social media' in sl or 'redes' in sl):
+        return 'Social Media (orgánico)'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl or sl in ('rerefido', 'referral', 'pereonal', 'personall'):
         return 'Referidos / Personal'
     if sl.startswith('prensa'):
@@ -290,8 +292,20 @@ ATTR_COV = {
     'adName':  sum(1 for c in contacts if (c.get('attr') or {}).get('adName')),
 }
 
+# ---------- inversión por medio (scripts/inversiones.json, editable a mano) ----------
+try:
+    INV = json.load(open(Path(__file__).resolve().parent / 'inversiones.json'))
+except Exception:
+    INV = {'moneda': 'USD', 'fuentes': {}, 'categorias': {}}
+# filas que SIEMPRE se muestran en su categoría aunque no tengan leads en la selección
+FIJAS = {'Orgánico digital': ['Sitio Web (SEO / directo)', 'Social Media (orgánico)', 'LinkedIn Orgánico'],
+         'Pauta digital': ['Paid Search', 'Paid LinkedIn', 'Facebook']}
+for _cat, _fs in FIJAS.items():
+    giC(_cat)
+    for _f in _fs: giF(_f)
 PAYLOAD = json.dumps({
     'rows': rows,
+    'inv': INV, 'fijas': {ordered(DC).index(k): [ordered(DF).index(f) for f in v] for k, v in FIJAS.items()},
     'fuentes': ordered(DF), 'paises': ordered(DP), 'status': ordered(DS),
     'cursos': ordered(DK), 'asesores': ordered(DA), 'realtors': ordered(DR),
     'tags': ordered(DT), 'attrs': ordered(DAT), 'cats': ordered(DC),
@@ -444,9 +458,11 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div class="chart-sec">
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
 <p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra: leads y score promedio → <b>tipificación de sus oportunidades en HOT / WARM / COLD</b> (por etapa del pipeline) → MQL y SQL → contactabilidad y tiempo de 1ª atención → % descartados → clientes, conversión y cierres. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
-<div style="overflow-x:auto"><table style="min-width:1600px"><thead><tr>
+<div style="overflow-x:auto"><table style="min-width:1750px"><thead><tr>
 <th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Facebook (Meta) + resto de pago. Orgánico digital: Sitio Web (SEO / directo), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios orgánicos.">Categoría / fuente</th>
+<th data-tip="Inversión en el medio (USD), tomada de scripts/inversiones.json — se diligencia a mano por fuente y/o categoría, con total y/o por mes. Con filtro de fechas suma solo los meses del rango; sin filtro usa el total. '—' = sin dato de inversión.">Inversión</th>
 <th data-tip="Leads adquiridos en la selección (respetan los filtros de arriba, salvo categoría y fuente).">Leads</th>
+<th data-tip="Costo por lead = inversión ÷ leads de la selección. Solo se calcula donde hay inversión registrada.">CPL</th>
 <th data-tip="% del total de la selección.">%</th>
 <th data-tip="Lead scoring v2 promedio (0-100) de los leads de la fila.">Score prom.</th>
 <th data-tip="Oportunidades tipificadas HOT por su etapa en el pipeline: Date to Miami, Asistió Oficina Miami, Tour Miami, Toma Decisión (HOT), Recompra, Pending y Cierre (Elite Club). Entre paréntesis: % de las oportunidades de la fila.">Opp. HOT</th>
@@ -707,6 +723,38 @@ function addTo(a, x, c90, c180) {{
     if (RE_CIERRE.test(et) || o[1] === 'ganada') a.oCierre++;
   }}
 }}
+// ---------- inversión (scripts/inversiones.json) según el filtro de fechas ----------
+function invDe(entry) {{
+  if (!entry) return null;
+  const d1 = document.getElementById('f-d1').value, d2 = document.getElementById('f-d2').value;
+  const meses = entry.meses || {{}};
+  const hayMeses = Object.keys(meses).length > 0;
+  if (!d1 && !d2) {{
+    if (entry.total) return entry.total;
+    if (hayMeses) return Object.values(meses).reduce((t, v) => t + (+v || 0), 0);
+    return null;
+  }}
+  if (!hayMeses) return null;   // hay filtro de fechas pero solo hay un total: no se puede prorratear con certeza
+  const m1 = d1 ? d1.slice(0, 7) : '0000-00', m2 = d2 ? d2.slice(0, 7) : '9999-99';
+  let t = 0, alguno = false;
+  Object.entries(meses).forEach(([m, v]) => {{ if (m >= m1 && m <= m2) {{ t += (+v || 0); alguno = true; }} }});
+  return alguno ? t : null;
+}}
+const invFuente = nombre => invDe((D.inv.fuentes || {{}})[nombre]);
+const invCat = (ci, porFu) => {{
+  // categoría = inversión propia + suma de la inversión de sus fuentes
+  let t = invDe((D.inv.categorias || {{}})[D.cats[ci]]), alguno = t !== null;
+  [...porFu.keys()].filter(k => k.startsWith(ci + ':')).forEach(k => {{
+    const v = invFuente(D.fuentes[+k.split(':')[1]]);
+    if (v !== null) {{ t = (t || 0) + v; alguno = true; }}
+  }});
+  // fuentes fijas sin leads en la selección también pueden tener inversión
+  (D.fijas[ci] || []).forEach(fi => {{ if (!porFu.has(ci + ':' + fi)) {{ const v = invFuente(D.fuentes[fi]); if (v !== null) {{ t = (t || 0) + v; alguno = true; }} }} }});
+  return alguno ? t : null;
+}};
+const MON = D.inv.moneda || 'USD';
+const money = v => v === null ? '<span style="color:#B9BDCC">—</span>' : `<b>${{MON === 'USD' ? 'US$' : MON + ' '}}${{Math.round(v).toLocaleString('es-CO')}}</b>`;
+const cplTxt = (v, n) => v === null ? '<span style="color:#B9BDCC">—</span>' : n ? `<b>US$${{(v / n).toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}</b>` : '<span style="color:var(--rojo)" data-tip="Hay inversión pero 0 leads en la selección">sin leads</span>';
 function renderFuentes() {{
   const base = filtro(['c', 'f']);
   const hoy = Date.now();
@@ -720,6 +768,7 @@ function renderFuentes() {{
     if (!porFu.has(k)) porFu.set(k, mkAgg());
     addTo(porFu.get(k), x, c90, c180);
   }});
+  Object.keys(D.fijas).forEach(ci => {{ if (!porCat.has(+ci)) porCat.set(+ci, mkAgg()); }});
   const pcc = (v, n) => n ? (v / n * 100).toFixed(1).replace('.', ',') + '%' : '—';
   const momTxt = a => {{
     if (a.p90 >= 5 || a.d90 >= 5) {{
@@ -731,8 +780,9 @@ function renderFuentes() {{
     return (!a.d90 && !a.p90) ? '<span style="color:var(--gris)">sin llegada</span>' : '<span style="color:var(--gris)">estable</span>';
   }};
   const oPct = (v, a) => a.opp ? ` <small style="color:var(--gris)">(${{(v / a.opp * 100).toFixed(0)}}%)</small>` : '';
-  const celdas = a => `
-    <td><b>${{fmtN(a.n)}}</b></td><td>${{pcc(a.n, base.length)}}</td>
+  const celdas = (a, inv) => `
+    <td style="white-space:nowrap">${{money(inv)}}</td>
+    <td><b>${{fmtN(a.n)}}</b></td><td style="white-space:nowrap">${{cplTxt(inv, a.n)}}</td><td>${{pcc(a.n, base.length)}}</td>
     <td><b>${{a.n ? (a.sum / a.n).toFixed(1).replace('.', ',') : '—'}}</b></td>
     <td style="white-space:nowrap;color:var(--rojo);font-weight:700">${{fmtN(a.oHot)}}${{oPct(a.oHot, a)}}</td>
     <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{fmtN(a.oWarm)}}${{oPct(a.oWarm, a)}}</td>
@@ -750,14 +800,17 @@ function renderFuentes() {{
   [...porCat.entries()].sort((x, y) => y[1].n - x[1].n).forEach(([ci, a]) => {{
     const abierto = EXP.has(ci);
     out += `<tr class="clkd" data-cat="${{ci}}" style="background:var(--gris-fondo)" data-tip="${{esc(D.cats[ci])}}: ${{fmtN(a.n)}} leads en ${{[...porFu.keys()].filter(k => k.startsWith(ci + ':')).length}} fuentes. Clic para ${{abierto ? 'colapsar' : 'expandir'}} sus fuentes.">
-      <td style="white-space:nowrap"><b>${{abierto ? '▾' : '▸'}} ${{esc(D.cats[ci])}}</b></td>${{celdas(a)}}</tr>`;
+      <td style="white-space:nowrap"><b>${{abierto ? '▾' : '▸'}} ${{esc(D.cats[ci])}}</b></td>${{celdas(a, invCat(ci, porFu))}}</tr>`;
     if (abierto) {{
       const fus = [...porFu.entries()].filter(([k]) => k.startsWith(ci + ':'))
         .map(([k, a2]) => [+k.split(':')[1], a2]).sort((x, y) => y[1].n - x[1].n);
       // TODAS las fuentes de la categoría, sin agrupar en "Otras": auditoría completa de qué contiene cada categoría
+      // + filas FIJAS (SEO, Social Media, LinkedIn Orgánico, Paid Search, Paid LinkedIn, Facebook) aunque tengan 0 leads
+      (D.fijas[ci] || []).forEach(fi => {{ if (!fus.some(([f2]) => f2 === fi)) fus.push([fi, mkAgg()]); }});
+      fus.sort((x, y) => y[1].n - x[1].n);
       fus.forEach(([fi, a2]) => {{
         out += `<tr class="clkd" data-f="${{fi}}" data-tip="${{esc(D.fuentes[fi])}}: ${{fmtN(a2.n)}} leads. Clic para filtrar por esta fuente y ver sus leads abajo.">
-          <td style="white-space:nowrap;padding-left:28px" title="${{esc(D.fuentes[fi])}}">${{esc(D.fuentes[fi]).slice(0, 44)}}</td>${{celdas(a2)}}</tr>`;
+          <td style="white-space:nowrap;padding-left:28px${{a2.n ? '' : ';color:var(--gris)'}}" title="${{esc(D.fuentes[fi])}}">${{esc(D.fuentes[fi]).slice(0, 44)}}</td>${{celdas(a2, invFuente(D.fuentes[fi]))}}</tr>`;
       }});
     }}
   }});
