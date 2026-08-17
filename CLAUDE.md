@@ -102,7 +102,7 @@ borrar nada en GHL salvo instrucción explícita del usuario.
 17. `actualizar_diario.py` — ORQUESTADOR de la actualización completa: fetches
     incrementales (poda WA + gestión --refresh 3) → snapshot → dashboard gerencial
     + 7 reportes → staging estable `netlify-pfs/` (en la raíz del proyecto) → zip
-    `~/Desktop/netlify-pfs-AAAA-MM-DD.zip`. `--sin-fetch` = solo reportes + zip.
+    `~/Desktop/netlify-pfs-AAAA-MM-DD_HH-MM.zip` (con hora: el más reciente es el que se sube). `--sin-fetch` = solo reportes + zip.
 18. `ghl_reporte_adquisicion.py` — genera `adquisicion-pfs-AAAA-MM-DD.html`:
     análisis de adquisición por medio — KPIs, tortas por fuente y país, llegada
     mensual apilada, tabla maestra de calidad por fuente (volumen, momentum 90d,
@@ -150,12 +150,13 @@ desglose (owner+seguidor).
 `ghl_score_v2.py` (corre en el orquestador antes del snapshot) calcula el score
 0-100 con TODA la evidencia del CRM y escribe `scripts/data/score_v2.json`
 ({cid: {s, d:[intención, etapa, reciprocidad, recencia], fl}}). Pilares:
-① INTENCIÓN 0-35 (horizonte declarado / monto en notas-mensajes 30 / compra
+① INTENCIÓN 0-35 (propiedad ESPECÍFICA citada por el lead — nº MLS o "me interesa
+esta propiedad" — = 35, la señal más fuerte / horizonte declarado / monto en notas-mensajes 30 / compra
 declarada 20 / presupuesto 22; APLAZAMIENTO reciente ≤120d lo congela a 15);
 ② ETAPA 0-25 (lead status); ③ RECIPROCIDAD 0-20 (eco del lead: WA entrantes,
 llamadas contestadas o notas de respuesta; gestión sin respuesta máx 4);
 ④ RECENCIA REAL 0-20 (mejor fecha entre lastActivity, notas, tareas, intentos y
-conversaciones — los campos lastActivity suelen estar rotos). Flags: 💰M monto ·
+conversaciones — los campos lastActivity suelen estar rotos). Flags: 🏠P propiedad específica (MLS) · 💰M monto ·
 🛒C compra · ✋R respondió · ⏸Z aplazado (chips en el drill-down del home).
 Las citas de mensajes SALIENTES pegadas en notas ("PFS REALTY LLC: …") se
 recortan antes de buscar evidencia (el pitch del asesor no es declaración del

@@ -339,13 +339,13 @@ TIPS = {
 def _tip(s, n):
     return (f'{TIPS.get(s, "")} Cómo se calcula: cuenta los {fmt(n)} contactos cuyo campo '
             f'“Lead Status” del CRM es “{s}”. Clic: filtra la tabla y los muestra clasificados por asesor.')
-FORMULA = ('El score v2 (0-100) suma 4 pilares con TODA la evidencia del CRM: ① INTENCIÓN hasta 35 pts — horizonte '
-           'declarado (En curso por), monto de compra detectado en notas/conversaciones (30), compra declarada en texto (20) '
+FORMULA = ('El score v2 (0-100) suma 4 pilares con TODA la evidencia del CRM: ① INTENCIÓN hasta 35 pts — propiedad ESPECÍFICA citada por el lead '
+           '(nº MLS o "me interesa esta propiedad" = 35: ya eligió qué quiere), horizonte declarado (En curso por), monto de compra detectado en notas/conversaciones (30), compra declarada en texto (20) '
            'o presupuesto diligenciado (22); un aplazamiento reciente ("retomar en octubre…") la congela a máx 15 · '
            '② ETAPA hasta 25 pts (Lead Status: Negocio abierto=25, En curso=15…) · ③ RECIPROCIDAD hasta 20 pts — cuenta el eco '
            'del lead (respondió +8, nº de mensajes entrantes hasta +8, diálogo real +4); gestión sin respuesta vale máx 4 · '
            '④ RECENCIA REAL hasta 20 pts — la fecha más reciente entre actividad, notas, tareas, intentos y conversaciones '
-           '(≤7 días=20, ≤30=15, ≤90=8, ≤180=4). Flags: 💰 monto · 🛒 compra declarada · ✋ respondió · ⏸ aplazado.')
+           '(≤7 días=20, ≤30=15, ≤90=8, ≤180=4). Flags: 🏠 propiedad específica · 💰 monto · 🛒 compra declarada · ✋ respondió · ⏸ aplazado.')
 hot_tip = (f'CALIENTE = score ≥ 55. {FORMULA} Para superar 55 el lead necesita combinar al menos dos señales fuertes: '
            'oportunidad vigente + estado activo + interacción reciente. Son los más cercanos a la venta. '
            'Clic: filtra la tabla y muestra de cada lead su asesor, etapa y “En curso por”.')
@@ -780,6 +780,7 @@ function scDesg(r) {{
   const st = D.status[r[4]] || '(sin status)';
   let e1;
   if (fl.indexOf('Z') !== -1) e1 = 'dijo que quiere comprar' + (fl.indexOf('M') !== -1 ? ' y habló de monto' : '') + ', PERO pidió aplazar la decisión — por eso este punto se limita a 15';
+  else if (fl.indexOf('P') !== -1) e1 = 'citó una PROPIEDAD ESPECÍFICA (número MLS o "me interesa esta propiedad"): ya eligió qué quiere — intención máxima';
   else if (d[0] >= 30) e1 = 'habló de un monto de compra en notas o mensajes';
   else if (d[0] >= 22) e1 = 'declaró intención de compra o tiene presupuesto diligenciado';
   else if (d[0] >= 18) e1 = 'tiene horizonte de compra declarado (campo En curso por)';
@@ -814,6 +815,7 @@ function tareasDe(r) {{
   const d = r[17] || [0, 0, 0, 0], fl = r[16] || '', sc = r[9], t = [];
   const intTot = (r[14] && r[14][0]) || 0;
   if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
+  if (fl.indexOf('P') !== -1) t.push(['🏠', 'Responder YA sobre la propiedad que pidió', 'El lead citó una propiedad concreta (MLS): responder en menos de 1 hora con precio, disponibilidad y ficha de ESA propiedad + 1-2 alternativas similares, y proponer visita o videollamada de inmediato. Es el lead de mayor intención que existe.']);
   if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);
   else if (fl.indexOf('C') !== -1) t.push(['🎯', 'Confirmar presupuesto y forma de pago', 'Ya declaró interés de compra: confirmar presupuesto y forma de pago (cash o crédito) con una pregunta directa.']);
   if (d[2] <= 4) t.push(intTot >= 6
@@ -838,7 +840,7 @@ function renderLeads(d) {{
   const rows = ls.slice(0, shown).map(r => {{
     const em = r[1] ? `<a href="mailto:${{esc(r[1])}}">${{esc(r[1])}}</a>` : '—';
     const ph = r[2] ? `<a href="tel:${{esc(r[2])}}">${{esc(r[2])}}</a> · <a href="https://wa.me/${{esc(r[2].replace(/[^0-9]/g, ''))}}" target="_blank">WA</a>` : '—';
-    const FLG = {{M: ['💰', 'Monto de compra detectado en notas o mensajes del lead.'], C: ['🛒', 'Declaración de compra/inversión detectada en notas o conversaciones.'], R: ['✋', 'El lead HA RESPONDIDO (mensaje entrante, llamada contestada o respuesta registrada en notas).'], Z: ['⏸', 'Aplazamiento reciente detectado en notas ("retomar en…", "más adelante") — la intención está congelada.']}};
+    const FLG = {{P: ['🏠', 'PROPIEDAD ESPECÍFICA: el lead citó un número MLS o pidió información de "esta propiedad" — ya eligió qué quiere comprar o arrendar (intención máxima).'], M: ['💰', 'Monto de compra detectado en notas o mensajes del lead.'], C: ['🛒', 'Declaración de compra/inversión detectada en notas o conversaciones.'], R: ['✋', 'El lead HA RESPONDIDO (mensaje entrante, llamada contestada o respuesta registrada en notas).'], Z: ['⏸', 'Aplazamiento reciente detectado en notas ("retomar en…", "más adelante") — la intención está congelada.']}};
     const flg = (r[16] || '').split('').map(ch => FLG[ch] ? `<span data-tip="${{FLG[ch][1]}}" style="cursor:help">${{FLG[ch][0]}}</span>` : '').join('');
     const sTip = scDesg(r);
     return `<tr><td style="white-space:nowrap${{sTip ? ';cursor:help' : ''}}"${{sTip ? ` data-tip="${{sTip}}"` : ''}}><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}</td>
@@ -848,7 +850,7 @@ function renderLeads(d) {{
   }}).join('');
   d.querySelector('[data-holder]').innerHTML =
     `<table><thead><tr>
-     <th data-tip="Qué es: lead scoring v2 0-100 y su temperatura. PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Cómo se calcula: ① Intención 0-35 (horizonte declarado, monto o compra detectados en notas y mensajes; un aplazamiento reciente la congela a 15) + ② Etapa 0-25 (lead status) + ③ Reciprocidad 0-20 (cuánto responde EL LEAD) + ④ Recencia real 0-20 (última actividad en notas, tareas, intentos o conversaciones). Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado. Caliente ≥55, Tibio 30-54, Frío 10-29.">Score</th>
+     <th data-tip="Qué es: lead scoring v2 0-100 y su temperatura. PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Cómo se calcula: ① Intención 0-35 (horizonte declarado, monto o compra detectados en notas y mensajes; un aplazamiento reciente la congela a 15) + ② Etapa 0-25 (lead status) + ③ Reciprocidad 0-20 (cuánto responde EL LEAD) + ④ Recencia real 0-20 (última actividad en notas, tareas, intentos o conversaciones). Flags: 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado. Caliente ≥55, Tibio 30-54, Frío 10-29.">Score</th>
      <th data-tip="Qué es: el nombre del contacto tal como está registrado en el CRM.">Contacto</th>
      <th data-tip="Qué es: el correo del contacto en el CRM; el enlace abre tu cliente de correo.">Email</th>
      <th data-tip="Qué es: el teléfono del contacto; 'WA' abre el chat de WhatsApp (wa.me + número).">Teléfono</th>

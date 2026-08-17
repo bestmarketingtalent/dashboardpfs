@@ -9,7 +9,8 @@ declaraciones de compra/monto. Escribe scripts/data/score_v2.json:
 Los reportes lo consumen con prioridad y caen a la fórmula clásica si no existe.
 
 Pilares (misma escala 0-100 de siempre):
- ① INTENCIÓN 0-35 : máx entre horizonte declarado (En curso por: 35/28/18),
+ ① INTENCIÓN 0-35 : máx entre propiedad específica citada por el lead (nº MLS o
+     "me interesa esta propiedad" = 35, ya eligió qué quiere), horizonte declarado (En curso por: 35/28/18),
      monto de compra detectado en notas/mensajes (30), compra declarada en
      texto (20) o presupuesto diligenciado (22). Si hay APLAZAMIENTO reciente
      ("retomar en octubre", "más adelante"…) se congela a máx 15.
@@ -22,7 +23,7 @@ Pilares (misma escala 0-100 de siempre):
  ④ RECENCIA REAL 0-20 : la fecha más reciente entre lastActivity/Engagement,
      última nota, última tarea, último intento de contacto y última
      conversación en cualquier canal (≤7d=20, ≤30=15, ≤90=8, ≤180=4).
-Flags: 💰 monto declarado · 🛒 compra declarada · ✋ respondió · ⏸ aplazado."""
+Flags: 🏠 propiedad específica (MLS) · 💰 monto declarado · 🛒 compra declarada · ✋ respondió · ⏸ aplazado."""
 import json, re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -61,6 +62,10 @@ RE_MONTO = re.compile(
 RE_COMPRA = re.compile(
     r'\b(comprar|compra de|invertir|inversi[oó]n en|proforma|apartar|separar|reservar|escritur|cerrar el negocio|firmar|cita (virtual|presencial|de asesor))',
     re.I)
+# PROPIEDAD ESPECÍFICA: el lead cita un número MLS (o pide info de "esta propiedad" con
+# dirección) — ya eligió qué quiere comprar o arrendar: la intención más concreta posible.
+RE_MLS = re.compile(r'\bMLS\s*[:#]?\s*([A-Z]{1,2}\d{6,9})\b|\b([AR]\d{8})\b', re.I)
+RE_PROP = re.compile(r'me interesa esta propiedad|interesad[oa] en esta propiedad|informaci[oó]n (de|sobre) (esta|la) propiedad', re.I)
 RE_RESP = re.compile(r'\b(responde|contesta|respondi[oó]|contest[oó]|me dice|dice que|confirma)\b', re.I)
 RE_NORESP = re.compile(r'\bno (responde|contesta|contest[oó]|respondi[oó])\b', re.I)
 RE_APLAZA = re.compile(
@@ -128,10 +133,15 @@ for c in contacts:
         if d is not None and d <= 120 and RE_APLAZA.search(sin_citas_out(n[2])):
             aplazado = True; break
 
+    # propiedad específica: MLS citado por el lead (mensaje entrante) o en nota del asesor,
+    # o el lead pidió info de "esta propiedad" (formulario de ficha de inmueble)
+    prop = bool(RE_MLS.search(todo_txt)) or bool(RE_PROP.search(txt_lead))
+
     # ① INTENCIÓN
     p1 = CURSO_PTS.get((c.get('enCursoPor') or '').strip(), 0)
     evid = 0
-    if RE_MONTO.search(todo_txt): evid = 30
+    if prop: evid = 35                       # eligió la propiedad: intención máxima
+    elif RE_MONTO.search(todo_txt): evid = 30
     elif compra: evid = 20
     if presu_ok: evid = max(evid, 22)
     p1 = max(p1, evid)
@@ -171,6 +181,7 @@ for c in contacts:
 
     s = min(100, p1 + p2 + p3 + p4)
     fl = ''
+    if prop: fl += 'P'; stats['prop'] = stats.get('prop', 0) + 1
     if RE_MONTO.search(todo_txt): fl += 'M'; stats['monto'] += 1
     if compra: fl += 'C'; stats['compra'] += 1
     if respondio: fl += 'R'; stats['resp'] += 1
@@ -181,4 +192,4 @@ json.dump(OUT, open(DATA / 'score_v2.json', 'w'))
 scs = [v['s'] for v in OUT.values()]
 print(f"score_v2: {len(OUT)} leads | prom {sum(scs)/len(scs):.1f} | "
       f"calientes(≥55) {sum(1 for s in scs if s >= 55)} | tibios(30-54) {sum(1 for s in scs if 30 <= s < 55)}")
-print(f"flags: monto {stats['monto']} | compra declarada {stats['compra']} | respondieron {stats['resp']} | aplazados {stats['aplazado']}")
+print(f"flags: propiedad/MLS {stats.get('prop', 0)} | monto {stats['monto']} | compra declarada {stats['compra']} | respondieron {stats['resp']} | aplazados {stats['aplazado']}")

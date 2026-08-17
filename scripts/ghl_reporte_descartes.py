@@ -580,6 +580,7 @@ function scTip(r, d, fl, sc, st) {{
   if (!d || d.length !== 4) return '';
   let e1;
   if (fl.indexOf('Z') !== -1) e1 = 'dijo que quiere comprar' + (fl.indexOf('M') !== -1 ? ' y habló de monto' : '') + ', PERO pidió aplazar la decisión — por eso este punto se limita a 15';
+  else if (fl.indexOf('P') !== -1) e1 = 'citó una PROPIEDAD ESPECÍFICA (número MLS o "me interesa esta propiedad"): ya eligió qué quiere — intención máxima';
   else if (d[0] >= 30) e1 = 'habló de un monto de compra en notas o mensajes';
   else if (d[0] >= 22) e1 = 'declaró intención de compra o tiene presupuesto diligenciado';
   else if (d[0] >= 18) e1 = 'tiene horizonte de compra declarado (campo En curso por)';
@@ -592,7 +593,7 @@ function scTip(r, d, fl, sc, st) {{
            : 'lleva más de 6 meses sin ninguna actividad';
   return `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
 }}
-const FLGV = {{M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
+const FLGV = {{P: '🏠', M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
 function opCellG(o) {{
   if (!o) return '<span style="color:#B9BDCC" data-tip="Este lead NO tiene oportunidad creada en el pipeline de ventas: nunca ha entrado al embudo comercial.">—</span>';
   const col = o[1] === 'abierta' ? '#1D7A46' : o[1] === 'ganada' ? '#0F6E56' : '#A33B3B';
@@ -601,6 +602,7 @@ function opCellG(o) {{
 function tareasG(d, fl, sc, intTot) {{
   d = d && d.length === 4 ? d : [0, 0, 0, 0]; fl = fl || ''; const t = [];
   if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
+  if (fl.indexOf('P') !== -1) t.push(['🏠', 'Responder YA sobre la propiedad que pidió', 'El lead citó una propiedad concreta (MLS): responder en menos de 1 hora con precio, disponibilidad y ficha de ESA propiedad + 1-2 alternativas similares, y proponer visita o videollamada de inmediato. Es el lead de mayor intención que existe.']);
   if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);
   else if (fl.indexOf('C') !== -1) t.push(['🎯', 'Confirmar presupuesto y forma de pago', 'Ya declaró interés de compra: confirmar presupuesto y forma de pago (cash o crédito) con una pregunta directa.']);
   if (d[2] <= 4) t.push(intTot >= 6
@@ -639,7 +641,7 @@ function renderTabla() {{
   }}).join('');
   document.getElementById('ltab').innerHTML =
     `<table style="min-width:1150px"><thead><tr>
-     <th data-tip="Lead scoring v2 0-100 (misma fórmula del home). PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos. En descartados, un score alto = señal viva pese al descarte: candidato a rescate. Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
+     <th data-tip="Lead scoring v2 0-100 (misma fórmula del home). PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos. En descartados, un score alto = señal viva pese al descarte: candidato a rescate. Flags: 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
      <th data-tip="Nombre del contacto tal como está en el CRM.">Contacto</th>
      <th data-tip="Campo 'Motivo de descarte' del CRM. '(Sin motivo registrado)' = descarte sin explicación.">Motivo de descarte</th>
      <th data-tip="Usuario asignado al lead: quien lo descartó o lo tenía al descartarse. MARKETING PFS = automatización.">Quién lo descartó</th>

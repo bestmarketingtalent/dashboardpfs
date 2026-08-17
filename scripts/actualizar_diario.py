@@ -94,7 +94,7 @@ for src, dst in MAPA.items():
         raise SystemExit(f'FALTA el reporte {src}')
     shutil.copy(ROOT / src, stage / dst)
 
-zip_path = Path.home() / 'Desktop' / f'netlify-pfs-{HOY}.zip'
+zip_path = Path.home() / 'Desktop' / f'netlify-pfs-{HOY}_{datetime.now():%H-%M}.zip'   # con hora: siempre se sabe cuál es el último
 with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as z:
     for dst in MAPA.values():
         z.write(stage / dst, dst)

@@ -951,6 +951,7 @@ function scDesg(r) {{
   const st = D.sts[r[6]] || '(sin status)';
   let e1;
   if (fl.indexOf('Z') !== -1) e1 = 'dijo que quiere comprar' + (fl.indexOf('M') !== -1 ? ' y habló de monto' : '') + ', PERO pidió aplazar la decisión — por eso este punto se limita a 15';
+  else if (fl.indexOf('P') !== -1) e1 = 'citó una PROPIEDAD ESPECÍFICA (número MLS o "me interesa esta propiedad"): ya eligió qué quiere — intención máxima';
   else if (d[0] >= 30) e1 = 'habló de un monto de compra en notas o mensajes';
   else if (d[0] >= 22) e1 = 'declaró intención de compra o tiene presupuesto diligenciado';
   else if (d[0] >= 18) e1 = 'tiene horizonte de compra declarado (campo En curso por)';
@@ -985,6 +986,7 @@ function tareasDe(r) {{
   const d = r[20] || [0, 0, 0, 0], fl = r[19] || '', sc = r[8], t = [];
   const intTot = (r[17] && r[17][0]) || 0;
   if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
+  if (fl.indexOf('P') !== -1) t.push(['🏠', 'Responder YA sobre la propiedad que pidió', 'El lead citó una propiedad concreta (MLS): responder en menos de 1 hora con precio, disponibilidad y ficha de ESA propiedad + 1-2 alternativas similares, y proponer visita o videollamada de inmediato. Es el lead de mayor intención que existe.']);
   if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);
   else if (fl.indexOf('C') !== -1) t.push(['🎯', 'Confirmar presupuesto y forma de pago', 'Ya declaró interés de compra: confirmar presupuesto y forma de pago (cash o crédito) con una pregunta directa.']);
   if (d[2] <= 4) t.push(intTot >= 6
@@ -1015,7 +1017,7 @@ function masLeads() {{
     const dig = r[4].replace(/[^0-9]/g, '');
     const ph = r[4] ? `<a href="tel:${{esc(r[4])}}">${{esc(r[4])}}</a>${{dig ? ' · <a href="https://wa.me/' + dig + '" target="_blank">WA</a>' : ''}}` : '—';
     const sTip = scDesg(r);
-    const FLGV = {{M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
+    const FLGV = {{P: '🏠', M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
     const flgs = (r[19] || '').split('').map(ch => FLGV[ch] || '').join('');
     return `<tr><td style="white-space:nowrap${{sTip ? ';cursor:help' : ''}}"${{sTip ? ` data-tip="${{sTip}}"` : ''}}><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span> ${{flgs}}</td>
       <td><b>${{esc(r[2])}}</b>${{(curIdx >= 0 && r[0] !== curIdx) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="Este asesor es SEGUIDOR del lead; el owner es ${{esc(D.ase[r[0]])}}.">seguidor · owner: ${{esc(D.ase[r[0]]).slice(0, 16)}}</span>` : ''}}</td><td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
@@ -1026,7 +1028,7 @@ function masLeads() {{
   <button class="btn" onclick="document.getElementById('leadbox').innerHTML=''">✕ Cerrar</button></h3>
   <div style="border:1px solid var(--gris-linea);border-radius:12px;overflow:auto;max-height:62vh">
   <table style="margin:0"><thead><tr>
-  <th data-tip="Lead scoring v2 0-100 (misma fórmula del reporte de contactos). PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Flags: 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
+  <th data-tip="Lead scoring v2 0-100 (misma fórmula del reporte de contactos). PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Flags: 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
   <th data-tip="Nombre del contacto en el CRM.">Contacto</th>
   <th data-tip="Email del lead registrado en el CRM.">Email</th>
   <th data-tip="Teléfono del lead; 'WA' abre su chat de WhatsApp.">Teléfono</th>
