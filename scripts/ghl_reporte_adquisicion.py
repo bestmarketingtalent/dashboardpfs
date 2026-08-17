@@ -65,7 +65,7 @@ def fuente_of(c):
         # todo lo demás de LinkedIn (organico explícito, formularios orgánicos, "LinkedIn" a secas) = orgánico
         return 'LinkedIn Orgánico'
     if sl in ('facebook', 'meta / facebook_mobile_feed', 'paid social', 'fb', 'facebook ads', 'meta ads'):
-        return 'Facebook'
+        return 'Paid Social'
     if ('instagram' in sl or 'tiktok' in sl or 'social media' in sl or 'redes' in sl) and ('organic' in sl or 'orgánic' in sl or 'social media' in sl or 'redes' in sl):
         return 'Social Media (orgánico)'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl or sl in ('rerefido', 'referral', 'pereonal', 'personall'):
@@ -79,7 +79,7 @@ def fuente_of(c):
         ss = (a.get('sessionSource') or '').lower(); md = (a.get('medium') or '').lower()
         if 'organic search' in ss: return 'SEO (búsqueda orgánica)'
         if 'paid search' in ss: return 'Paid Search'
-        if 'paid social' in ss: return 'Facebook'
+        if 'paid social' in ss: return 'Paid Social'
         if 'social' in ss: return 'Social Media (orgánico)'
         if 'direct' in ss: return 'Sitio Web (directo)'
         if 'referral' in ss: return 'Referidos / Personal'
@@ -310,7 +310,7 @@ except Exception:
     INV = {'moneda': 'USD', 'fuentes': {}, 'categorias': {}}
 # filas que SIEMPRE se muestran en su categoría aunque no tengan leads en la selección
 FIJAS = {'Orgánico digital': ['SEO (búsqueda orgánica)', 'Sitio Web (directo)', 'Social Media (orgánico)', 'LinkedIn Orgánico'],
-         'Pauta digital': ['Paid Search', 'Paid LinkedIn', 'Facebook']}
+         'Pauta digital': ['Paid Search', 'Paid LinkedIn', 'Paid Social']}
 for _cat, _fs in FIJAS.items():
     giC(_cat)
     for _f in _fs: giF(_f)
@@ -470,7 +470,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
 <p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra: leads y score promedio → <b>tipificación de sus oportunidades en HOT / WARM / COLD</b> (por etapa del pipeline) → MQL y SQL → contactabilidad y tiempo de 1ª atención → % descartados → clientes, conversión y cierres. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
 <div style="overflow-x:auto"><table style="min-width:1750px"><thead><tr>
-<th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Facebook (Meta) + resto de pago. Orgánico digital: SEO (búsqueda orgánica), Sitio Web (directo), Social Media (orgánico), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios. Los leads con fuente 'web site' se reclasifican por el registro de atribución de GHL (sessionSource): Organic Search→SEO, Direct→Sitio Web directo, Social→Social Media, Paid Social→Facebook, CRM/CSV→Importaciones; sin atribución quedan como 'Sitio Web (sin atribución)'.">Categoría / fuente</th>
+<th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Paid Social (Facebook / Instagram / Meta) + resto de pago. Orgánico digital: SEO (búsqueda orgánica), Sitio Web (directo), Social Media (orgánico), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios. Los leads con fuente 'web site' se reclasifican por el registro de atribución de GHL (sessionSource): Organic Search→SEO, Direct→Sitio Web directo, Social→Social Media, Paid Social→Paid Social, CRM/CSV→Importaciones; sin atribución quedan como 'Sitio Web (sin atribución)'.">Categoría / fuente</th>
 <th data-tip="Inversión en el medio (USD), tomada de scripts/inversiones.json — se diligencia a mano por fuente y/o categoría, con total y/o por mes. Con filtro de fechas suma solo los meses del rango; sin filtro usa el total. '—' = sin dato de inversión.">Inversión</th>
 <th data-tip="Leads adquiridos en la selección (respetan los filtros de arriba, salvo categoría y fuente).">Leads</th>
 <th data-tip="Costo por lead = inversión ÷ leads de la selección. Solo se calcula donde hay inversión registrada.">CPL</th>

@@ -2,15 +2,39 @@
   "_ayuda": "Inversión en medios por FUENTE (nombre exacto de la familia como aparece en la tabla maestra de Adquisición) y por CATEGORÍA (para lo que no baja a fuente). Valores en USD. Puedes poner un total acumulado ('total') y/o por mes ('meses': {'2026-08': 1200, ...}). El reporte suma los meses que caen dentro del filtro de fechas; sin filtro de fechas usa 'total' si existe, o la suma de todos los meses. CPL = inversión ÷ leads de la selección. Deja en 0 o borra la fuente para que aparezca '—'.",
   "moneda": "USD",
   "fuentes": {
-    "Paid Search":   {"total": 0, "meses": {}},
-    "Facebook":      {"total": 0, "meses": {}},
-    "Paid LinkedIn": {"total": 0, "meses": {}},
-    "Instagram":     {"total": 0, "meses": {}},
-    "Prensa":        {"total": 0, "meses": {}},
-    "Email":         {"total": 0, "meses": {}}
+    "Paid Search": {
+      "total": 0,
+      "meses": {}
+    },
+    "Paid LinkedIn": {
+      "total": 0,
+      "meses": {}
+    },
+    "Instagram": {
+      "total": 0,
+      "meses": {}
+    },
+    "Prensa": {
+      "total": 0,
+      "meses": {}
+    },
+    "Email": {
+      "total": 0,
+      "meses": {}
+    },
+    "Paid Social": {
+      "total": 0,
+      "meses": {}
+    }
   },
   "categorias": {
-    "Eventos":              {"total": 0, "meses": {}},
-    "Otros medios":         {"total": 0, "meses": {}}
+    "Eventos": {
+      "total": 0,
+      "meses": {}
+    },
+    "Otros medios": {
+      "total": 0,
+      "meses": {}
+    }
   }
 }
