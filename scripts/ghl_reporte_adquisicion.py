@@ -458,6 +458,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div style="overflow-x:auto"><table style="min-width:2250px"><thead><tr>
 <th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Paid Social (Facebook / Instagram / Meta) + resto de pago. Orgánico digital: SEO (búsqueda orgánica), Sitio Web (directo), Social Media (orgánico), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios. Los leads con fuente 'web site' se reclasifican por el registro de atribución de GHL (sessionSource): Organic Search→SEO, Direct→Sitio Web directo, Social→Social Media, Paid Social→Paid Social, CRM/CSV→Importaciones; sin atribución quedan como 'Sitio Web (sin atribución)'.">Categoría / fuente</th>
 <th data-tip="Inversión en el medio (USD), tomada de scripts/inversiones.json — se diligencia a mano por fuente y/o categoría, con total y/o por mes. Con filtro de fechas suma solo los meses del rango; sin filtro usa el total. '—' = sin dato de inversión.">Inversión</th>
+<th data-tip="Ingresos futuros: suma del VALOR registrado en las oportunidades ABIERTAS del pipeline de los leads de la fila (campo valor de la oportunidad en el CRM). Entre paréntesis: cuántas oportunidades tienen valor diligenciado — hoy solo una minoría lo tiene, así que es un piso, no el total.">Ingresos futuros</th>
 <th data-tip="Leads adquiridos en la selección (respetan los filtros de arriba, salvo categoría y fuente).">Leads</th>
 <th data-tip="Costo por lead = inversión ÷ leads de la selección. Solo se calcula donde hay inversión registrada.">CPL</th>
 <th data-tip="% del total de la selección.">%</th>
@@ -472,7 +473,6 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="% de las oportunidades COLD de la selección que aporta este medio (share).">% COLD</th>
 <th data-tip="Leads de la fila que NO tienen oportunidad en el pipeline (nunca entraron al embudo de ventas).">Sin opp.</th>
 <th data-tip="Costo por oportunidad = inversión ÷ TODAS las oportunidades creadas en el pipeline (HOT + WARM + COLD) de la selección. Solo donde hay inversión registrada.">Costo / opp.</th>
-<th data-tip="Ingresos futuros: suma del VALOR registrado en las oportunidades ABIERTAS del pipeline de los leads de la fila (campo valor de la oportunidad en el CRM). Entre paréntesis: cuántas oportunidades tienen valor diligenciado — hoy solo una minoría lo tiene, así que es un piso, no el total.">Ingresos futuros</th>
 <th data-tip="% MQL: leads con señal de calificación de marketing — score ≥30 u oportunidad declarada (En curso por = Oportunidad…) o ya en Negocio abierto/Cliente.">MQL%</th>
 <th data-tip="% SQL: leads aceptados por ventas — Negocio abierto o Cliente, o En curso CON oportunidad vigente. Todo SQL es MQL.">SQL%</th>
 <th data-tip="% contactabilidad: leads que RESPONDIERON (mensaje entrante de WhatsApp o llamada contestada).">Contactab.</th>
@@ -822,6 +822,7 @@ function renderFuentes() {{
   const oPct = (v, a) => a.opp ? ` <small style="color:var(--gris)">(${{(v / a.opp * 100).toFixed(0)}}%)</small>` : '';
   const celdas = (a, inv) => `
     <td style="white-space:nowrap">${{money(inv)}}</td>
+    <td style="white-space:nowrap">${{a.valAb ? `<b>US$${{Math.round(a.valAb).toLocaleString('es-CO')}}</b> <small style="color:var(--gris)">(${{a.valAbN}})</small>` : '<span style="color:#B9BDCC">—</span>'}}</td>
     <td><b>${{fmtN(a.n)}}</b></td><td style="white-space:nowrap">${{cplTxt(inv, a.n)}}</td><td>${{pcc(a.n, base.length)}}</td>
     <td><b>${{a.n ? (a.sum / a.n).toFixed(0).replace('.', ',') : '—'}}</b></td>
     <td style="white-space:nowrap"><b>${{fmtN(a.opp)}}</b></td><td>${{shr(a.opp, TOT.opp)}}</td>
@@ -830,7 +831,6 @@ function renderFuentes() {{
     <td style="white-space:nowrap;color:var(--azul);font-weight:700">${{fmtN(a.oCold)}}${{oPct(a.oCold, a)}}</td><td>${{shr(a.oCold, TOT.oCold)}}</td>
     <td style="white-space:nowrap;color:var(--gris)">${{fmtN(a.n - a.opp)}}</td>
     <td style="white-space:nowrap">${{cpoTxt(inv, a.opp)}}</td>
-    <td style="white-space:nowrap">${{a.valAb ? `<b>US$${{Math.round(a.valAb).toLocaleString('es-CO')}}</b> <small style="color:var(--gris)">(${{a.valAbN}})</small>` : '<span style="color:#B9BDCC">—</span>'}}</td>
     <td style="color:var(--naranja);font-weight:700">${{pcc(a.mql, a.n)}}</td>
     <td style="color:var(--rojo);font-weight:700">${{pcc(a.sql, a.n)}}</td>
     <td><b style="color:${{a.n && a.resp / a.n >= .3 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.resp, a.n)}}</b></td>
