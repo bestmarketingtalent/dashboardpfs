@@ -463,6 +463,9 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="Costo por lead = inversión ÷ leads de la selección. Solo se calcula donde hay inversión registrada.">CPL</th>
 <th data-tip="% del total de la selección.">%</th>
 <th data-tip="Lead scoring v2 promedio (0-100) de los leads de la fila.">Score prom.</th>
+<th data-tip="% MQL: leads con señal de calificación de marketing — score ≥30 u oportunidad declarada (En curso por = Oportunidad…) o ya en Negocio abierto/Cliente.">MQL%</th>
+<th data-tip="% SQL: leads aceptados por ventas — Negocio abierto o Cliente, o En curso CON oportunidad vigente. Todo SQL es MQL.">SQL%</th>
+<th data-tip="% contactabilidad: leads que RESPONDIERON (mensaje entrante de WhatsApp o llamada contestada).">Contactab.</th>
 <th data-tip="Total de oportunidades creadas en el pipeline por los leads de la fila (HOT + WARM + COLD).">Opp. total</th>
 <th data-tip="% de TODAS las oportunidades de la selección que aporta este medio (share).">% opp.</th>
 <th data-tip="Oportunidades tipificadas HOT por su etapa en el pipeline: Date to Miami, Asistió Oficina Miami, Tour Miami, Toma Decisión (HOT), Recompra, Pending y Cierre (Elite Club). Entre paréntesis: % de las oportunidades de la fila.">Opp. HOT</th>
@@ -473,9 +476,6 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="% de las oportunidades COLD de la selección que aporta este medio (share).">% COLD</th>
 <th data-tip="Leads de la fila que NO tienen oportunidad en el pipeline (nunca entraron al embudo de ventas).">Sin opp.</th>
 <th data-tip="Costo por oportunidad = inversión ÷ TODAS las oportunidades creadas en el pipeline (HOT + WARM + COLD) de la selección. Solo donde hay inversión registrada.">Costo / opp.</th>
-<th data-tip="% MQL: leads con señal de calificación de marketing — score ≥30 u oportunidad declarada (En curso por = Oportunidad…) o ya en Negocio abierto/Cliente.">MQL%</th>
-<th data-tip="% SQL: leads aceptados por ventas — Negocio abierto o Cliente, o En curso CON oportunidad vigente. Todo SQL es MQL.">SQL%</th>
-<th data-tip="% contactabilidad: leads que RESPONDIERON (mensaje entrante de WhatsApp o llamada contestada).">Contactab.</th>
 <th data-tip="Tiempo promedio de 1ª atención (primer mensaje saliente de WhatsApp) de los leads con conversación.">1ª atención</th>
 <th data-tip="% de leads que terminó con Lead Status Descartado.">Desc%</th>
 <th data-tip="Leads que hoy son clientes.">Clientes</th>
@@ -825,15 +825,15 @@ function renderFuentes() {{
     <td style="white-space:nowrap">${{a.valAb ? `<b>US$${{Math.round(a.valAb).toLocaleString('es-CO')}}</b> <small style="color:var(--gris)">(${{a.valAbN}})</small>` : '<span style="color:#B9BDCC">—</span>'}}</td>
     <td><b>${{fmtN(a.n)}}</b></td><td style="white-space:nowrap">${{cplTxt(inv, a.n)}}</td><td>${{pcc(a.n, base.length)}}</td>
     <td><b>${{a.n ? (a.sum / a.n).toFixed(0).replace('.', ',') : '—'}}</b></td>
+    <td style="color:var(--naranja);font-weight:700">${{pcc(a.mql, a.n)}}</td>
+    <td style="color:var(--rojo);font-weight:700">${{pcc(a.sql, a.n)}}</td>
+    <td><b style="color:${{a.n && a.resp / a.n >= .3 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.resp, a.n)}}</b></td>
     <td style="white-space:nowrap"><b>${{fmtN(a.opp)}}</b></td><td>${{shr(a.opp, TOT.opp)}}</td>
     <td style="white-space:nowrap;color:var(--rojo);font-weight:700">${{fmtN(a.oHot)}}${{oPct(a.oHot, a)}}</td><td>${{shr(a.oHot, TOT.oHot)}}</td>
     <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{fmtN(a.oWarm)}}${{oPct(a.oWarm, a)}}</td><td>${{shr(a.oWarm, TOT.oWarm)}}</td>
     <td style="white-space:nowrap;color:var(--azul);font-weight:700">${{fmtN(a.oCold)}}${{oPct(a.oCold, a)}}</td><td>${{shr(a.oCold, TOT.oCold)}}</td>
     <td style="white-space:nowrap;color:var(--gris)">${{fmtN(a.n - a.opp)}}</td>
     <td style="white-space:nowrap">${{cpoTxt(inv, a.opp)}}</td>
-    <td style="color:var(--naranja);font-weight:700">${{pcc(a.mql, a.n)}}</td>
-    <td style="color:var(--rojo);font-weight:700">${{pcc(a.sql, a.n)}}</td>
-    <td><b style="color:${{a.n && a.resp / a.n >= .3 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.resp, a.n)}}</b></td>
     <td style="white-space:nowrap">${{a.atnN ? atnT(a.atnS / a.atnN) : '—'}}</td>
     <td style="color:${{a.n && a.desc / a.n >= 0.2 ? 'var(--rojo)' : 'var(--tinta)'}};font-weight:700">${{pcc(a.desc, a.n)}}</td>
     <td>${{fmtN(a.cli)}}</td><td><b style="color:${{a.n && a.cli / a.n >= 0.035 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.cli, a.n)}}</b></td>
