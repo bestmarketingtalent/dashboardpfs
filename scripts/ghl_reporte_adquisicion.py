@@ -61,14 +61,17 @@ def fuente_of(c):
         return 'Paid Search'
     if ('linkedin' in sl or 'linked in' in sl) and 'paid' in sl:
         return 'Paid LinkedIn'
+    if ('linkedin' in sl or 'linked in' in sl):
+        # todo lo demás de LinkedIn (organico explícito, formularios orgánicos, "LinkedIn" a secas) = orgánico
+        return 'LinkedIn Orgánico'
     if sl in ('facebook', 'meta / facebook_mobile_feed', 'paid social', 'fb', 'facebook ads', 'meta ads'):
         return 'Facebook'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl or sl in ('rerefido', 'referral', 'pereonal', 'personall'):
         return 'Referidos / Personal'
     if sl.startswith('prensa'):
         return 'Prensa'
-    if sl in ('web site', 'sitio web', 'web blog', 'blog') or sl.endswith('pfsrealty.com'):
-        return 'Sitio Web'
+    if sl in ('web site', 'sitio web', 'web blog', 'blog', 'pfsmain', 'external_form', 'miamisumejorinversion') or sl.endswith('pfsrealty.com'):
+        return 'Sitio Web (SEO / directo)'
     return CANON[sl]
 
 # ---------- score (misma fórmula 0-100) ----------
@@ -185,7 +188,7 @@ def categoria_of(f):
                              'cotelco', 'club lagos', 'campestre', 'salto', 'webinar', 'jornada', 'feria')):
         return 'Eventos'
     # lo explícitamente ORGÁNICO nunca es pauta, aunque nombre una red social
-    if 'organic' in fl or 'orgánic' in fl or 'formulario' in fl:
+    if 'organic' in fl or 'orgánic' in fl or 'formulario' in fl or fl.startswith('sitio web'):
         return 'Orgánico digital'
     # PAUTA DIGITAL: subcategorías Paid Search · Paid LinkedIn · Facebook (+ resto de pago)
     if any(k in fl for k in ('facebook', 'google', 'paid', 'instagram', 'tiktok', 'digital',
@@ -454,12 +457,12 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 
 <div class="chart-sec">
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
-<p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a sus fuentes. Cada nivel muestra volumen, momentum, contactabilidad, MQL, SQL, conversión y descarte. <b>Respeta todos los filtros excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
+<p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra volumen, momentum, contactabilidad, MQL, SQL, conversión, descarte y las <b>etapas de oportunidad</b> del pipeline. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
 <div style="overflow-x:auto"><table style="min-width:1150px"><thead><tr>
-<th data-tip="Categoría de medios (clic para expandir sus fuentes) o fuente individual (clic para filtrar). Pauta digital se desglosa en sus subcategorías Paid Search (Google Ads y variantes), Paid LinkedIn y Facebook (Meta); las fuentes con <30 leads se agrupan en 'Otras' dentro de su categoría. Lo marcado como orgánico (LinkedIn Organico, instagram organico, formularios) va a Orgánico digital.">Categoría / fuente</th>
+<th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Facebook (Meta) + resto de pago. Orgánico digital: Sitio Web (SEO / directo), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios orgánicos.">Categoría / fuente</th>
 <th data-tip="Leads adquiridos en la selección.">Leads</th>
 <th data-tip="% del total de la selección.">%</th>
-<th data-tip="Leads llegados en los últimos 90 días.">Últ. 90d</th>
+<th data-tip="De los leads de la selección, cuántos llegaron en los últimos 90 días (columna informativa; la selección la definen los filtros de arriba).">Últ. 90d</th>
 <th data-tip="Momentum: variación de los últimos 90 días vs los 90 anteriores. ▲ crece, ▼ cae. Estable = ±15%.">Momentum</th>
 <th data-tip="% contactabilidad: leads que RESPONDIERON (mensaje entrante de WhatsApp o llamada contestada). Mide si el dato sirve y el canal conecta. Cobertura: WA descargado + llamadas de carteras humanas.">Contactab.</th>
 <th data-tip="% MQL: leads con señal de calificación de marketing — score ≥30 u oportunidad declarada (En curso por = Oportunidad…) o ya en Negocio abierto/Cliente.">MQL%</th>
@@ -469,6 +472,10 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="% de leads que terminó descartado.">Desc%</th>
 <th data-tip="Score promedio (0-100).">Score</th>
 <th data-tip="Tiempo promedio de 1ª atención (primer mensaje saliente de WhatsApp) de los leads con conversación.">1ª atención</th>
+<th data-tip="% de los leads de la fila que tienen OPORTUNIDAD creada en el pipeline de ventas (entraron al embudo).">Con opp.</th>
+<th data-tip="Oportunidades ABIERTAS hoy en el pipeline (leads de la fila).">Opp. abiertas</th>
+<th data-tip="% de los leads de la fila cuya oportunidad está en etapa AVANZADA del embudo: WARM, Cita, Precalificación, Atención Contador, Date to Miami, Asistió, Tour, HOT, Pending o Cierre.">Etapa avanzada</th>
+<th data-tip="Oportunidades en etapa Cierre (Elite Club) o ganadas, de los leads de la fila.">En cierre</th>
 </tr></thead><tbody id="tb-fu"></tbody></table></div>
 </div>
 
@@ -906,7 +913,10 @@ function renderInterp(pts, mx, my) {{
 
 /* ---------- tabla maestra: categoría → fuente (drill-down) ---------- */
 const EXP = new Set();
-function mkAgg() {{ return {{n: 0, cli: 0, desc: 0, sum: 0, atnS: 0, atnN: 0, d90: 0, p90: 0, resp: 0, mql: 0, sql: 0}}; }}
+function mkAgg() {{ return {{n: 0, cli: 0, desc: 0, sum: 0, atnS: 0, atnN: 0, d90: 0, p90: 0, resp: 0, mql: 0, sql: 0, opp: 0, oppAb: 0, oppAv: 0, oppCierre: 0}}; }}
+// etapas del pipeline consideradas AVANZADAS (más allá del primer contacto)
+const ETAPAS_AV = /warm|precalificaci|contador|date to miami|asisti|tour|toma decision|hot|pending|elite|cierre|cita/i;
+const ETAPAS_CIERRE = /cierre/i;
 function addTo(a, x, c90, c180) {{
   a.n++; a.sum += x[7];
   if (x[5] === CLI_I) a.cli++;
@@ -916,6 +926,14 @@ function addTo(a, x, c90, c180) {{
   if (x[16]) a.resp++;
   if (esMQL(x)) a.mql++;
   if (esSQL(x)) a.sql++;
+  const o = x[20];
+  if (o) {{
+    a.opp++;
+    if (o[1] === 'abierta') a.oppAb++;
+    const et = D.opps[o[0]] || '';
+    if (ETAPAS_AV.test(et)) a.oppAv++;
+    if (ETAPAS_CIERRE.test(et) || o[1] === 'ganada') a.oppCierre++;
+  }}
 }}
 function renderFuentes() {{
   const base = filtro(['c', 'f']);
@@ -949,7 +967,11 @@ function renderFuentes() {{
     <td>${{fmtN(a.cli)}}</td><td><b style="color:${{a.n && a.cli / a.n >= 0.035 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.cli, a.n)}}</b></td>
     <td style="color:${{a.n && a.desc / a.n >= 0.2 ? 'var(--rojo)' : 'var(--tinta)'}}">${{pcc(a.desc, a.n)}}</td>
     <td>${{a.n ? (a.sum / a.n).toFixed(1).replace('.', ',') : '—'}}</td>
-    <td style="white-space:nowrap">${{a.atnN ? atnT(a.atnS / a.atnN) : '—'}}</td>`;
+    <td style="white-space:nowrap">${{a.atnN ? atnT(a.atnS / a.atnN) : '—'}}</td>
+    <td style="white-space:nowrap">${{pcc(a.opp, a.n)}}</td>
+    <td style="white-space:nowrap">${{fmtN(a.oppAb)}}</td>
+    <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{pcc(a.oppAv, a.n)}}</td>
+    <td style="white-space:nowrap;color:var(--verde);font-weight:700">${{fmtN(a.oppCierre)}}</td>`;
   let out = '';
   [...porCat.entries()].sort((x, y) => y[1].n - x[1].n).forEach(([ci, a]) => {{
     const abierto = EXP.has(ci);
@@ -958,21 +980,11 @@ function renderFuentes() {{
     if (abierto) {{
       const fus = [...porFu.entries()].filter(([k]) => k.startsWith(ci + ':'))
         .map(([k, a2]) => [+k.split(':')[1], a2]).sort((x, y) => y[1].n - x[1].n);
-      const otras = mkAgg();
-      const SUBFIJAS = new Set(['Paid Search', 'Paid LinkedIn', 'Facebook']);
+      // TODAS las fuentes de la categoría, sin agrupar en "Otras": auditoría completa de qué contiene cada categoría
       fus.forEach(([fi, a2]) => {{
-        if (a2.n >= 30 || SUBFIJAS.has(D.fuentes[fi])) {{
-          out += `<tr class="clkd" data-f="${{fi}}" data-tip="${{esc(D.fuentes[fi])}}: ${{fmtN(a2.n)}} leads. Clic para filtrar por esta fuente y ver sus leads abajo.">
-            <td style="white-space:nowrap;padding-left:28px">${{esc(D.fuentes[fi]).slice(0, 34)}}</td>${{celdas(a2)}}</tr>`;
-        }} else {{
-          a2n = a2;
-          otras.n += a2.n; otras.cli += a2.cli; otras.desc += a2.desc; otras.sum += a2.sum;
-          otras.atnS += a2.atnS; otras.atnN += a2.atnN; otras.d90 += a2.d90; otras.p90 += a2.p90;
-          otras.resp += a2.resp; otras.mql += a2.mql; otras.sql += a2.sql;
-        }}
+        out += `<tr class="clkd" data-f="${{fi}}" data-tip="${{esc(D.fuentes[fi])}}: ${{fmtN(a2.n)}} leads. Clic para filtrar por esta fuente y ver sus leads abajo.">
+          <td style="white-space:nowrap;padding-left:28px" title="${{esc(D.fuentes[fi])}}">${{esc(D.fuentes[fi]).slice(0, 44)}}</td>${{celdas(a2)}}</tr>`;
       }});
-      if (otras.n) out += `<tr data-tip="Fuentes de ${{esc(D.cats[ci])}} con menos de 30 leads cada una, agrupadas.">
-        <td style="white-space:nowrap;padding-left:28px;color:var(--gris)">Otras fuentes de la categoría</td>${{celdas(otras)}}</tr>`;
     }}
   }});
   document.getElementById('tb-fu').innerHTML = out;
