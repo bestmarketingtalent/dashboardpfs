@@ -42,6 +42,10 @@ def fuente_of(c):
     sl = s.lower()
     if 'google' in sl or sl.startswith('goo ') or sl == 'goo disp' or sl == 'paid search':
         return 'Paid Search'
+    if ('linkedin' in sl or 'linked in' in sl) and 'paid' in sl:
+        return 'Paid LinkedIn'
+    if sl in ('facebook', 'meta / facebook_mobile_feed', 'paid social', 'fb', 'facebook ads', 'meta ads'):
+        return 'Facebook'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl or sl in ('rerefido', 'referral', 'pereonal', 'personall'):
         return 'Referidos / Personal'
     if sl.startswith('prensa'):
@@ -159,10 +163,14 @@ def categoria_of(f):
     if 'hubspot' in fl or 'migration' in fl or 'importa' in fl: return 'Importaciones / listas'
     if 'referid' in fl or 'personal' in fl or 'aliado' in fl: return 'Referidos y aliados'
     if fl in ('antonio aguirre', 'pfs guardia'): return 'Equipo comercial'
-    if any(k in fl for k in ('evento', 'celebra', 'simposio', 'torneo', 'master class', 'mundial',
+    if any(k in fl for k in ('evento', 'celebra', 'simposio', 'torneo', 'master class', 'masterclass', 'mundial',
                              'concurso', 'cóctel', 'coctel', 'c�ctel', 'ágora', 'agora', 'amcham',
                              'cotelco', 'club lagos', 'campestre', 'salto', 'webinar', 'jornada', 'feria')):
         return 'Eventos'
+    # lo explícitamente ORGÁNICO nunca es pauta, aunque nombre una red social
+    if 'organic' in fl or 'orgánic' in fl or 'formulario' in fl:
+        return 'Orgánico digital'
+    # PAUTA DIGITAL: subcategorías Paid Search · Paid LinkedIn · Facebook (+ resto de pago)
     if any(k in fl for k in ('facebook', 'google', 'paid', 'instagram', 'tiktok', 'digital',
                              'zillow', 'ihomefinder', 'wivboost', 'meta', 'markdpa')):
         return 'Pauta digital'
@@ -431,7 +439,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
 <p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a sus fuentes. Cada nivel muestra volumen, momentum, contactabilidad, MQL, SQL, conversión y descarte. <b>Respeta todos los filtros excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
 <div style="overflow-x:auto"><table style="min-width:1150px"><thead><tr>
-<th data-tip="Categoría de medios (clic para expandir sus fuentes) o fuente individual (clic para filtrar). Fuentes con <30 leads se agrupan en 'Otras' dentro de su categoría.">Categoría / fuente</th>
+<th data-tip="Categoría de medios (clic para expandir sus fuentes) o fuente individual (clic para filtrar). Pauta digital se desglosa en sus subcategorías Paid Search (Google Ads y variantes), Paid LinkedIn y Facebook (Meta); las fuentes con <30 leads se agrupan en 'Otras' dentro de su categoría. Lo marcado como orgánico (LinkedIn Organico, instagram organico, formularios) va a Orgánico digital.">Categoría / fuente</th>
 <th data-tip="Leads adquiridos en la selección.">Leads</th>
 <th data-tip="% del total de la selección.">%</th>
 <th data-tip="Leads llegados en los últimos 90 días.">Últ. 90d</th>
@@ -926,8 +934,9 @@ function renderFuentes() {{
       const fus = [...porFu.entries()].filter(([k]) => k.startsWith(ci + ':'))
         .map(([k, a2]) => [+k.split(':')[1], a2]).sort((x, y) => y[1].n - x[1].n);
       const otras = mkAgg();
+      const SUBFIJAS = new Set(['Paid Search', 'Paid LinkedIn', 'Facebook']);
       fus.forEach(([fi, a2]) => {{
-        if (a2.n >= 30) {{
+        if (a2.n >= 30 || SUBFIJAS.has(D.fuentes[fi])) {{
           out += `<tr class="clkd" data-f="${{fi}}" data-tip="${{esc(D.fuentes[fi])}}: ${{fmtN(a2.n)}} leads. Clic para filtrar por esta fuente y ver sus leads abajo.">
             <td style="white-space:nowrap;padding-left:28px">${{esc(D.fuentes[fi]).slice(0, 34)}}</td>${{celdas(a2)}}</tr>`;
         }} else {{
