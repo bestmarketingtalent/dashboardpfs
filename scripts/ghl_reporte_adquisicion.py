@@ -453,27 +453,6 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div class="kpis" id="adq-kpis"></div>
 
 <div class="chart-sec">
-<h2>🥧 Cómo se reparte la selección</h2>
-<p class="chart-sub">Los cortes clave de los leads que cumplen los filtros de arriba: de dónde vienen, en qué lead status están, en qué etapa del pipeline van, qué temperatura tienen — y de qué origen salen las oportunidades HOT, WARM y COLD. Clic en una porción aplica (o quita) ese filtro.</p>
-<div class="pies">
-<div class="pie-box"><h3 data-tip="Reparto de los leads de la selección por medio/fuente (top 7 + Otros). Clic = filtrar por esa fuente.">📣 Por origen (fuente)</h3>
-<svg id="pie-fu" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-fu"></div></div>
-<div class="pie-box"><h3 data-tip="Reparto por Lead Status del CRM (En curso, En Nutrición, Cliente, Descartado…). Clic = filtrar por ese status.">🏷 Por lead status</h3>
-<svg id="pie-st" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-st"></div></div>
-<div class="pie-box"><h3 data-tip="Reparto por etapa de la oportunidad en el pipeline de ventas (Nuevo Lead, Intento de Contacto, WARM, HOT, Cierre…). '(Sin oportunidad)' = el lead nunca entró al pipeline. Clic = filtrar por esa etapa.">🪜 Por etapa de oportunidad</h3>
-<svg id="pie-op" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-op"></div></div>
-<div class="pie-box"><h3 data-tip="Reparto por temperatura del lead scoring v2: Caliente ≥55, Tibio 30-54, Frío 10-29, Sin señales <10. Clic = filtrar por esa temperatura.">🌡 Por lead scoring</h3>
-<svg id="pie-sc" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-sc"></div></div>
-<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa HOT del pipeline (Date to Miami, Asistió Oficina Miami, Tour Miami, Toma Decisión, Recompra, Pending, Cierre): de qué origen vienen. Clic = filtrar por esa fuente.">🔥 Origen de las oportunidades HOT</h3>
-<svg id="pie-hot" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-hot"></div></div>
-<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa WARM (Cita/Asistió jornada, Cita Virtual, Asistió Presencial/Virtual, WARM, Precalificación, Contador): de qué origen vienen. Clic = filtrar por esa fuente.">🌤 Origen de las oportunidades WARM</h3>
-<svg id="pie-warm" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-warm"></div></div>
-<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa COLD (Nuevo Lead, Intento de Contacto, COLD, Sin Oportunidad): de qué origen vienen. Clic = filtrar por esa fuente.">❄ Origen de las oportunidades COLD</h3>
-<svg id="pie-cold" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-cold"></div></div>
-</div>
-</div>
-
-<div class="chart-sec">
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
 <p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra: leads y score promedio → <b>tipificación de sus oportunidades en HOT / WARM / COLD</b> (por etapa del pipeline) → MQL y SQL → contactabilidad y tiempo de 1ª atención → % descartados → clientes, conversión y cierres. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
 <div style="overflow-x:auto"><table style="min-width:1980px"><thead><tr>
@@ -500,6 +479,27 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="De los leads de la selección, cuántos llegaron en los últimos 90 días (informativa).">Últ. 90d</th>
 <th data-tip="Momentum: variación de los últimos 90 días vs los 90 anteriores. ▲ crece, ▼ cae. Estable = ±15%.">Momentum</th>
 </tr></thead><tbody id="tb-fu"></tbody></table></div>
+</div>
+
+<div class="chart-sec">
+<h2>🥧 Cómo se reparte la selección</h2>
+<p class="chart-sub">Los cortes clave de los leads que cumplen los filtros de arriba: de dónde vienen, en qué lead status están, en qué etapa del pipeline van, qué temperatura tienen — y de qué origen salen las oportunidades HOT, WARM y COLD. Clic en una porción aplica (o quita) ese filtro.</p>
+<div class="pies">
+<div class="pie-box"><h3 data-tip="Reparto de los leads de la selección por medio/fuente (top 7 + Otros). Clic = filtrar por esa fuente.">📣 Por origen (fuente)</h3>
+<svg id="pie-fu" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-fu"></div></div>
+<div class="pie-box"><h3 data-tip="Reparto por Lead Status del CRM (En curso, En Nutrición, Cliente, Descartado…). Clic = filtrar por ese status.">🏷 Por lead status</h3>
+<svg id="pie-st" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-st"></div></div>
+<div class="pie-box"><h3 data-tip="Reparto por etapa de la oportunidad en el pipeline de ventas (Nuevo Lead, Intento de Contacto, WARM, HOT, Cierre…). '(Sin oportunidad)' = el lead nunca entró al pipeline. Clic = filtrar por esa etapa.">🪜 Por etapa de oportunidad</h3>
+<svg id="pie-op" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-op"></div></div>
+<div class="pie-box"><h3 data-tip="Reparto por temperatura del lead scoring v2: Caliente ≥55, Tibio 30-54, Frío 10-29, Sin señales <10. Clic = filtrar por esa temperatura.">🌡 Por lead scoring</h3>
+<svg id="pie-sc" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-sc"></div></div>
+<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa HOT del pipeline (Date to Miami, Asistió Oficina Miami, Tour Miami, Toma Decisión, Recompra, Pending, Cierre): de qué origen vienen. Clic = filtrar por esa fuente.">🔥 Origen de las oportunidades HOT</h3>
+<svg id="pie-hot" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-hot"></div></div>
+<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa WARM (Cita/Asistió jornada, Cita Virtual, Asistió Presencial/Virtual, WARM, Precalificación, Contador): de qué origen vienen. Clic = filtrar por esa fuente.">🌤 Origen de las oportunidades WARM</h3>
+<svg id="pie-warm" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-warm"></div></div>
+<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa COLD (Nuevo Lead, Intento de Contacto, COLD, Sin Oportunidad): de qué origen vienen. Clic = filtrar por esa fuente.">❄ Origen de las oportunidades COLD</h3>
+<svg id="pie-cold" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-cold"></div></div>
+</div>
 </div>
 
 <div class="chart-sec" style="margin-top:20px">
