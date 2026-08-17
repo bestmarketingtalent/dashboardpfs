@@ -104,11 +104,13 @@ borrar nada en GHL salvo instrucción explícita del usuario.
     + 7 reportes → staging estable `netlify-pfs/` (en la raíz del proyecto) → zip
     `~/Desktop/netlify-pfs-AAAA-MM-DD_HH-MM.zip` (con hora: el más reciente es el que se sube). `--sin-fetch` = solo reportes + zip.
 18. `ghl_reporte_adquisicion.py` — genera `adquisicion-pfs-AAAA-MM-DD.html`:
-    análisis de adquisición por medio — KPIs, tortas por fuente y país, llegada
-    mensual apilada, tabla maestra de calidad por fuente (volumen, momentum 90d,
-    conversión, descarte, calificados, 1ª atención), campañas por etiqueta no
-    genérica, atribución digital (attributionSource; el embudo WA rompe UTMs/gclid)
-    y tabla de leads + Excel. Requiere 1, 3 y (opcional) 10/16 para intentos.
+    análisis de adquisición por medio, SIMPLIFICADO (ago-2026): KPIs, 4 tortas
+    (origen, lead status, etapa de oportunidad, scoring), tabla maestra categoría→
+    fuente con TODAS las fuentes visibles (volumen, momentum 90d informativo,
+    contactabilidad, MQL/SQL, conversión, descarte, score, 1ª atención, % con
+    oportunidad, opp. abiertas, % etapa avanzada, en cierre) y tabla de leads con
+    la ficha unificada. Filtro nuevo: etapa de oportunidad. Se eliminaron llegada
+    mensual, scatter, campañas y atribución. Requiere 1, 3 y (opcional) 10/16 para intentos.
 El sitio Netlify tiene 5 pestañas: index.html (Gestión comercial),
 adquisicion.html (Adquisición), asesores.html (Asesores comerciales: contenedor con 3 sub-pestañas — gestión de
 asesores, análisis de conversaciones y pérdida de leads — que carga

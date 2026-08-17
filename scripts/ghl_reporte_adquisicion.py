@@ -407,6 +407,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div><label data-tip="Filtra por el medio/fuente del lead: campo 'Fuente de contacto' del CRM con las variantes de Paid Search (Google Ads), Referidos, Prensa y Sitio Web agrupadas. Ordenado por volumen.">Medio / fuente</label><select id="f-f" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el país del lead, determinado por el prefijo internacional de su número móvil.">País (prefijo del móvil)</label><select id="f-p" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'Lead Status' del CRM: en qué quedó el lead adquirido (Cliente, Descartado, En curso…).">Lead status</label><select id="f-s" autocomplete="off"></select></div>
+<div><label data-tip="Filtra por la etapa de la oportunidad del lead en el pipeline de ventas. '(Sin oportunidad)' = nunca entró al pipeline.">Etapa de oportunidad</label><select id="f-o" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por temperatura del lead scoring 0-100: Caliente ≥55, Tibio 30-54, Frío 10-29, Sin señales <10.">Scoring (temperatura)</label><select id="f-t" autocomplete="off">
 <option value="">Todos</option>
 <option value="hot">🔥 Calientes (≥55)</option>
@@ -426,33 +427,18 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div class="kpis" id="adq-kpis"></div>
 
 <div class="chart-sec">
-<h2>🥧 De dónde vienen los leads</h2>
-<p class="chart-sub">Reparto de la selección actual por medio y por país. Clic en una porción aplica (o quita) ese filtro.</p>
+<h2>🥧 Cómo se reparte la selección</h2>
+<p class="chart-sub">Los cuatro cortes clave de los leads que cumplen los filtros de arriba: de dónde vienen, en qué lead status están, en qué etapa del pipeline de ventas van y qué temperatura tienen. Clic en una porción aplica (o quita) ese filtro.</p>
 <div class="pies">
-<div class="pie-box"><h3 data-tip="Reparto de los leads de la selección por medio/fuente (top 7 + Otros). Clic = filtrar por esa fuente.">📣 Por medio / fuente</h3>
+<div class="pie-box"><h3 data-tip="Reparto de los leads de la selección por medio/fuente (top 7 + Otros). Clic = filtrar por esa fuente.">📣 Por origen (fuente)</h3>
 <svg id="pie-fu" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-fu"></div></div>
-<div class="pie-box"><h3 data-tip="Reparto de los leads de la selección por país (prefijo del móvil, top 7 + Otros). Clic = filtrar por ese país.">🌎 Por país del lead</h3>
-<svg id="pie-pa" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-pa"></div></div>
+<div class="pie-box"><h3 data-tip="Reparto por Lead Status del CRM (En curso, En Nutrición, Cliente, Descartado…). Clic = filtrar por ese status.">🏷 Por lead status</h3>
+<svg id="pie-st" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-st"></div></div>
+<div class="pie-box"><h3 data-tip="Reparto por etapa de la oportunidad en el pipeline de ventas (Nuevo Lead, Intento de Contacto, WARM, HOT, Cierre…). '(Sin oportunidad)' = el lead nunca entró al pipeline. Clic = filtrar por esa etapa.">🪜 Por etapa de oportunidad</h3>
+<svg id="pie-op" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-op"></div></div>
+<div class="pie-box"><h3 data-tip="Reparto por temperatura del lead scoring v2: Caliente ≥55, Tibio 30-54, Frío 10-29, Sin señales <10. Clic = filtrar por esa temperatura.">🌡 Por lead scoring</h3>
+<svg id="pie-sc" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-sc"></div></div>
 </div>
-</div>
-
-<div class="chart-sec">
-<h2>📈 Llegada mensual por medio</h2>
-<p class="chart-sub">Cuántos leads entraron cada mes (últimos 18 meses de la selección), apilados por las 6 fuentes principales. Respeta todos los filtros. Pasa el mouse sobre un segmento para el detalle.</p>
-<div style="overflow-x:auto"><svg id="stack" viewBox="0 0 1240 320" preserveAspectRatio="xMidYMid meet" style="width:100%;min-width:700px;height:auto;display:block"></svg></div>
-<div class="pleg" id="stack-leg"></div>
-</div>
-
-<div class="chart-sec">
-<h2>¿Qué fuentes producen los leads mejor calificados para la venta?</h2>
-<p class="chart-sub">Cada punto es una fuente ("Fuente de contacto" del CRM). Eje horizontal: cuántos leads trajo (escala logarítmica). Eje vertical: qué % de ellos está calificado para venta según los estados que marques abajo. Tamaño del punto: nº de leads calificados. Las fuentes más eficientes quedan arriba; las líneas punteadas son las medianas — el cuadrante superior derecho combina volumen y calificación. Pasa el mouse sobre un punto para ver su detalle. Respeta todos los filtros de arriba excepto los de categoría y fuente (que son las dimensiones analizadas).</p>
-<div class="chart-ctrl"><b data-tip="Define qué estados cuentan como 'lead calificado para venta' en el gráfico. El % de cada fuente = leads en los estados marcados ÷ total de leads de la fuente. Un lead caliente que además tiene un estado marcado se cuenta una sola vez.">Cuenta como calificado:</b><span id="sc-cks"></span>
-<b style="margin-left:8px" data-tip="Excluye del gráfico las fuentes con menos leads que este mínimo, para que los porcentajes de fuentes diminutas no distorsionen la lectura.">Fuentes con al menos</b>
-<select id="sc-min" autocomplete="off"><option value="5">5 leads</option><option value="10" selected>10 leads</option>
-<option value="30">30 leads</option><option value="100">100 leads</option></select></div>
-<div id="scat-wrap"><svg id="scat" viewBox="0 0 1240 430" preserveAspectRatio="xMidYMid meet"></svg><div id="scat-tip"></div></div>
-<div id="scat-interp"></div>
-<div id="scat-top"></div>
 </div>
 
 <div class="chart-sec">
@@ -478,34 +464,6 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="Oportunidades en etapa Cierre (Elite Club) o ganadas, de los leads de la fila.">En cierre</th>
 </tr></thead><tbody id="tb-fu"></tbody></table></div>
 </div>
-
-<div class="chart-sec">
-<h2>🎪 Campañas detectadas (por etiqueta)</h2>
-<p class="chart-sub">El CRM no registra la campaña en un campo propio, así que se detecta con la primera etiqueta no genérica de cada lead (mismo criterio del dashboard gerencial). Top 15 de la selección con su conversión y descarte. Respeta todos los filtros.</p>
-<div style="overflow-x:auto"><table style="min-width:760px"><thead><tr>
-<th data-tip="Primera etiqueta no genérica del lead: eventos, webinars, activaciones con nombre propio, listas.">Campaña / etiqueta</th>
-<th data-tip="Leads de la selección con esa etiqueta como primera etiqueta no genérica.">Leads</th>
-<th data-tip="De esos leads, cuántos son hoy clientes.">Clientes</th>
-<th data-tip="Conversión de la campaña: clientes ÷ leads.">Conv%</th>
-<th data-tip="% de los leads de la campaña que terminó descartado.">Desc%</th>
-<th data-tip="Score promedio de los leads de la campaña.">Score</th>
-<th data-tip="Fuente principal por la que entraron los leads de esa campaña.">Fuente principal</th>
-</tr></thead><tbody id="tb-camp"></tbody></table></div>
-</div>
-
-<div class="chart-sec">
-<h2>🧬 Atribución digital (sesión de origen)</h2>
-<p class="chart-sub">Lo que la plataforma alcanzó a registrar de la sesión que creó cada contacto (sessionSource · medium). Respeta todos los filtros.</p>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px">
-<div><table><thead><tr>
-<th data-tip="Combinación sessionSource · medium del registro de atribución del contacto. '(Sin atribución digital)' = el contacto no trae registro de sesión.">Atribución</th>
-<th>Leads</th><th data-tip="Clientes que salieron de esa vía de atribución.">Clientes</th><th>Conv%</th>
-</tr></thead><tbody id="tb-attr"></tbody></table></div>
-<div class="alerta"><b>⚠ El embudo de WhatsApp rompe la atribución de pauta:</b> de {fmt(TOTAL)} leads, solo <b>{fmt(ATTR_COV['gclid'])}</b> traen gclid (Google), <b>{fmt(ATTR_COV['fbclid'])}</b> fbclid y <b>{fmt(ATTR_COV['utm'])}</b> utmCampaign — porque el lead de pauta aterriza en la landing y salta a WhatsApp, donde nace el contacto sin herencia de UTMs (queda solo "Social media · whatsapp"). Meta sí conserva "Paid Social" porque usa formularios nativos. <b>Solución:</b> mini-formulario antes del botón de WhatsApp o código de campaña en el texto prellenado del mensaje. Mientras tanto, la fuente confiable es el campo "Fuente de contacto" (esta hoja) y las etiquetas de campaña.</div>
-</div>
-</div>
-
-<div id="adq-learn" class="caveat"></div>
 
 <div class="chart-sec" style="margin-top:20px">
 <h2>📄 Leads de la selección</h2>
@@ -551,6 +509,10 @@ fill('f-c', D.cats.map((_, i) => i), D.cats);
 fill('f-f', D.fuenteOrden, D.fuenteOrden.map(i => D.fuentes[i]));
 fill('f-p', D.paisOrden, D.paisOrden.map(i => D.paises[i]));
 fill('f-s', D.status.map((_, i) => i), D.status);
+// etapa de oportunidad: ordenada por volumen en la base + '(Sin oportunidad)' al final
+(() => {{ const cnt = new Map(); D.rows.forEach(x => {{ if (x[20]) cnt.set(x[20][0], (cnt.get(x[20][0]) || 0) + 1); }});
+  const ids = [...cnt.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k);
+  fill('f-o', ids.concat([-1]), ids.map(i => D.opps[i]).concat(['(Sin oportunidad)'])); }})();
 
 /* tooltip global */
 const vtip = document.createElement('div'); vtip.id = 'vtip'; document.body.appendChild(vtip);
@@ -578,9 +540,10 @@ const matchTemp = sc => {{
 }};
 function filtro(exceptos) {{
   const g = id => document.getElementById(id).value;
-  const f = g('f-f'), p = g('f-p'), s = g('f-s'), cc = g('f-c'), q = g('f-q').trim().toLowerCase();
+  const f = g('f-f'), p = g('f-p'), s = g('f-s'), cc = g('f-c'), o = g('f-o'), q = g('f-q').trim().toLowerCase();
   return D.rows.filter(x =>
     (exceptos.includes('c') || cc === '' || x[17] == cc) &&
+    (exceptos.includes('o') || o === '' || (o === '-1' ? !x[20] : (x[20] && x[20][0] == o))) &&
     (exceptos.includes('f') || f === '' || x[3] == f) &&
     (exceptos.includes('p') || p === '' || x[4] == p) &&
     (exceptos.includes('s') || s === '' || x[5] == s) &&
@@ -592,7 +555,7 @@ let view = [];
 function apply() {{
   view = filtro([]).slice().sort((a, b) => b[7] - a[7]);
   shown = PAGE;
-  renderKpis(); renderPies(); renderStack(); renderScat(); renderFuentes(); renderCampanas(); renderAttr(); renderLearn(); renderTabla();
+  renderKpis(); renderPies(); renderFuentes(); renderTabla();
   document.getElementById('resumen').textContent =
     `${{fmtN(view.length)}} leads en la vista de ${{fmtN(D.rows.length)}} adquiridos.`;
 }}
@@ -688,227 +651,30 @@ function pieDe(svgId, legId, col, nombres, selId, titulo, exc) {{
     tip: `Otros ${{top.length - 7}} valores: ${{fmtN(resto)}} leads.`, click: null}});
   drawPie(svgId, legId, datos, 'leads');
 }}
+function pieGen(svgId, legId, keyOf, labelOf, exc, onClick, colores) {{
+  const base = filtro([exc]);
+  const cnt = new Map();
+  base.forEach(x => {{ const k = keyOf(x); cnt.set(k, (cnt.get(k) || 0) + 1); }});
+  const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
+  const datos = top.slice(0, 7).map(([k, c], j) => ({{
+    label: labelOf(k), val: c, color: (colores && colores[k]) || PIE_COL[j],
+    tip: `${{labelOf(k)}}: ${{fmtN(c)}} leads (${{(c / base.length * 100).toFixed(1)}}% de la selección). Clic para aplicar/quitar el filtro.`,
+    click: onClick ? () => onClick(k) : null
+  }}));
+  const resto = top.slice(7).reduce((t, [, c]) => t + c, 0);
+  if (resto) datos.push({{label: 'Otros', val: resto, color: '#C9D6E4', tip: `Otros ${{top.length - 7}} valores: ${{fmtN(resto)}} leads.`, click: null}});
+  drawPie(svgId, legId, datos, 'leads');
+}}
+const TEMP_OF = sc => sc >= 55 ? 'hot' : sc >= 30 ? 'warm' : sc >= 10 ? 'cold' : 'none';
+const TEMP_LBL = {{hot: '🔥 Caliente (≥55)', warm: '🌤 Tibio (30-54)', cold: '❄ Frío (10-29)', none: 'Sin señales (<10)'}};
+const TEMP_COL = {{hot: '#D64545', warm: '#AA9664', cold: '#3A566B', none: '#8A99A8'}};
 function renderPies() {{
   pieDe('pie-fu', 'pleg-fu', 3, D.fuentes, 'f-f', 'fuente', 'f');
-  pieDe('pie-pa', 'pleg-pa', 4, D.paises, 'f-p', 'país', 'p');
-}}
-
-/* ---------- llegada mensual apilada por fuente ---------- */
-const MES_N = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-function renderStack() {{
-  const rows = view.filter(x => x[8]);
-  const svg = document.getElementById('stack'), leg = document.getElementById('stack-leg');
-  if (!rows.length) {{ svg.innerHTML = '<text x="620" y="150" text-anchor="middle" font-size="13" fill="#5B6B85">Sin leads en la selección</text>'; leg.innerHTML = ''; return; }}
-  const fcnt = new Map();
-  rows.forEach(x => fcnt.set(x[3], (fcnt.get(x[3]) || 0) + 1));
-  const top = [...fcnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(e => e[0]);
-  const pos = new Map(top.map((f, i) => [f, i]));
-  const meses = [...new Set(rows.map(x => x[8].slice(0, 7)))].sort().slice(-18);
-  const mIdx = new Map(meses.map((m, i) => [m, i]));
-  const serie = meses.map(() => new Array(top.length + 1).fill(0));
-  rows.forEach(x => {{
-    const mi = mIdx.get(x[8].slice(0, 7));
-    if (mi === undefined) return;
-    serie[mi][pos.has(x[3]) ? pos.get(x[3]) : top.length]++;
-  }});
-  const W = 1240, H = 320, L = 46, R = 14, T = 16, B = 40;
-  const tot = serie.map(s => s.reduce((a, b) => a + b, 0));
-  const max = Math.max(...tot, 1);
-  const bw = (W - L - R) / meses.length;
-  const Y = v => T + (1 - v / (max * 1.1)) * (H - T - B);
-  let g = '';
-  const paso = max > 40 ? Math.ceil(max / 4 / 10) * 10 : Math.max(1, Math.ceil(max / 4));
-  for (let v = 0; v <= max * 1.02; v += paso) {{
-    g += `<line x1="${{L}}" y1="${{Y(v)}}" x2="${{W - R}}" y2="${{Y(v)}}" stroke="#F0F3F8"/>` +
-         `<text x="${{L - 6}}" y="${{Y(v) + 3.5}}" text-anchor="end" font-size="10.5" fill="#5B6B85">${{fmtN(v)}}</text>`;
-  }}
-  const et = m => MES_N[+m.slice(5, 7) - 1] + ' ' + m.slice(2, 4);
-  meses.forEach((m, i) => {{
-    let acc = 0;
-    const x = L + i * bw + bw * 0.14, w = bw * 0.72;
-    serie[i].forEach((v, si) => {{
-      if (!v) return;
-      const y1 = Y(acc), y2 = Y(acc + v);
-      const nom = si < top.length ? D.fuentes[top[si]] : 'Otras fuentes';
-      g += `<rect x="${{x}}" y="${{y2}}" width="${{w}}" height="${{y1 - y2}}" fill="${{si < top.length ? PIE_COL[si] : '#C9D6E4'}}" ` +
-        `data-tip="${{esc(nom)}} — ${{esc(et(m))}}: ${{fmtN(v)}} leads (mes total: ${{fmtN(tot[i])}})." style="cursor:help"></rect>`;
-      acc += v;
-    }});
-    if (meses.length <= 20) g += `<text x="${{x + w / 2}}" y="${{Y(tot[i]) - 5}}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2C4356">${{fmtN(tot[i])}}</text>`;
-    g += `<text x="${{x + w / 2}}" y="${{H - B + 16}}" text-anchor="middle" font-size="10" fill="#5B6B85">${{esc(et(m))}}</text>`;
-  }});
-  g += `<line x1="${{L}}" y1="${{H - B}}" x2="${{W - R}}" y2="${{H - B}}" stroke="#E4E9F2"/>`;
-  svg.innerHTML = g;
-  leg.innerHTML = top.map((f, i) =>
-    `<span><span class="dot" style="background:${{PIE_COL[i]}}"></span>${{esc(D.fuentes[f])}}</span>`).join('') +
-    (serie.some(s => s[top.length]) ? '<span><span class="dot" style="background:#C9D6E4"></span>Otras fuentes</span>' : '');
-}}
-
-/* ---------- dispersión: eficiencia por fuente ---------- */
-const SC_DEFAULT = ['hot', 'Negocio abierto', 'Cliente'];
-(function initScatCtrl() {{
-  const holder = document.getElementById('sc-cks');
-  const opts = [['hot', '🔥 Calientes (score ≥ 55)']]
-    .concat(D.status.map((s, i) => [String(i), s]));
-  holder.innerHTML = opts.map(([v, l]) => {{
-    const on = SC_DEFAULT.includes(v === 'hot' ? 'hot' : D.status[+v]);
-    return `<label class="ckp ${{on ? 'on' : ''}}"><input type="checkbox" autocomplete="off" value="${{v}}" ${{on ? 'checked' : ''}}>${{esc(l)}}</label>`;
-  }}).join('');
-  holder.querySelectorAll('input').forEach(i => i.addEventListener('change', () => {{
-    i.parentElement.classList.toggle('on', i.checked); renderScat();
-  }}));
-  document.getElementById('sc-min').addEventListener('change', renderScat);
-}})();
-
-function scatData() {{
-  const minN = +document.getElementById('sc-min').value;
-  const checked = [...document.querySelectorAll('#sc-cks input:checked')].map(i => i.value);
-  const hotOn = checked.includes('hot');
-  const sSet = new Set(checked.filter(v => v !== 'hot').map(Number));
-  const F = new Map();
-  filtro(['c', 'f']).forEach(r => {{
-    let o = F.get(r[3]);
-    if (!o) {{ o = {{ t: 0, st: {{}}, hotSt: {{}} }}; F.set(r[3], o); }}
-    o.t++;
-    o.st[r[5]] = (o.st[r[5]] || 0) + 1;
-    if (r[7] >= 55) o.hotSt[r[5]] = (o.hotSt[r[5]] || 0) + 1;
-  }});
-  const pts = [];
-  F.forEach((o, fi) => {{
-    if (o.t < minN) return;
-    let q = 0;
-    for (const [s, c] of Object.entries(o.st)) if (sSet.has(+s)) q += c;
-    if (hotOn) for (const [s, c] of Object.entries(o.hotSt)) if (!sSet.has(+s)) q += c;
-    pts.push({{ fi, t: o.t, q, p: q / o.t * 100, st: o.st,
-                hot: Object.values(o.hotSt).reduce((a, b) => a + b, 0) }});
-  }});
-  return pts;
-}}
-
-function median(a) {{
-  if (!a.length) return 0;
-  const s = a.slice().sort((x, y) => x - y), m = s.length >> 1;
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-}}
-
-function renderScat() {{
-  const pts = scatData();
-  const svg = document.getElementById('scat');
-  if (!pts.length) {{ svg.innerHTML = ''; document.getElementById('scat-top').innerHTML = ''; return; }}
-  const W = 1240, H = 430, L = 52, R = 26, T = 16, B = 40;
-  const xmin = Math.min(...pts.map(p => p.t)), xmax = Math.max(...pts.map(p => p.t));
-  const lx0 = Math.log10(Math.max(1, xmin * .8)), lx1 = Math.log10(xmax * 1.25);
-  const ymax = Math.max(5, Math.max(...pts.map(p => p.p)) * 1.14);
-  const X = t => L + (Math.log10(t) - lx0) / (lx1 - lx0) * (W - L - R);
-  const Y = p => T + (1 - p / ymax) * (H - T - B);
-  const rad = q => Math.max(6, Math.min(24, 5 + Math.sqrt(q) * 1.9));
-  let g = '';
-  /* grid + ejes */
-  const xticks = [5, 10, 30, 100, 300, 1000, 3000, 10000].filter(v => v >= xmin * .8 && v <= xmax * 1.25);
-  xticks.forEach(v => {{
-    g += `<line x1="${{X(v)}}" y1="${{T}}" x2="${{X(v)}}" y2="${{H - B}}" stroke="#F0F3F8"/>` +
-         `<text x="${{X(v)}}" y="${{H - B + 16}}" text-anchor="middle" font-size="10.5" fill="#5B6B85">${{fmtN(v)}}</text>`;
-  }});
-  const ystep = ymax > 40 ? 10 : ymax > 16 ? 5 : 2;
-  for (let v = 0; v <= Math.min(100, ymax); v += ystep) {{
-    g += `<line x1="${{L}}" y1="${{Y(v)}}" x2="${{W - R}}" y2="${{Y(v)}}" stroke="#F0F3F8"/>` +
-         `<text x="${{L - 7}}" y="${{Y(v) + 3.5}}" text-anchor="end" font-size="10.5" fill="#5B6B85">${{v}}%</text>`;
-  }}
-  g += `<text x="${{(L + W - R) / 2}}" y="${{H - 6}}" text-anchor="middle" font-size="11" fill="#5B6B85" font-weight="700">Leads que trajo la fuente (escala log)</text>`;
-  g += `<text x="14" y="${{(T + H - B) / 2}}" text-anchor="middle" font-size="11" fill="#5B6B85" font-weight="700" transform="rotate(-90 14 ${{(T + H - B) / 2}})">% calificados para venta</text>`;
-  /* medianas */
-  const mx = median(pts.map(p => p.t)), my = median(pts.map(p => p.p));
-  g += `<line x1="${{X(mx)}}" y1="${{T}}" x2="${{X(mx)}}" y2="${{H - B}}" stroke="#C9D6E4" stroke-dasharray="5 4"/>`;
-  g += `<line x1="${{L}}" y1="${{Y(my)}}" x2="${{W - R}}" y2="${{Y(my)}}" stroke="#C9D6E4" stroke-dasharray="5 4"/>`;
-  g += `<text x="${{W - R - 4}}" y="${{T + 12}}" text-anchor="end" font-size="10.5" fill="#8A99A8" font-style="italic">↗ alto volumen · alta calificación</text>`;
-  /* puntos (grandes debajo, pequeños encima) */
-  const drawn = pts.slice().sort((a, b) => b.t - a.t);
-  drawn.forEach((p, i) => {{
-    g += `<circle class="dot" data-i="${{pts.indexOf(p)}}" cx="${{X(p.t)}}" cy="${{Y(p.p)}}" r="${{rad(p.q)}}"/>`;
-  }});
-  /* etiquetas directas: top 4 por nº calificados y top 3 por % */
-  const lab = new Set();
-  pts.slice().sort((a, b) => b.q - a.q).slice(0, 4).forEach(p => lab.add(p.fi));
-  pts.slice().sort((a, b) => b.p - a.p).slice(0, 3).forEach(p => lab.add(p.fi));
-  pts.filter(p => lab.has(p.fi)).forEach(p => {{
-    const nm = D.fuentes[p.fi].length > 26 ? D.fuentes[p.fi].slice(0, 25) + '…' : D.fuentes[p.fi];
-    const anchor = X(p.t) > W - 220 ? 'end' : 'start';
-    const dx = anchor === 'end' ? -(rad(p.q) + 5) : rad(p.q) + 5;
-    g += `<text x="${{X(p.t) + dx}}" y="${{Y(p.p) + 3.5}}" text-anchor="${{anchor}}" font-size="10.8" font-weight="700" fill="#2C4356">${{esc(nm)}}</text>`;
-  }});
-  svg.innerHTML = g;
-  /* tooltip */
-  const tip = document.getElementById('scat-tip'), wrap = document.getElementById('scat-wrap');
-  svg.querySelectorAll('.dot').forEach(c => {{
-    const show = e => {{
-      const p = pts[+c.dataset.i];
-      const det = Object.entries(p.st).sort((a, b) => b[1] - a[1]).slice(0, 6)
-        .map(([s, n]) => `${{esc(D.status[+s])}}: <b>${{fmtN(n)}}</b>`).join(' · ');
-      tip.innerHTML = `<b>${{esc(D.fuentes[p.fi])}}</b><br>` +
-        `Leads: <b>${{fmtN(p.t)}}</b> · Calificados: <b>${{fmtN(p.q)}}</b> (${{p.p.toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}%)` +
-        ` · 🔥 Calientes: <b>${{fmtN(p.hot)}}</b><br><span style="opacity:.85">${{det}}</span>`;
-      const r = wrap.getBoundingClientRect();
-      let tx = e.clientX - r.left + 14, ty = e.clientY - r.top - 10;
-      tip.style.display = 'block';
-      if (tx + 290 > r.width) tx = e.clientX - r.left - 300;
-      tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
-    }};
-    c.addEventListener('mousemove', show);
-    c.addEventListener('mouseenter', show);
-    c.addEventListener('mouseleave', () => tip.style.display = 'none');
-  }});
-  /* interpretación dinámica según el filtro activo */
-  renderInterp(pts, mx, my);
-  /* ranking accesible */
-  document.getElementById('scat-top').innerHTML =
-    '<div style="border:0;font-weight:800;color:var(--gris);text-transform:uppercase;font-size:10.5px;letter-spacing:.5px">Fuentes más eficientes (con el mínimo de leads elegido)</div><div style="border:0"></div>' +
-    pts.slice().sort((a, b) => b.p - a.p || b.q - a.q).slice(0, 10).map((p, i) =>
-      `<div><span class="rk">${{i + 1}}.</span> ${{esc(D.fuentes[p.fi])}}
-       <span style="color:var(--gris)">${{fmtN(p.q)}} de ${{fmtN(p.t)}}</span>
-       <span class="pc">${{p.p.toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}%</span></div>`).join('');
-}}
-function renderInterp(pts, mx, my) {{
-  const el = document.getElementById('scat-interp');
-  const pct = x => x.toLocaleString('es-CO', {{ maximumFractionDigits: 1 }}) + '%';
-  const nm = p => `<b>${{esc(D.fuentes[p.fi])}}</b>`;
-  const minN = +document.getElementById('sc-min').value;
-  const checked = [...document.querySelectorAll('#sc-cks input:checked')];
-  if (!checked.length) {{
-    el.innerHTML = '<h3>Interpretación</h3>Marca al menos un estado en “Cuenta como calificado” para generar la lectura del gráfico.';
-    return;
-  }}
-  const defTxt = checked.map(i => i.value === 'hot' ? '🔥 Calientes (score ≥ 55)' : D.status[+i.value]).join(' + ');
-  const T = pts.reduce((a, p) => a + p.t, 0), Q = pts.reduce((a, p) => a + p.q, 0);
-  const li = [];
-  li.push(`Con la definición actual de calificado (<b>${{esc(defTxt)}}</b>) y fuentes de al menos ${{fmtN(minN)}} leads, se analizan <b>${{fmtN(pts.length)}} fuentes</b> que suman <b>${{fmtN(T)}}</b> leads, de los cuales <b>${{fmtN(Q)}}</b> (${{pct(T ? Q / T * 100 : 0)}}) están calificados. La fuente mediana convierte el ${{pct(my)}}.`);
-  const stars = pts.filter(p => p.t >= mx && p.p >= my && p.q > 0).sort((a, b) => b.q - a.q);
-  if (stars.length) {{
-    li.push(`<b>Dónde está el negocio (volumen + calificación):</b> ${{stars.slice(0, 3).map(p =>
-      `${{nm(p)}} (${{fmtN(p.q)}} calificados de ${{fmtN(p.t)}}, ${{pct(p.p)}})`).join(' · ')}}. Son las fuentes que combinan escala y calidad: protege su presupuesto y su seguimiento.`);
-  }} else {{
-    li.push(`<b>Ninguna fuente combina hoy volumen y calificación por encima de la mediana</b>: las eficientes son pequeñas y las masivas convierten poco.`);
-  }}
-  const gems = pts.filter(p => p.t < mx && p.p >= my * 1.5 && p.q >= 3 && p.p < 99).sort((a, b) => b.p - a.p);
-  if (gems.length) {{
-    li.push(`<b>Joyas por escalar (alta calificación, poco volumen):</b> ${{gems.slice(0, 3).map(p =>
-      `${{nm(p)}} (${{pct(p.p)}} con ${{fmtN(p.t)}} leads)`).join(' · ')}}. Si su calidad se sostiene al crecer, son la mejor inversión marginal.`);
-  }}
-  const low = pts.filter(p => p.t >= mx && p.p < my).sort((a, b) => b.t - a.t);
-  if (low.length) {{
-    li.push(`<b>Volumen con baja calificación:</b> ${{low.slice(0, 3).map(p =>
-      `${{nm(p)}} (${{fmtN(p.t)}} leads, solo ${{pct(p.p)}})`).join(' · ')}}. Aportan ${{fmtN(low.reduce((a, p) => a + p.q, 0))}} calificados por puro volumen, pero pagan mucho lead frío: revisar segmentación o el proceso de gestión de esos leads.`);
-  }}
-  const perfect = pts.filter(p => p.p >= 99).sort((a, b) => b.t - a.t);
-  if (perfect.length) {{
-    li.push(`<b>Ojo con ${{perfect.map(nm).join(' y ')}}</b>: convierte(n) ~100%, patrón típico de listas de clientes ya existentes importadas al CRM, no de una fuente real de captación. No usar como referencia de eficiencia.`);
-  }}
-  const hotOn = checked.some(i => i.value === 'hot');
-  if (hotOn) {{
-    const H = pts.reduce((a, p) => a + p.hot, 0);
-    const topHot = pts.filter(p => p.hot > 0).sort((a, b) => b.hot - a.hot).slice(0, 3);
-    if (topHot.length) li.push(`<b>Los ${{fmtN(H)}} leads calientes</b> de estas fuentes salen sobre todo de ${{topHot.map(p => `${{nm(p)}} (${{fmtN(p.hot)}})`).join(' · ')}}.`);
-  }}
-  el.innerHTML = '<h3>Interpretación (se actualiza con el filtro)</h3><ul>' + li.map(x => `<li>${{x}}</li>`).join('') + '</ul>';
+  pieDe('pie-st', 'pleg-st', 5, D.status, 'f-s', 'lead status', 's');
+  pieGen('pie-op', 'pleg-op', x => x[20] ? x[20][0] : -1, k => k < 0 ? '(Sin oportunidad)' : D.opps[k], 'o',
+    k => {{ const sel = document.getElementById('f-o'); sel.value = sel.value == k ? '' : k; apply(); }});
+  pieGen('pie-sc', 'pleg-sc', x => TEMP_OF(x[7]), k => TEMP_LBL[k], 't',
+    k => {{ const sel = document.getElementById('f-t'); sel.value = sel.value == k ? '' : k; apply(); }}, TEMP_COL);
 }}
 
 /* ---------- tabla maestra: categoría → fuente (drill-down) ---------- */
@@ -1014,83 +780,6 @@ function campDe(x) {{
   }}
   return null;
 }}
-function renderCampanas() {{
-  const agg = new Map();
-  view.forEach(x => {{
-    const c = campDe(x);
-    if (!c) return;
-    if (!agg.has(c)) agg.set(c, {{n: 0, cli: 0, desc: 0, sum: 0, fu: new Map()}});
-    const a = agg.get(c);
-    a.n++; a.sum += x[7];
-    if (x[5] === CLI_I) a.cli++;
-    if (x[5] === DESC_I) a.desc++;
-    a.fu.set(x[3], (a.fu.get(x[3]) || 0) + 1);
-  }});
-  const pcc = (v, n) => n ? (v / n * 100).toFixed(1).replace('.', ',') + '%' : '—';
-  document.getElementById('tb-camp').innerHTML = [...agg.entries()]
-    .filter(([, a]) => a.n >= 15).sort((x, y) => y[1].n - x[1].n).slice(0, 15)
-    .map(([c, a]) => {{
-      const fu = [...a.fu.entries()].sort((x, y) => y[1] - x[1])[0];
-      return `<tr data-tip="${{esc(c)}}: ${{fmtN(a.n)}} leads, ${{fmtN(a.cli)}} clientes, ${{fmtN(a.desc)}} descartados.">
-        <td><b>${{esc(c).slice(0, 46)}}</b></td><td>${{fmtN(a.n)}}</td>
-        <td>${{fmtN(a.cli)}}</td><td><b style="color:${{a.cli / a.n >= 0.035 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.cli, a.n)}}</b></td>
-        <td style="color:${{a.desc / a.n >= 0.2 ? 'var(--rojo)' : 'var(--tinta)'}}">${{pcc(a.desc, a.n)}}</td>
-        <td>${{(a.sum / a.n).toFixed(1).replace('.', ',')}}</td>
-        <td>${{esc(D.fuentes[fu[0]])}} <small style="color:var(--gris)">(${{fmtN(fu[1])}})</small></td></tr>`;
-    }}).join('') || '<tr><td colspan="7" style="color:var(--gris)">Sin campañas con 15+ leads en la selección.</td></tr>';
-}}
-
-/* ---------- atribución ---------- */
-function renderAttr() {{
-  const agg = new Map();
-  view.forEach(x => {{
-    if (!agg.has(x[15])) agg.set(x[15], {{n: 0, cli: 0}});
-    const a = agg.get(x[15]);
-    a.n++; if (x[5] === CLI_I) a.cli++;
-  }});
-  const pcc = (v, n) => n ? (v / n * 100).toFixed(1).replace('.', ',') + '%' : '—';
-  document.getElementById('tb-attr').innerHTML = [...agg.entries()]
-    .sort((x, y) => y[1].n - x[1].n).slice(0, 10)
-    .map(([i, a]) => `<tr><td>${{esc(D.attrs[i]).slice(0, 40)}}</td><td>${{fmtN(a.n)}}</td>
-      <td>${{fmtN(a.cli)}}</td><td>${{pcc(a.cli, a.n)}}</td></tr>`).join('');
-}}
-
-/* ---------- aprendizajes ---------- */
-function renderLearn() {{
-  const base = filtro(['f']);
-  const agg = new Map();
-  const hoy = Date.now();
-  const c90 = new Date(hoy - 90 * 86400000).toISOString().slice(0, 10);
-  const c180 = new Date(hoy - 180 * 86400000).toISOString().slice(0, 10);
-  base.forEach(x => {{
-    if (!agg.has(x[3])) agg.set(x[3], {{n: 0, cli: 0, desc: 0, d90: 0, p90: 0}});
-    const a = agg.get(x[3]);
-    a.n++;
-    if (x[5] === CLI_I) a.cli++;
-    if (x[5] === DESC_I) a.desc++;
-    if (x[8] >= c90) a.d90++; else if (x[8] >= c180) a.p90++;
-  }});
-  const conVol = [...agg.entries()].filter(([, a]) => a.n >= 100);
-  const li = [];
-  if (conVol.length) {{
-    const mejor = conVol.slice().sort((x, y) => y[1].cli / y[1].n - x[1].cli / x[1].n)[0];
-    li.push(`<b>La fuente que mejor convierte (100+ leads):</b> ${{esc(D.fuentes[mejor[0]])}} — ${{(mejor[1].cli / mejor[1].n * 100).toFixed(1).replace('.', ',')}}% de conversión (${{fmtN(mejor[1].cli)}} clientes de ${{fmtN(mejor[1].n)}} leads). Ojo: conversiones ~100% suelen ser listas de clientes importadas, no captación real.`);
-    const peor = conVol.slice().sort((x, y) => y[1].desc / y[1].n - x[1].desc / x[1].n)[0];
-    li.push(`<b>La fuente que más se descarta:</b> ${{esc(D.fuentes[peor[0]])}} — ${{(peor[1].desc / peor[1].n * 100).toFixed(1).replace('.', ',')}}% de sus leads terminó en la basura. Revisar si el problema es la calidad del lead o la velocidad de atención.`);
-    const crece = conVol.filter(([, a]) => a.p90 >= 10).sort((x, y) => (y[1].d90 - y[1].p90) / y[1].p90 - (x[1].d90 - x[1].p90) / x[1].p90)[0];
-    if (crece) {{
-      const d = (crece[1].d90 - crece[1].p90) / crece[1].p90 * 100;
-      li.push(`<b>Momentum:</b> ${{esc(D.fuentes[crece[0]])}} ${{d >= 0 ? 'crece' : 'cae'}} ${{Math.abs(d).toFixed(0)}}% en llegada (${{fmtN(crece[1].d90)}} leads en los últimos 90 días vs ${{fmtN(crece[1].p90)}} en los 90 anteriores).`);
-    }}
-    const top1 = conVol.slice().sort((x, y) => y[1].n - x[1].n)[0];
-    li.push(`<b>Concentración:</b> ${{esc(D.fuentes[top1[0]])}} aporta el ${{(top1[1].n / base.length * 100).toFixed(0)}}% de la adquisición de la selección — dependencia alta de un solo medio.`);
-  }}
-  li.push(`<b>Atribución de pauta rota:</b> solo ${{fmtN(D.attrCov.gclid)}} leads con gclid y ${{fmtN(D.attrCov.utm)}} con utmCampaign en toda la base (${{fmtN(D.attrCov.conAttr)}} traen algún registro de sesión). Hasta que el embudo de WhatsApp no herede UTMs, el ROI por campaña de Google no se puede medir desde el CRM.`);
-  document.getElementById('adq-learn').innerHTML =
-    '<b>🎓 Aprendizajes de la selección actual:</b><ul style="padding-left:20px;margin:6px 0">' +
-    li.map(x => `<li style="margin:4px 0">${{x}}</li>`).join('') + '</ul>';
-}}
-
 /* ---------- tabla de leads ---------- */
 function tagsCell(idxs) {{
   if (!idxs || !idxs.length) return '—';
@@ -1252,28 +941,20 @@ function csv() {{
   XL('adquisicion-leads-filtrado.xlsx', out);
 }}
 
-['f-c', 'f-f', 'f-p', 'f-s', 'f-t', 'f-d1', 'f-d2'].forEach(id =>
+['f-c', 'f-f', 'f-p', 'f-s', 'f-o', 'f-t', 'f-d1', 'f-d2'].forEach(id =>
   document.getElementById(id).addEventListener('change', apply));
 document.getElementById('f-q').addEventListener('input', apply);
 function reset() {{
-  ['f-c', 'f-f', 'f-p', 'f-s', 'f-t', 'f-d1', 'f-d2'].forEach(id => document.getElementById(id).value = '');
+  ['f-c', 'f-f', 'f-p', 'f-s', 'f-o', 'f-t', 'f-d1', 'f-d2'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-q').value = '';
   apply();
 }}
 /* arranque limpio contra la restauración de formularios del navegador */
-function arranque() {{
-  const defc = ['hot', String(D.status.indexOf('Negocio abierto')), String(D.status.indexOf('Cliente'))];
-  document.querySelectorAll('#sc-cks input').forEach(i => {{
-    i.checked = defc.includes(i.value);
-    i.parentElement.classList.toggle('on', i.checked);
-  }});
-  const scm = document.getElementById('sc-min'); if (scm) scm.value = '10';
-  reset();
-}}
+function arranque() {{ reset(); }}
 arranque();
 window.addEventListener('pageshow', e => {{ if (e.persisted) arranque(); }});
 setTimeout(() => {{
-  const alguno = ['f-c', 'f-f', 'f-p', 'f-s', 'f-t', 'f-q', 'f-d1', 'f-d2'].some(id => document.getElementById(id).value !== '');
+  const alguno = ['f-c', 'f-f', 'f-p', 'f-s', 'f-o', 'f-t', 'f-q', 'f-d1', 'f-d2'].some(id => document.getElementById(id).value !== '');
   if (alguno) arranque();
 }}, 250);
 </script>
