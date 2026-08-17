@@ -443,25 +443,26 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 
 <div class="chart-sec">
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
-<p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra volumen, momentum, contactabilidad, MQL, SQL, conversión, descarte y las <b>etapas de oportunidad</b> del pipeline. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
-<div style="overflow-x:auto"><table style="min-width:1150px"><thead><tr>
+<p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra: leads y score promedio → <b>tipificación de sus oportunidades en HOT / WARM / COLD</b> (por etapa del pipeline) → MQL y SQL → contactabilidad y tiempo de 1ª atención → % descartados → clientes, conversión y cierres. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
+<div style="overflow-x:auto"><table style="min-width:1600px"><thead><tr>
 <th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Facebook (Meta) + resto de pago. Orgánico digital: Sitio Web (SEO / directo), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios orgánicos.">Categoría / fuente</th>
-<th data-tip="Leads adquiridos en la selección.">Leads</th>
+<th data-tip="Leads adquiridos en la selección (respetan los filtros de arriba, salvo categoría y fuente).">Leads</th>
 <th data-tip="% del total de la selección.">%</th>
-<th data-tip="De los leads de la selección, cuántos llegaron en los últimos 90 días (columna informativa; la selección la definen los filtros de arriba).">Últ. 90d</th>
-<th data-tip="Momentum: variación de los últimos 90 días vs los 90 anteriores. ▲ crece, ▼ cae. Estable = ±15%.">Momentum</th>
-<th data-tip="% contactabilidad: leads que RESPONDIERON (mensaje entrante de WhatsApp o llamada contestada). Mide si el dato sirve y el canal conecta. Cobertura: WA descargado + llamadas de carteras humanas.">Contactab.</th>
+<th data-tip="Lead scoring v2 promedio (0-100) de los leads de la fila.">Score prom.</th>
+<th data-tip="Oportunidades tipificadas HOT por su etapa en el pipeline: Date to Miami, Asistió Oficina Miami, Tour Miami, Toma Decisión (HOT), Recompra, Pending y Cierre (Elite Club). Entre paréntesis: % de las oportunidades de la fila.">Opp. HOT</th>
+<th data-tip="Oportunidades WARM: Cita/Asistió a jornada-evento-webinar, Cita Virtual, Asistió Presencial o Virtual, WARM, Llamada de Precalificación, Precalificación Financiera y Atención Contador.">Opp. WARM</th>
+<th data-tip="Oportunidades COLD: Nuevo Lead, Intento de Contacto, COLD y Sin Oportunidad.">Opp. COLD</th>
+<th data-tip="Leads de la fila que NO tienen oportunidad en el pipeline (nunca entraron al embudo de ventas).">Sin opp.</th>
 <th data-tip="% MQL: leads con señal de calificación de marketing — score ≥30 u oportunidad declarada (En curso por = Oportunidad…) o ya en Negocio abierto/Cliente.">MQL%</th>
 <th data-tip="% SQL: leads aceptados por ventas — Negocio abierto o Cliente, o En curso CON oportunidad vigente. Todo SQL es MQL.">SQL%</th>
-<th data-tip="Leads que hoy son clientes.">Clientes</th>
-<th data-tip="Tasa de conversión: clientes ÷ leads. La métrica reina de adquisición.">Conv%</th>
-<th data-tip="% de leads que terminó descartado.">Desc%</th>
-<th data-tip="Score promedio (0-100).">Score</th>
+<th data-tip="% contactabilidad: leads que RESPONDIERON (mensaje entrante de WhatsApp o llamada contestada).">Contactab.</th>
 <th data-tip="Tiempo promedio de 1ª atención (primer mensaje saliente de WhatsApp) de los leads con conversación.">1ª atención</th>
-<th data-tip="% de los leads de la fila que tienen OPORTUNIDAD creada en el pipeline de ventas (entraron al embudo).">Con opp.</th>
-<th data-tip="Oportunidades ABIERTAS hoy en el pipeline (leads de la fila).">Opp. abiertas</th>
-<th data-tip="% de los leads de la fila cuya oportunidad está en etapa AVANZADA del embudo: WARM, Cita, Precalificación, Atención Contador, Date to Miami, Asistió, Tour, HOT, Pending o Cierre.">Etapa avanzada</th>
-<th data-tip="Oportunidades en etapa Cierre (Elite Club) o ganadas, de los leads de la fila.">En cierre</th>
+<th data-tip="% de leads que terminó con Lead Status Descartado.">Desc%</th>
+<th data-tip="Leads que hoy son clientes.">Clientes</th>
+<th data-tip="Tasa de conversión: clientes ÷ leads.">Conv%</th>
+<th data-tip="Oportunidades en etapa Cierre (Elite Club) o ganadas.">En cierre</th>
+<th data-tip="De los leads de la selección, cuántos llegaron en los últimos 90 días (informativa).">Últ. 90d</th>
+<th data-tip="Momentum: variación de los últimos 90 días vs los 90 anteriores. ▲ crece, ▼ cae. Estable = ±15%.">Momentum</th>
 </tr></thead><tbody id="tb-fu"></tbody></table></div>
 </div>
 
@@ -679,10 +680,15 @@ function renderPies() {{
 
 /* ---------- tabla maestra: categoría → fuente (drill-down) ---------- */
 const EXP = new Set();
-function mkAgg() {{ return {{n: 0, cli: 0, desc: 0, sum: 0, atnS: 0, atnN: 0, d90: 0, p90: 0, resp: 0, mql: 0, sql: 0, opp: 0, oppAb: 0, oppAv: 0, oppCierre: 0}}; }}
-// etapas del pipeline consideradas AVANZADAS (más allá del primer contacto)
-const ETAPAS_AV = /warm|precalificaci|contador|date to miami|asisti|tour|toma decision|hot|pending|elite|cierre|cita/i;
-const ETAPAS_CIERRE = /cierre/i;
+function mkAgg() {{ return {{n: 0, cli: 0, desc: 0, sum: 0, atnS: 0, atnN: 0, d90: 0, p90: 0, resp: 0, mql: 0, sql: 0, opp: 0, oHot: 0, oWarm: 0, oCold: 0, oCierre: 0}}; }}
+// TIPIFICACIÓN de la oportunidad por bloque del embudo (etapa del PIPELINE):
+//   COLD = Nuevo Lead · Intento de Contacto · COLD · Sin Oportunidad
+//   WARM = Cita/Asistió jornada · Cita Virtual · Asistió Presencial/Virtual · WARM · Llamada/Precalificación financiera · Atención Contador
+//   HOT  = Date to Miami · Asistió Oficina Miami · Tour Miami · Toma Decision (HOT) · Recompra · Pending · Cierre (Elite Club)
+const RE_HOT = /date to miami|oficina miami|tour miami|toma decision|hot|recompra|pending|cierre/i;
+const RE_WARM = /cita|asisti|warm|precalificaci|contador/i;
+const RE_CIERRE = /cierre/i;
+function tipoOpp(et) {{ if (RE_HOT.test(et)) return 'hot'; if (RE_WARM.test(et)) return 'warm'; return 'cold'; }}
 function addTo(a, x, c90, c180) {{
   a.n++; a.sum += x[7];
   if (x[5] === CLI_I) a.cli++;
@@ -695,10 +701,10 @@ function addTo(a, x, c90, c180) {{
   const o = x[20];
   if (o) {{
     a.opp++;
-    if (o[1] === 'abierta') a.oppAb++;
     const et = D.opps[o[0]] || '';
-    if (ETAPAS_AV.test(et)) a.oppAv++;
-    if (ETAPAS_CIERRE.test(et) || o[1] === 'ganada') a.oppCierre++;
+    const tp = tipoOpp(et);
+    if (tp === 'hot') a.oHot++; else if (tp === 'warm') a.oWarm++; else a.oCold++;
+    if (RE_CIERRE.test(et) || o[1] === 'ganada') a.oCierre++;
   }}
 }}
 function renderFuentes() {{
@@ -724,20 +730,22 @@ function renderFuentes() {{
     }}
     return (!a.d90 && !a.p90) ? '<span style="color:var(--gris)">sin llegada</span>' : '<span style="color:var(--gris)">estable</span>';
   }};
+  const oPct = (v, a) => a.opp ? ` <small style="color:var(--gris)">(${{(v / a.opp * 100).toFixed(0)}}%)</small>` : '';
   const celdas = a => `
-    <td>${{fmtN(a.n)}}</td><td>${{pcc(a.n, base.length)}}</td>
-    <td>${{fmtN(a.d90)}}</td><td style="white-space:nowrap">${{momTxt(a)}}</td>
-    <td><b style="color:${{a.n && a.resp / a.n >= .3 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.resp, a.n)}}</b></td>
+    <td><b>${{fmtN(a.n)}}</b></td><td>${{pcc(a.n, base.length)}}</td>
+    <td><b>${{a.n ? (a.sum / a.n).toFixed(1).replace('.', ',') : '—'}}</b></td>
+    <td style="white-space:nowrap;color:var(--rojo);font-weight:700">${{fmtN(a.oHot)}}${{oPct(a.oHot, a)}}</td>
+    <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{fmtN(a.oWarm)}}${{oPct(a.oWarm, a)}}</td>
+    <td style="white-space:nowrap;color:var(--azul);font-weight:700">${{fmtN(a.oCold)}}${{oPct(a.oCold, a)}}</td>
+    <td style="white-space:nowrap;color:var(--gris)">${{fmtN(a.n - a.opp)}}</td>
     <td style="color:var(--naranja);font-weight:700">${{pcc(a.mql, a.n)}}</td>
     <td style="color:var(--rojo);font-weight:700">${{pcc(a.sql, a.n)}}</td>
-    <td>${{fmtN(a.cli)}}</td><td><b style="color:${{a.n && a.cli / a.n >= 0.035 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.cli, a.n)}}</b></td>
-    <td style="color:${{a.n && a.desc / a.n >= 0.2 ? 'var(--rojo)' : 'var(--tinta)'}}">${{pcc(a.desc, a.n)}}</td>
-    <td>${{a.n ? (a.sum / a.n).toFixed(1).replace('.', ',') : '—'}}</td>
+    <td><b style="color:${{a.n && a.resp / a.n >= .3 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.resp, a.n)}}</b></td>
     <td style="white-space:nowrap">${{a.atnN ? atnT(a.atnS / a.atnN) : '—'}}</td>
-    <td style="white-space:nowrap">${{pcc(a.opp, a.n)}}</td>
-    <td style="white-space:nowrap">${{fmtN(a.oppAb)}}</td>
-    <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{pcc(a.oppAv, a.n)}}</td>
-    <td style="white-space:nowrap;color:var(--verde);font-weight:700">${{fmtN(a.oppCierre)}}</td>`;
+    <td style="color:${{a.n && a.desc / a.n >= 0.2 ? 'var(--rojo)' : 'var(--tinta)'}};font-weight:700">${{pcc(a.desc, a.n)}}</td>
+    <td>${{fmtN(a.cli)}}</td><td><b style="color:${{a.n && a.cli / a.n >= 0.035 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.cli, a.n)}}</b></td>
+    <td style="color:var(--verde);font-weight:700">${{fmtN(a.oCierre)}}</td>
+    <td>${{fmtN(a.d90)}}</td><td style="white-space:nowrap">${{momTxt(a)}}</td>`;
   let out = '';
   [...porCat.entries()].sort((x, y) => y[1].n - x[1].n).forEach(([ci, a]) => {{
     const abierto = EXP.has(ci);
