@@ -69,7 +69,7 @@ def score_of(ct):
     return min(100, s)
 CORTE = f'{_hoy.day} de {MESES[_hoy.month-1]} de {_hoy.year}'
 def fmt(n): return f'{n:,}'.replace(',', '.')
-def pct(x): return f'{x:.1f}'.replace('.', ',') + '%'
+def pct(x): return f'{x:.0f}'.replace('.', ',') + '%'
 
 # ---------- universo completo WhatsApp ----------
 wa = [c for c in convos if c['lastType'] == 'TYPE_WHATSAPP']
@@ -120,7 +120,7 @@ def rt_txt(rts):
     if not rts: return '—'
     h = statistics.median(rts)
     if h < 1: return f'{h*60:.0f} min'
-    if h < 48: return f'{h:.1f} h'.replace('.', ',')
+    if h < 48: return f'{h:.0f} h'.replace('.', ',')
     return f'{h/24:.0f} días'
 
 # tabla por asesor (universo >= 50 convos)
@@ -550,7 +550,7 @@ function render() {{
     const p = i / t * 100;
     const sm = W.sample[W.as[ai]];
     return `<tr><td><b>${{esc(W.as[ai])}}</b></td><td>${{fN(t)}}</td>` +
-      `<td style="color:${{espCol(p)}};font-weight:700">${{fN(i)}} (${{p.toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}%)</td>` +
+      `<td style="color:${{espCol(p)}};font-weight:700">${{fN(i)}} (${{p.toLocaleString('es-CO', {{maximumFractionDigits: 0}})}}%)</td>` +
       (conMuestra ? `<td>${{sm ? sm[0] : '—'}}</td><td>${{sm ? sm[1] : '—'}}</td><td>${{sm ? sm[2] : '—'}}</td>` : '') + '</tr>';
   }}).join('') || '<tr><td colspan="6" style="color:var(--gris)">Sin asesores con volumen suficiente en esta fuente.</td></tr>';
   /* tabla por fuente (todas las fuentes, respetando el rango de fechas) */
@@ -564,7 +564,7 @@ function render() {{
       const pp = i / t * 100;
       const col = pp >= 10 ? '#D64545' : pp >= 4 ? '#AA9664' : '#1E9E62';
       return `<tr><td><b>${{esc(W.f[fi2])}}</b></td><td>${{fN(t)}}</td>` +
-        `<td style="color:${{col}};font-weight:700">${{fN(i)}} (${{pp.toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}%)</td></tr>`;
+        `<td style="color:${{col}};font-weight:700">${{fN(i)}} (${{pp.toLocaleString('es-CO', {{maximumFractionDigits: 0}})}}%)</td></tr>`;
     }}).join('');
   /* tabla de pendientes */
   document.getElementById('tb-p').innerHTML = pend.map(p => {{

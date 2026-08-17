@@ -426,7 +426,7 @@ _G_CXL  = sum(r[12] for r in LEADS) / TOT_LEADS
 _atns_g = [r[13] for r in LEADS if r[13] >= 0]
 _G_ATN  = sum(_atns_g) / len(_atns_g) if _atns_g else None
 
-def pct(x): return f'{x:.1f}'.replace('.', ',') + '%'
+def pct(x): return f'{x:.0f}'.replace('.', ',') + '%'
 
 # ---------- feedback por reglas ----------
 def feedback(nombre, g, act, smp, pend, es_asesor, cs=None):
@@ -525,7 +525,7 @@ def pack(nombre, g, act, smp, pend, es_asesor):
         'lconvs': LEADCONVS.get(nombre, [])[:150],
         'leads': g['leads'], 'cli': g['status'].get('Cliente', 0),
         'neg': g['status'].get('Negocio abierto', 0),
-        'hot': g['hot'], 'warm': g['warm'], 'sc': round(scp, 1),
+        'hot': g['hot'], 'warm': g['warm'], 'sc': round(scp),
         'status': [[s, g['status'][s]] for s in STATUS_ORDER if g['status'].get(s)],
         'curso': sorted(g['curso'].items(), key=lambda x: -x[1])[:5],
         'oport': sum(n for k2, n in g['curso'].items() if k2.startswith('Oportunidad')),
@@ -553,7 +553,7 @@ for r, g in R.items():
 orden_a = sorted([k for k in PEOPLE if k.startswith('a:')], key=lambda k: -PEOPLE[k]['leads'])
 orden_r = sorted([k for k in PEOPLE if k.startswith('r:')], key=lambda k: -PEOPLE[k]['leads'])
 PAYLOAD = json.dumps({'p': PEOPLE, 'ordenA': orden_a, 'ordenR': orden_r,
-                      'bench': {'conv': round(G_CONV, 1), 'wpct': round(G_WPCT, 1), 'sc': round(G_SC, 1), 'cont': round(_G_CONT, 1), 'cxl': round(_G_CXL, 1), 'atn': round(_G_ATN, 1) if _G_ATN is not None else None},
+                      'bench': {'conv': round(G_CONV), 'wpct': round(G_WPCT), 'sc': round(G_SC), 'cont': round(_G_CONT), 'cxl': round(_G_CXL), 'atn': round(_G_ATN) if _G_ATN is not None else None},
                       'leads': LEADS, 'ase': ordered(DASE), 'rl': ordered(DRL),
                       'fu': ordered(DFU), 'cu': ordered(DCU), 'sts': STATUS_ORDER,
                       'tg': ordered(DTG), 'opp': ordered(DOP)},
@@ -642,7 +642,7 @@ a{{color:var(--azul)}}
 <div class="strip"></div>
 <div class="wrap">
 
-<div class="caveat"><b>Cómo leer este informe.</b> Todo sale de los registros del CRM al corte: cartera asignada, lead scoring, conversaciones de WhatsApp / llamadas / email y una muestra cualitativa leída de 224 conversaciones (16 por asesor con más volumen). Benchmarks de la compañía: conversión a Cliente {pct(G_CONV)} · conversaciones con cliente esperando {pct(G_WPCT)} · score promedio {G_SC:.1f}. <b>Úselo como insumo estructurado, no como veredicto único:</b> la asignación masiva de carteras, los campos sin diligenciar y el tamaño de la muestra afectan las métricas individuales. Antes de decisiones de personal, contraste con el contexto de cada asesor (metas, canal principal, gestión fuera del CRM) y déle la oportunidad de explicar sus números.</div>
+<div class="caveat"><b>Cómo leer este informe.</b> Todo sale de los registros del CRM al corte: cartera asignada, lead scoring, conversaciones de WhatsApp / llamadas / email y una muestra cualitativa leída de 224 conversaciones (16 por asesor con más volumen). Benchmarks de la compañía: conversión a Cliente {pct(G_CONV)} · conversaciones con cliente esperando {pct(G_WPCT)} · score promedio {G_SC:.0f}. <b>Úselo como insumo estructurado, no como veredicto único:</b> la asignación masiva de carteras, los campos sin diligenciar y el tamaño de la muestra afectan las métricas individuales. Antes de decisiones de personal, contraste con el contexto de cada asesor (metas, canal principal, gestión fuera del CRM) y déle la oportunidad de explicar sus números.</div>
 
 <div class="fbar">
 <div><label data-tip="La cartera del asesor incluye los contactos donde es OWNER o SEGUIDOR (followers). Solo cambia la consulta del reporte — el CRM no se modifica.">Auditar asesor comercial</label><select id="f-a" autocomplete="off"></select></div>
@@ -662,7 +662,7 @@ a{{color:var(--azul)}}
 const D = {PAYLOAD};
 const fN = n => n.toLocaleString('es-CO');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}})[c]);
-const pc = (a, b) => b ? (a / b * 100).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + '%' : '—';
+const pc = (a, b) => b ? (a / b * 100).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) + '%' : '—';
 const scCol = s => s >= 55 ? '#D64545' : s >= 30 ? '#AA9664' : s >= 10 ? '#3A566B' : '#8A99A8';
 const SCOL = {{'Cliente':'#2C4356','Negocio abierto':'#1E9E62','En curso':'#3A566B','Intento de contacto':'#AA9664','Nuevo':'#8A6D1A','En Nutrición':'#8A99A8','Descartado':'#D64545','(Sin status)':'#5B6B85'}};
 
@@ -719,7 +719,7 @@ function carteraCalc(rs) {{
   return {{
     leads: rs.length, cli: stG('Cliente'), neg: stG('Negocio abierto'), encurso: stG('En curso'),
     oport: [...cu.entries()].filter(([i]) => D.cu[i].startsWith('Oportunidad')).reduce((t, [, n]) => t + n, 0),
-    hot, warm, cold, none, sc: rs.length ? Math.round(sum / rs.length * 10) / 10 : 0,
+    hot, warm, cold, none, sc: rs.length ? Math.round(sum / rs.length) : 0,
     contPct: rs.length ? cont / rs.length * 100 : 0,
     cxl: rs.length ? isum / rs.length : 0,
     atnH: atnN ? atnS / atnN : null, atnN,
@@ -736,7 +736,7 @@ function nivelTag(p) {{
 }}
 const stN = (p, s) => s === 'En curso' ? p.encurso : (p.status.find(x => x[0] === s) || [0, 0])[1];
 const oportN = p => p.oport;
-const rtT = h => h === null || h === undefined ? '—' : h < 1 ? Math.round(h*60) + ' min' : h < 48 ? h.toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' h' : Math.round(h/24) + ' d';
+const rtT = h => h === null || h === undefined ? '—' : h < 1 ? Math.round(h*60) + ' min' : h < 48 ? h.toLocaleString('es-CO', {{maximumFractionDigits: 0}}) + ' h' : Math.round(h/24) + ' d';
 const tmoT = secs => {{ const t = Math.round(secs), m = Math.floor(t / 60), ss = t % 60; return m + ':' + String(ss).padStart(2, '0') + ' min'; }};
 function tagsCell(idxs) {{
   if (!idxs || !idxs.length) return '—';
@@ -757,11 +757,11 @@ function filaRk(k) {{
     <td>${{fN(c.encurso)}}</td><td>${{fN(c.oport)}}</td>
     <td style="white-space:nowrap">${{fN(c.hot)}} / ${{fN(c.warm)}} / ${{fN(c.cold)}}</td><td>${{c.sc.toLocaleString('es-CO')}}</td>
     <td>${{c.leads ? c.contPct.toFixed(0) + '%' : '—'}}</td>
-    <td>${{c.leads ? c.cxl.toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—'}}</td>
+    <td>${{c.leads ? c.cxl.toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—'}}</td>
     <td>${{c.atnH === null ? '—' : rtT(c.atnH)}}</td>
-    <td>${{c.gCov ? (c.gOut / c.gCov).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—'}}</td>
+    <td>${{c.gCov ? (c.gOut / c.gCov).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—'}}</td>
     <td>${{c.gAns ? tmoT(c.gSecs / c.gAns) : '—'}}</td>
-    <td>${{c.gCov ? (c.gEm / c.gCov).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—'}}</td>
+    <td>${{c.gCov ? (c.gEm / c.gCov).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—'}}</td>
     <td>${{c.gCov ? fN(c.gTD) + '/' + fN(c.gTT) : '—'}}</td>
     <td>${{c.gCov ? fN(c.gNo) : '—'}}</td>
     <td>${{c.i2 ? `<b style="color:${{c.iMulti / c.i2 >= .6 ? 'var(--verde)' : c.iMulti / c.i2 < .4 ? 'var(--rojo)' : 'var(--naranja)'}}">${{Math.round(c.iMulti / c.i2 * 100)}}%</b>` : '—'}}</td>
@@ -882,8 +882,8 @@ function verResumen() {{
     if (c.i2) met('multi', c.iMulti / c.i2 * 100);
   }});
   const avg = k2 => accum[k2] && accum[k2].length ? accum[k2].reduce((a, b) => a + b, 0) / accum[k2].length : null;
-  const f1 = v2 => v2 === null ? '—' : v2.toLocaleString('es-CO', {{maximumFractionDigits: 1}});
-  const fp = v2 => v2 === null ? '—' : v2.toFixed(1).replace('.', ',') + '%';
+  const f1 = v2 => v2 === null ? '—' : v2.toLocaleString('es-CO', {{maximumFractionDigits: 0}});
+  const fp = v2 => v2 === null ? '—' : v2.toFixed(0).replace('.', ',') + '%';
   const kpiProm = (val, lbl, tip, color) =>
     `<div class="kpi" data-tip="${{esc(tip)}} Promedio simple entre los ${{nAses}} asesores comerciales con cartera (cada asesor pesa igual; MARKETING PFS y sin-asesor quedan fuera). Respeta el rango de fechas de creación del lead."><b style="color:${{color || 'var(--tinta)'}}">${{val}}</b><span>${{lbl}}</span></div>`;
   const kpisGlobal = `
@@ -1102,8 +1102,8 @@ function verPerfil(k) {{
   const intentos = !cart.iCov ? '' : `
   <h3>📆 Intentos de contacto: ¿insiste en varios días o ráfaga de un solo día? <span style="color:var(--gris);font-weight:600;font-size:12px">(${{fN(cart.iTot)}} toques salientes a ${{fN(cart.iCov)}} leads)</span></h3>
   <div class="kpis">
-    <div class="kpi" data-tip="Total de toques salientes (llamadas + WhatsApp + emails + SMS) dividido por los leads de su cartera que recibieron al menos uno. Fuente: últimos 100 eventos por conversación."><b>${{(cart.iTot / cart.iCov).toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}</b><span>intentos por lead tocado</span></div>
-    <div class="kpi" data-tip="Promedio de DÍAS DISTINTOS en que tocó a cada lead. 1 = todo se intentó en un solo día; más días = seguimiento sostenido en el tiempo."><b>${{(cart.iDias / cart.iCov).toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}</b><span>días distintos de intento por lead</span></div>
+    <div class="kpi" data-tip="Total de toques salientes (llamadas + WhatsApp + emails + SMS) dividido por los leads de su cartera que recibieron al menos uno. Fuente: últimos 100 eventos por conversación."><b>${{(cart.iTot / cart.iCov).toLocaleString('es-CO', {{maximumFractionDigits: 0}})}}</b><span>intentos por lead tocado</span></div>
+    <div class="kpi" data-tip="Promedio de DÍAS DISTINTOS en que tocó a cada lead. 1 = todo se intentó en un solo día; más días = seguimiento sostenido en el tiempo."><b>${{(cart.iDias / cart.iCov).toLocaleString('es-CO', {{maximumFractionDigits: 0}})}}</b><span>días distintos de intento por lead</span></div>
     <div class="kpi" data-tip="De sus ${{fN(cart.i2)}} leads con 2+ intentos PERSONALES (WhatsApp o llamada — el goteo automático de email no cuenta aquí), cuántos recibieron intentos en 2 o más días distintos: seguimiento real, no una sola sentada."><b style="color:var(--verde)">${{cart.i2 ? Math.round(cart.iMulti / cart.i2 * 100) + '%' : '—'}}</b><span>seguimiento en varios días</span></div>
     <div class="kpi" data-tip="De sus ${{fN(cart.i2)}} leads con 2+ intentos personales (WhatsApp/llamada), cuántos los recibieron TODOS el mismo día (ráfaga única y nunca más). Alto = se rinde el primer día; los leads que no contestan hoy sí contestan otro día."><b style="color:var(--rojo)">${{cart.i2 ? Math.round(cart.iBurst / cart.i2 * 100) + '%' : '—'}}</b><span>ráfaga de un solo día</span></div>
     <div class="kpi" data-tip="Leads tocados por 2 o más canales distintos (p. ej. WhatsApp + llamada). El multicanal sube la tasa de contacto: quien no contesta el teléfono puede contestar el WhatsApp."><b>${{Math.round(cart.iMix / cart.iCov * 100)}}%</b><span>leads con 2+ canales</span></div>
@@ -1133,12 +1133,12 @@ function verPerfil(k) {{
     <div class="kpi" data-lf="none||Leads sin señales (score <10)" data-tip="SIN SEÑALES = score <10 (misma fórmula). Sin oportunidad registrada, sin estado que sume (vacío, Descartado, Aliado…) y sin interacciones ni actividad reciente: cero evidencia de interés en el CRM. Clic para ver la tabla."><b style="color:#8A99A8">${{fN(cart.none)}}</b><span>sin señales (&lt;10)</span></div>
     <div class="kpi" data-tip="Score promedio de su cartera vs promedio compañía ${{D.bench.sc}}."><b>${{cart.sc.toLocaleString('es-CO')}}</b><span>score promedio</span></div>
     <div class="kpi" data-tip="Tiempo promedio de 1ª atención: primer mensaje SALIENTE de WhatsApp al lead menos su fecha de creación en el CRM, promediado sobre los ${{fN(cart.atnN)}} leads de su cartera con conversación de WhatsApp. Promedio compañía: ${{D.bench.atn === null ? 'sin dato' : rtT(D.bench.atn)}}."><b style="color:var(--azul)">${{cart.atnH === null ? '—' : rtT(cart.atnH)}}</b><span>1ª atención promedio (WA)</span></div>
-    <div class="kpi" data-tip="% de leads contactados: leads de su cartera con al menos una gestión registrada (nº de veces contactado + actividades de venta > 0). Promedio compañía: ${{D.bench.cont}}%."><b style="color:var(--verde)">${{cart.leads ? cart.contPct.toFixed(1).replace('.', ',') + '%' : '—'}}</b><span>% de leads contactados</span></div>
-    <div class="kpi" data-tip="Contactos promedio por lead: promedio de gestiones registradas sobre TODA su cartera, incluidos los nunca tocados. Promedio compañía: ${{D.bench.cxl}}."><b>${{cart.leads ? cart.cxl.toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—'}}</b><span>contactos promedio por lead</span></div>
+    <div class="kpi" data-tip="% de leads contactados: leads de su cartera con al menos una gestión registrada (nº de veces contactado + actividades de venta > 0). Promedio compañía: ${{D.bench.cont}}%."><b style="color:var(--verde)">${{cart.leads ? cart.contPct.toFixed(0).replace('.', ',') + '%' : '—'}}</b><span>% de leads contactados</span></div>
+    <div class="kpi" data-tip="Contactos promedio por lead: promedio de gestiones registradas sobre TODA su cartera, incluidos los nunca tocados. Promedio compañía: ${{D.bench.cxl}}."><b>${{cart.leads ? cart.cxl.toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—'}}</b><span>contactos promedio por lead</span></div>
     <div class="kpi" data-tip="% de cierre de ventas: clientes ÷ leads de su cartera. Promedio compañía: ${{D.bench.conv}}%. Con rango de fechas activo mide el cierre de esa camada."><b style="color:var(--rojo)">${{cart.leads ? pc(cart.cli, cart.leads) : '—'}}</b><span>% cierre de ventas</span></div>
-    <div class="kpi" data-tip="Llamadas salientes por lead: ${{fN(cart.gOut)}} llamadas hechas a los ${{fN(cart.gCov)}} leads de su cartera con gestión descargada (${{fN(cart.gLC)}} leads recibieron al menos una llamada). Fuente: historial del CRM, últimos 100 eventos por conversación."><b>${{cart.gCov ? (cart.gOut / cart.gCov).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—'}}</b><span>llamadas por lead</span></div>
+    <div class="kpi" data-tip="Llamadas salientes por lead: ${{fN(cart.gOut)}} llamadas hechas a los ${{fN(cart.gCov)}} leads de su cartera con gestión descargada (${{fN(cart.gLC)}} leads recibieron al menos una llamada). Fuente: historial del CRM, últimos 100 eventos por conversación."><b>${{cart.gCov ? (cart.gOut / cart.gCov).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—'}}</b><span>llamadas por lead</span></div>
     <div class="kpi" data-tip="TMO — tiempo medio de operación: duración promedio de sus ${{fN(cart.gAns)}} llamadas contestadas. Total hablado: ${{Math.round(cart.gSecs / 60)}} minutos. No incluye llamadas sin respuesta."><b>${{cart.gAns ? tmoT(cart.gSecs / cart.gAns) : '—'}}</b><span>TMO (duración prom. llamada)</span></div>
-    <div class="kpi" data-tip="Emails salientes por lead de su cartera: ${{fN(cart.gEm)}} correos en total (incluye los de automatización enviados a su nombre)."><b>${{cart.gCov ? (cart.gEm / cart.gCov).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—'}}</b><span>emails por lead</span></div>
+    <div class="kpi" data-tip="Emails salientes por lead de su cartera: ${{fN(cart.gEm)}} correos en total (incluye los de automatización enviados a su nombre)."><b>${{cart.gCov ? (cart.gEm / cart.gCov).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—'}}</b><span>emails por lead</span></div>
     <div class="kpi" data-tip="Tareas de seguimiento en sus leads: ${{fN(cart.gTD)}} completadas de ${{fN(cart.gTT)}} creadas. Las tareas son los recordatorios que el asesor se programa en el CRM — pocas tareas = gestión sin plan de seguimiento."><b>${{cart.gTT ? fN(cart.gTD) + '/' + fN(cart.gTT) : '—'}}</b><span>tareas completadas/creadas</span></div>
     <div class="kpi" data-tip="Notas dejadas en sus leads: ${{fN(cart.gNo)}} notas en ${{fN(cart.gLN)}} leads (${{cart.gCov ? Math.round(cart.gLN / cart.gCov * 100) : 0}}% de la cartera con bitácora). La nota es la memoria escrita de la gestión: sin ella, nadie sabe qué se habló."><b>${{cart.gNo ? fN(cart.gNo) : '—'}}</b><span>notas en sus leads</span></div>
     <div class="kpi" data-tip="Tiempo de respuesta al lead: mediana entre cada mensaje del cliente y la siguiente respuesta del asesor, sobre TODAS sus conversaciones de WhatsApp (${{fN(p.convsN)}} convos analizadas)."><b>${{rtT(p.rtAll)}}</b><span>resp. mediana al lead</span></div>

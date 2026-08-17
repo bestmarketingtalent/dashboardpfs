@@ -517,7 +517,7 @@ function matchQ(q, nombre, email, tel) {{
 }}
 const scoreCol = sc => sc >= 55 ? '#D64545' : sc >= 30 ? '#AA9664' : sc >= 10 ? '#3A566B' : '#8A99A8';
 const tempTxt = sc => sc >= 55 ? 'Caliente' : sc >= 30 ? 'Tibio' : sc >= 10 ? 'Frío' : 'Sin señales';
-const atnT = h => h < 1 ? Math.round(h * 60) + ' min' : h < 48 ? h.toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' h' : (h / 24).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' días';
+const atnT = h => h < 1 ? Math.round(h * 60) + ' min' : h < 48 ? h.toLocaleString('es-CO', {{maximumFractionDigits: 0}}) + ' h' : (h / 24).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) + ' días';
 const intCell = it => it ? `<b>${{it[0]}}</b> · ${{it[1]}}d` : '—';
 const canCell = it => it ? (((it[2] ? '💬' : '') + (it[3] ? '📞' : '') + (it[4] ? '✉' : '') + (it[5] ? '𝗌' : '')) || '—') : '—';
 const intTip = it => it ? `${{it[0]}} intento(s) de contacto saliente(s) en ${{it[1]}} día(s) distinto(s): ` + [it[2] ? it[2] + ' WhatsApp' : '', it[3] ? it[3] + ' llamada(s)' : '', it[4] ? it[4] + ' email(s)' : '', it[5] ? it[5] + ' SMS' : ''].filter(Boolean).join(' · ') : 'Sin intentos salientes en las conversaciones descargadas.';
@@ -609,14 +609,14 @@ function renderKpis() {{
   }});
   const kp = (val, lbl, tip, color) =>
     `<div class="kpi" data-tip="${{esc(tip)}}"><b style="color:${{color || 'var(--tinta)'}}">${{val}}</b><span>${{lbl}}</span></div>`;
-  const pc = v => n ? (v / n * 100).toFixed(1).replace('.', ',') + '%' : '—';
+  const pc = v => n ? (v / n * 100).toFixed(0).replace('.', ',') + '%' : '—';
   document.getElementById('adq-kpis').innerHTML =
     kp(fmtN(n), 'leads adquiridos (vista)', 'Leads de la selección actual según los filtros.') +
     kp(fmtN(d90), 'llegados últimos 90 días', 'Leads de la vista creados en los últimos 90 días: el ritmo de adquisición reciente.') +
     kp(fmtN(cli) + ` <small style="font-size:12px">(${{pc(cli)}})</small>`, 'clientes · conversión', 'Leads de la vista que hoy son clientes, y la tasa de conversión de la selección. Con rango de fechas mide el cierre de esa camada.', 'var(--verde)') +
     kp(fmtN(desc) + ` <small style="font-size:12px">(${{pc(desc)}})</small>`, 'descartados · tasa', 'Leads de la vista que terminaron descartados: adquisición que se botó.', 'var(--rojo)') +
     kp(fmtN(cal), 'calificados (🔥+🌤 score ≥30)', 'Leads calientes + tibios de la vista: el inventario con señales de compra vigentes.', 'var(--naranja)') +
-    kp(n ? (sum / n).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—', 'score promedio', 'Temperatura promedio de la selección (lead scoring 0-100).') +
+    kp(n ? (sum / n).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—', 'score promedio', 'Temperatura promedio de la selección (lead scoring 0-100).') +
     kp(pc(cont), '% contactados', 'Leads de la vista con al menos una gestión registrada (veces contactado + actividades de venta > 0). Mide el esfuerzo del equipo.') +
     kp(pc(resp), '% contactabilidad', 'Leads que RESPONDIERON: al menos un mensaje entrante de WhatsApp o una llamada contestada. Mide si el dato del lead sirve y si el canal conecta. Cobertura: conversaciones de WhatsApp descargadas + llamadas de carteras humanas.', 'var(--verde)') +
     kp(fmtN(mql) + ` <small style="font-size:12px">(${{pc(mql)}})</small>`, 'MQL (calificados marketing)', 'MQL = lead con señal de calificación: score ≥30 (tibio/caliente) u oportunidad de compra declarada (En curso por = Oportunidad 1-3/3-6/6+ meses) o que ya avanzó a Negocio abierto/Cliente.', 'var(--naranja)') +
@@ -668,7 +668,7 @@ function pieDe(svgId, legId, col, nombres, selId, titulo, exc) {{
   const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
   const datos = top.slice(0, 7).map(([i, c], j) => ({{
     label: nombres[i], val: c, color: PIE_COL[j],
-    tip: `${{nombres[i]}}: ${{fmtN(c)}} leads (${{(c / base.length * 100).toFixed(1)}}% de la selección). Clic para aplicar/quitar el filtro de ${{titulo}}.`,
+    tip: `${{nombres[i]}}: ${{fmtN(c)}} leads (${{(c / base.length * 100).toFixed(0)}}% de la selección). Clic para aplicar/quitar el filtro de ${{titulo}}.`,
     click: () => {{
       const sel = document.getElementById(selId);
       sel.value = sel.value == i ? '' : i;
@@ -687,7 +687,7 @@ function pieGen(svgId, legId, keyOf, labelOf, exc, onClick, colores) {{
   const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
   const datos = top.slice(0, 7).map(([k, c], j) => ({{
     label: labelOf(k), val: c, color: (colores && colores[k]) || PIE_COL[j],
-    tip: `${{labelOf(k)}}: ${{fmtN(c)}} leads (${{(c / base.length * 100).toFixed(1)}}% de la selección). Clic para aplicar/quitar el filtro.`,
+    tip: `${{labelOf(k)}}: ${{fmtN(c)}} leads (${{(c / base.length * 100).toFixed(0)}}% de la selección). Clic para aplicar/quitar el filtro.`,
     click: onClick ? () => onClick(k) : null
   }}));
   const resto = top.slice(7).reduce((t, [, c]) => t + c, 0);
@@ -767,7 +767,7 @@ const invCat = (ci, porFu) => {{
 const MON = D.inv.moneda || 'USD';
 const money = v => v === null ? '<span style="color:#B9BDCC">—</span>' : `<b>${{MON === 'USD' ? 'US$' : MON + ' '}}${{Math.round(v).toLocaleString('es-CO')}}</b>`;
 const cpoTxt = (v, n) => v === null ? '<span style="color:#B9BDCC">—</span>' : n ? `<b>US$${{Math.round(v / n).toLocaleString('es-CO')}}</b>` : '<span style="color:var(--rojo)" data-tip="Hay inversión pero 0 oportunidades HOT+WARM en la selección">sin opp.</span>';
-const cplTxt = (v, n) => v === null ? '<span style="color:#B9BDCC">—</span>' : n ? `<b>US$${{(v / n).toLocaleString('es-CO', {{maximumFractionDigits: 1}})}}</b>` : '<span style="color:var(--rojo)" data-tip="Hay inversión pero 0 leads en la selección">sin leads</span>';
+const cplTxt = (v, n) => v === null ? '<span style="color:#B9BDCC">—</span>' : n ? `<b>US$${{(v / n).toLocaleString('es-CO', {{maximumFractionDigits: 0}})}}</b>` : '<span style="color:var(--rojo)" data-tip="Hay inversión pero 0 leads en la selección">sin leads</span>';
 function renderFuentes() {{
   const base = filtro(['c', 'f']);
   const hoy = Date.now();
@@ -782,7 +782,7 @@ function renderFuentes() {{
     addTo(porFu.get(k), x, c90, c180);
   }});
   Object.keys(D.fijas).forEach(ci => {{ if (!porCat.has(+ci)) porCat.set(+ci, mkAgg()); }});
-  const pcc = (v, n) => n ? (v / n * 100).toFixed(1).replace('.', ',') + '%' : '—';
+  const pcc = (v, n) => n ? (v / n * 100).toFixed(0).replace('.', ',') + '%' : '—';
   const momTxt = a => {{
     if (a.p90 >= 5 || a.d90 >= 5) {{
       const d = a.p90 ? (a.d90 - a.p90) / a.p90 * 100 : 100;
@@ -796,7 +796,7 @@ function renderFuentes() {{
   const celdas = (a, inv) => `
     <td style="white-space:nowrap">${{money(inv)}}</td>
     <td><b>${{fmtN(a.n)}}</b></td><td style="white-space:nowrap">${{cplTxt(inv, a.n)}}</td><td>${{pcc(a.n, base.length)}}</td>
-    <td><b>${{a.n ? (a.sum / a.n).toFixed(1).replace('.', ',') : '—'}}</b></td>
+    <td><b>${{a.n ? (a.sum / a.n).toFixed(0).replace('.', ',') : '—'}}</b></td>
     <td style="white-space:nowrap;color:var(--rojo);font-weight:700">${{fmtN(a.oHot)}}${{oPct(a.oHot, a)}}</td>
     <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{fmtN(a.oWarm)}}${{oPct(a.oWarm, a)}}</td>
     <td style="white-space:nowrap;color:var(--azul);font-weight:700">${{fmtN(a.oCold)}}${{oPct(a.oCold, a)}}</td>

@@ -297,7 +297,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <header><div class="wrap"><div class="logo">GC</div>
 <div><h1>Análisis de pérdida de leads (descartados)</h1>
 <p>CRM comercial (solo lectura) · Por qué se descartan, quién los descarta y cuáles rescatar · Corte: {CORTE}</p></div>
-<div class="hstats"><b>{fmt(N_DESC)}</b><span>leads descartados ({f'{N_DESC / TOTAL * 100:.1f}'.replace('.', ',')}% de {fmt(TOTAL)})</span></div>
+<div class="hstats"><b>{fmt(N_DESC)}</b><span>leads descartados ({f'{N_DESC / TOTAL * 100:.0f}'.replace('.', ',')}% de {fmt(TOTAL)})</span></div>
 </div></header>
 <nav class="mainnav"><div class="mnwrap">
 <a href="index.html"><span class="ic">📊</span> Gestión comercial</a>
@@ -484,7 +484,7 @@ function pieDe(svgId, legId, col, nombres, selId, titulo) {{
   const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
   const datos = top.slice(0, 7).map(([i, c], j) => ({{
     label: nombres[i], val: c, color: PIE_COL[j],
-    tip: `${{nombres[i]}}: ${{fmtN(c)}} descartados (${{(c / desc.length * 100).toFixed(1)}}% de la selección). Clic para aplicar/quitar el filtro de ${{titulo}}.`,
+    tip: `${{nombres[i]}}: ${{fmtN(c)}} descartados (${{(c / desc.length * 100).toFixed(0)}}% de la selección). Clic para aplicar/quitar el filtro de ${{titulo}}.`,
     click: () => {{
       const sel = document.getElementById(selId);
       sel.value = sel.value == i ? '' : i;
@@ -511,7 +511,7 @@ function renderKpis() {{
     `<div class="kpi ${{mode ? 'clkd' : ''}} ${{mode && MODE === mode ? 'on' : ''}}" ${{mode ? `data-mode="${{mode}}"` : ''}} data-tip="${{esc(tip)}}${{mode ? ' Clic para ver solo esos leads en la tabla (otro clic lo quita).' : ''}}"><b style="color:${{color || 'var(--tinta)'}}">${{val}}</b><span>${{lbl}}</span></div>`;
   document.getElementById('dsc-kpis').innerHTML =
     kp('', fmtN(n), 'descartados en la selección', 'Leads con Lead Status = Descartado dentro de los filtros activos.') +
-    kp('', base.length ? (n / base.length * 100).toFixed(1).replace('.', ',') + '%' : '—', 'tasa de descarte', 'Descartados ÷ leads de la selección (todos los status): qué proporción de lo captado se está botando.') +
+    kp('', base.length ? (n / base.length * 100).toFixed(0).replace('.', ',') + '%' : '—', 'tasa de descarte', 'Descartados ÷ leads de la selección (todos los status): qué proporción de lo captado se está botando.') +
     kp('sg', fmtN(sinGestion) + ` <small style="font-size:12px">(${{n ? (sinGestion / n * 100).toFixed(0) : 0}}%)</small>`, 'sin UNA sola gestión', 'Descartados con CERO interacciones registradas: descartes tempranos — se botaron sin trabajarlos.', 'var(--rojo)') +
     kp('resc', fmtN(rescat), 'rescatables (señal viva)', 'Descartados con score ≥30 u oportunidad de compra vigente registrada: contradicciones que merecen segunda mirada.', 'var(--verde)') +
     kp('sm', fmtN(sinMotivo) + ` <small style="font-size:12px">(${{n ? (sinMotivo / n * 100).toFixed(0) : 0}}%)</small>`, 'sin motivo registrado', 'Descartes sin explicación en el campo Motivo de descarte: no dejan aprendizaje.', '#8A6D1A') +
@@ -532,7 +532,7 @@ function renderDist() {{
   const mm = new Map();
   desc.forEach(x => mm.set(x[12], (mm.get(x[12]) || 0) + 1));
   document.getElementById('dsc-mot').innerHTML = [...mm.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
-    .map(([i, c]) => fila(D.motivos[i], c, n, 'f-m', i, `${{D.motivos[i]}}: ${{fmtN(c)}} descartes (${{n ? (c / n * 100).toFixed(1) : 0}}%). Clic para filtrar por este motivo.`, '#D64545')).join('');
+    .map(([i, c]) => fila(D.motivos[i], c, n, 'f-m', i, `${{D.motivos[i]}}: ${{fmtN(c)}} descartes (${{n ? (c / n * 100).toFixed(0) : 0}}%). Clic para filtrar por este motivo.`, '#D64545')).join('');
   const am = new Map();
   desc.forEach(x => am.set(x[3], (am.get(x[3]) || 0) + 1));
   document.getElementById('dsc-asg').innerHTML = [...am.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10)
@@ -546,9 +546,9 @@ function renderDist() {{
   document.getElementById('dsc-fu').innerHTML = [...fd.entries()]
     .filter(([i]) => (fb.get(i) || 0) >= 100)
     .map(([i, c]) => [i, c, c / fb.get(i) * 100]).sort((a, b) => b[2] - a[2]).slice(0, 10)
-    .map(([i, c, r]) => `<tr class="clkd" data-sel="f-f" data-val="${{i}}" data-tip="${{esc(D.fuentes[i])}}: ${{fmtN(c)}} descartados de ${{fmtN(fb.get(i))}} leads de esa fuente (${{r.toFixed(1)}}%). Clic para filtrar por esta fuente."><td style="white-space:nowrap">${{esc(D.fuentes[i]).slice(0, 30)}}</td>
+    .map(([i, c, r]) => `<tr class="clkd" data-sel="f-f" data-val="${{i}}" data-tip="${{esc(D.fuentes[i])}}: ${{fmtN(c)}} descartados de ${{fmtN(fb.get(i))}} leads de esa fuente (${{r.toFixed(0)}}%). Clic para filtrar por esta fuente."><td style="white-space:nowrap">${{esc(D.fuentes[i]).slice(0, 30)}}</td>
       <td style="width:42%"><div class="bar"><div style="width:${{Math.min(100, Math.max(2, r * 2.2))}}%;background:#AA9664"></div></div></td>
-      <td style="white-space:nowrap">${{r.toFixed(1).replace('.', ',')}}% <small style="color:var(--gris)">(${{fmtN(c)}})</small></td></tr>`).join('');
+      <td style="white-space:nowrap">${{r.toFixed(0).replace('.', ',')}}% <small style="color:var(--gris)">(${{fmtN(c)}})</small></td></tr>`).join('');
   const buckets = [['0 interacciones', x => x[11] === 0], ['1', x => x[11] === 1], ['2', x => x[11] === 2],
                    ['3-5', x => x[11] >= 3 && x[11] <= 5], ['6 o más', x => x[11] >= 6]];
   document.getElementById('dsc-ges').innerHTML = buckets.map(([l, f]) => {{

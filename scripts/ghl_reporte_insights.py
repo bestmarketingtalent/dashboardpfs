@@ -43,7 +43,7 @@ MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto',
 _hoy = datetime.now()
 CORTE = f'{_hoy.day} de {MESES[_hoy.month-1]} de {_hoy.year}'
 def fmt(n): return f'{n:,}'.replace(',', '.')
-def pct(x): return f'{x:.1f}'.replace('.', ',') + '%'
+def pct(x): return f'{x:.0f}'.replace('.', ',') + '%'
 
 CURSO_PTS = {'Oportunidad 1-3 meses': 35, 'Oportunidad 3-6 meses': 28, 'Oportunidad 6+ meses': 18}
 STATUS_PTS = {'Negocio abierto': 25, 'En curso': 15, 'Intento de contacto': 8, 'Nuevo': 5, 'En Nutrición': 3}
@@ -196,7 +196,7 @@ for ct in cs:
 
 def barra(n, total, color='#3A566B'):
     w = max(2, n / max(total, 1) * 100)
-    return f'<div class="bar"><div style="width:{w:.1f}%;background:{color}"></div></div>'
+    return f'<div class="bar"><div style="width:{w:.0f}%;background:{color}"></div></div>'
 
 # tabla países
 filas_p = ''
@@ -331,7 +331,7 @@ def _arc(cx, cy, r0, r1, a0, a1):
     p = lambda r, a: (cx + r * math.cos(a), cy + r * math.sin(a))
     x0, y0 = p(r1, a0); x1, y1 = p(r1, a1); x2, y2 = p(r0, a1); x3, y3 = p(r0, a0)
     big = 1 if (a1 - a0) > math.pi else 0
-    return f'M{x0:.1f} {y0:.1f} A{r1} {r1} 0 {big} 1 {x1:.1f} {y1:.1f} L{x2:.1f} {y2:.1f} A{r0} {r0} 0 {big} 0 {x3:.1f} {y3:.1f} Z'
+    return f'M{x0:.0f} {y0:.0f} A{r1} {r1} 0 {big} 1 {x1:.0f} {y1:.0f} L{x2:.0f} {y2:.0f} A{r0} {r0} 0 {big} 0 {x3:.0f} {y3:.0f} Z'
 
 def pie_conversaciones():
     if not conv_cnt: return ''

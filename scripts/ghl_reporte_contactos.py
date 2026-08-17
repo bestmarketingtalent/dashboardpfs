@@ -297,7 +297,7 @@ def _evol_html():
         if dd('opps') > 0: LB.append(('#5B6B85', f'📈 Oportunidades en pipeline: {fmt(b["opps"])} (+{fmt(dd("opps"))}).'))
         if dd('nutricion') > 0: LB.append(('#8A6D1A', f'🌱 El goteo de nutrición absorbió {fmt(dd("nutricion"))} leads más (van {fmt(b["nutricion"])}).'))
         if abs(b.get('score', 0) - a.get('score', 0)) >= 0.1:
-            LB.append((V if b['score'] > a['score'] else R, f'🌡 Score promedio de la base: {str(b["score"]).replace(".", ",")} ({b["score"]-a["score"]:+.1f}).'))
+            LB.append((V if b['score'] > a['score'] else R, f'🌡 Score promedio de la base: {round(b["score"])} ({round(b["score"]-a["score"]):+d}).'))
         if not LB: LB = [('#5B6B85', 'Sin cambios relevantes entre los dos últimos cortes.')]
         bullets = (f'<h3 style="font-size:13.5px;margin:8px 0 4px">Impacto del último corte · {f_es(a["fecha"])} → {f_es(b["fecha"])}</h3><ul style="padding-left:20px;margin:4px 0">' +
                    ''.join(f'<li style="margin:4px 0;color:{c}">{t}</li>' for c, t in LB) + '</ul>')
@@ -312,14 +312,14 @@ def _evol_html():
         tds = ''
         for k, _ in cols:
             v = h.get(k, 0)
-            vtxt = str(v).replace('.', ',') if k == 'score' else fmt(v)
+            vtxt = fmt(round(v)) if k == 'score' else fmt(v)
             delta = ''
             if prev is not None:
-                d = round(v - prev.get(k, 0), 1)
+                d = round(v - prev.get(k, 0))
                 if d:
                     malo_sube = k in ('esperando', 'sinstatus', 'sinasesor', 'nutricion')
                     col = (R if malo_sube else V) if d > 0 else (V if malo_sube else R)
-                    delta = f' <small style="color:{col};font-weight:700">{"▲" if d > 0 else "▼"}{str(abs(d)).replace(".0", "").replace(".", ",")}</small>'
+                    delta = f' <small style="color:{col};font-weight:700">{"▲" if d > 0 else "▼"}{fmt(abs(d))}</small>'
             tds += f'<td style="white-space:nowrap">{vtxt}{delta}</td>'
         filas += f'<tr><td><b>{f_es(h["fecha"])}</b></td>{tds}</tr>'
     ths = '<th data-tip="Fecha del corte (snapshot tomado al actualizar los datos).">Corte</th>' + ''.join(
@@ -602,7 +602,7 @@ const intCell = it => it ? `<b>${{it[0]}}</b> · ${{it[1]}}d` : '—';
 const canCell = it => it ? (((it[2] ? '💬' : '') + (it[3] ? '📞' : '') + (it[4] ? '✉' : '') + (it[5] ? '𝗌' : '')) || '—') : '—';
 const intTip = it => it ? `${{it[0]}} intento(s) de contacto saliente(s) en ${{it[1]}} día(s) distinto(s): ` + [it[2] ? it[2] + ' WhatsApp' : '', it[3] ? it[3] + ' llamada(s)' : '', it[4] ? it[4] + ' email(s)' : '', it[5] ? it[5] + ' SMS' : ''].filter(Boolean).join(' · ') + '. Varios intentos con 1 día = ráfaga única sin seguimiento.' : 'Sin intentos salientes en las conversaciones descargadas.';
 const canTxt = it => it ? [it[2] ? it[2] + ' WhatsApp' : '', it[3] ? it[3] + ' llamadas' : '', it[4] ? it[4] + ' emails' : '', it[5] ? it[5] + ' SMS' : ''].filter(Boolean).join(' | ') : '';
-const atnT = h => h < 1 ? Math.round(h * 60) + ' min' : h < 48 ? h.toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' h' : (h / 24).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' días';
+const atnT = h => h < 1 ? Math.round(h * 60) + ' min' : h < 48 ? h.toLocaleString('es-CO', {{maximumFractionDigits: 0}}) + ' h' : (h / 24).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) + ' días';
 const PAGE = 200;
 /* el filtro de asesor cuenta owner O seguidor (followers) del contacto */
 const matchA = (x, a) => a === '' || x[3] == a || (x[15] && x[15].indexOf(+a) !== -1);
@@ -723,16 +723,16 @@ function render() {{
   document.getElementById('k-warm').textContent = fmtN(warm);
   document.getElementById('k-cold').textContent = fmtN(cold);
   document.getElementById('k-none').textContent = fmtN(none);
-  document.getElementById('k-avg').textContent = n ? (sum / n).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—';
+  document.getElementById('k-avg').textContent = n ? (sum / n).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—';
   document.getElementById('k-sina').textContent = fmtN(sina);
   document.getElementById('k-atn').textContent = atnN ? atnT(atnS / atnN) : '—';
   atns.sort((a, b) => a - b);
   const atnMed = atnN ? atns[Math.floor(atnN / 2)] : 0;
   const atn1h = atnN ? Math.round(atns.filter(h => h <= 1).length / atnN * 100) : 0;
   document.getElementById('kc-atn').dataset.tip = 'Qué es: cuánto tarda el equipo en atender por primera vez a un lead. Cómo se calcula: fecha del primer mensaje SALIENTE de WhatsApp al lead menos su fecha de creación en el CRM, sobre los ' + fmtN(atnN) + ' leads de la vista con conversación de WhatsApp (los demás canales no dejan este dato). Ojo: el promedio mezcla dos realidades — el ' + atn1h + '% se atiende en la primera hora (saludo automático) y el resto son leads viejos tocados por primera vez mucho después (mediana: ' + (atnN ? atnT(atnMed) : '—') + '). Si el promedio es alto, el problema suele ser la reactivación tardía, no el saludo inicial.';
-  document.getElementById('k-cont').textContent = n ? (cont / n * 100).toFixed(1).replace('.', ',') + '%' : '—';
-  document.getElementById('k-cxl').textContent = n ? (isum / n).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—';
-  document.getElementById('k-win').textContent = n ? (cli / n * 100).toFixed(1).replace('.', ',') + '%' : '—';
+  document.getElementById('k-cont').textContent = n ? (cont / n * 100).toFixed(0).replace('.', ',') + '%' : '—';
+  document.getElementById('k-cxl').textContent = n ? (isum / n).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—';
+  document.getElementById('k-win').textContent = n ? (cli / n * 100).toFixed(0).replace('.', ',') + '%' : '—';
   document.getElementById('resumen').textContent =
     n === D.rows.length ? `Mostrando la base completa (${{fmtN(n)}} contactos).`
     : `Filtro activo${{TEMP !== '' ? ' · solo leads ' + TEMPN[TEMP] : ''}}: ${{fmtN(n)}} de ${{fmtN(D.rows.length)}} contactos.`;
@@ -1028,7 +1028,7 @@ function renderPies() {{
     ['cold', '❄ Fríos (10-29)', '#3A566B'], ['none', 'Sin señales (<10)', '#8A99A8']];
   drawPie('pie-temp', 'leg-temp', tdef.map(([k2, l, c]) => ({{
     label: l, val: cnt[k2], color: c,
-    tip: `${{l}}: ${{fmtN(cnt[k2])}} leads (${{r1.length ? (cnt[k2] / r1.length * 100).toFixed(1) : 0}}% de la selección). ${{TCRIT[k2]}} Clic para filtrar la tabla a esta temperatura.`,
+    tip: `${{l}}: ${{fmtN(cnt[k2])}} leads (${{r1.length ? (cnt[k2] / r1.length * 100).toFixed(0) : 0}}% de la selección). ${{TCRIT[k2]}} Clic para filtrar la tabla a esta temperatura.`,
     click: () => {{ TEMP = TEMP === k2 ? '' : k2; apply(); renderPies(); }}
   }})), 'leads en la selección');
   /* torta 2: leads score ≥30 por asesor (todos los filtros menos asesor y temperatura) */
@@ -1038,7 +1038,7 @@ function renderPies() {{
   const top = [...porA.entries()].sort((x, y) => y[1] - x[1]);
   const datos = top.slice(0, 7).map(([ai, n], i) => ({{
     label: D.asesores[ai], val: n, color: PIE_ASE_COL[i],
-    tip: `${{D.asesores[ai]}}: ${{fmtN(n)}} leads calientes/tibios (${{(n / r2.length * 100).toFixed(1)}}% de los calificados de la selección). Clic para filtrar por este asesor.`,
+    tip: `${{D.asesores[ai]}}: ${{fmtN(n)}} leads calientes/tibios (${{(n / r2.length * 100).toFixed(0)}}% de los calificados de la selección). Clic para filtrar por este asesor.`,
     click: () => {{ const s = document.getElementById('f-a'); s.value = s.value == ai ? '' : ai; apply(); renderPies(); }}
   }}));
   const resto = top.slice(7).reduce((t, [, n]) => t + n, 0);
@@ -1062,7 +1062,7 @@ function renderPies() {{
   const datos3 = top3.slice(0, 7).map(([vi, n], i) => ({{
     label: dim.nombres[vi], val: n,
     color: dv === 's' ? (SCOL[dim.nombres[vi]] || PIE_ASE_COL[i]) : PIE_ASE_COL[i],
-    tip: `${{dim.nombres[vi]}}: ${{fmtN(n)}} leads (${{(n / r3.length * 100).toFixed(1)}}% de la selección por ${{dim.titulo}}). Clic para aplicar/quitar este filtro.`,
+    tip: `${{dim.nombres[vi]}}: ${{fmtN(n)}} leads (${{(n / r3.length * 100).toFixed(0)}}% de la selección por ${{dim.titulo}}). Clic para aplicar/quitar este filtro.`,
     click: () => {{ const s = document.getElementById(dim.sel); s.value = s.value == vi ? '' : vi; apply(); }}
   }}));
   const resto3 = top3.slice(7).reduce((t, [, n]) => t + n, 0);
@@ -1113,12 +1113,12 @@ function renderEdades() {{
     if (!b.n) return '<td>—</td>';
     const p = b[k] / b.n * 100;
     return `<td style="background:${{hexA(TCOL2[k], Math.min(.5, p / 100 * .85))}};font-weight:700" ` +
-      `data-tip="${{TL[k]}} en esta cohorte: ${{fmtN(b[k])}} leads = ${{p.toFixed(1)}}% de los ${{fmtN(b.n)}} de esa antigüedad.">${{fmtN(b[k])}} <small style="font-weight:600;opacity:.75">(${{p.toFixed(0)}}%)</small></td>`;
+      `data-tip="${{TL[k]}} en esta cohorte: ${{fmtN(b[k])}} leads = ${{p.toFixed(0)}}% de los ${{fmtN(b.n)}} de esa antigüedad.">${{fmtN(b[k])}} <small style="font-weight:600;opacity:.75">(${{p.toFixed(0)}}%)</small></td>`;
   }};
   const barra2 = b => {{
     if (!b.n) return '';
     return '<div style="display:flex;height:18px;border-radius:6px;overflow:hidden;min-width:180px">' +
-      ['hot', 'warm', 'cold', 'none'].map(k => b[k] ? `<div data-tip="${{TL[k]}}: ${{(b[k]/b.n*100).toFixed(1)}}% de la cohorte" style="width:${{b[k]/b.n*100}}%;background:${{TCOL2[k]}}"></div>` : '').join('') + '</div>';
+      ['hot', 'warm', 'cold', 'none'].map(k => b[k] ? `<div data-tip="${{TL[k]}}: ${{(b[k]/b.n*100).toFixed(0)}}% de la cohorte" style="width:${{b[k]/b.n*100}}%;background:${{TCOL2[k]}}"></div>` : '').join('') + '</div>';
   }};
   const tot = B.reduce((t, b) => ({{hot: t.hot + b.hot, warm: t.warm + b.warm, cold: t.cold + b.cold, none: t.none + b.none, n: t.n + b.n, sum: t.sum + b.sum}}), {{hot: 0, warm: 0, cold: 0, none: 0, n: 0, sum: 0}});
   const col1 = modo === 'edad' ? 'Antigüedad del lead' : modo === 'fuente' ? 'Medio / fuente' : 'Asesor';
@@ -1137,10 +1137,10 @@ function renderEdades() {{
     <th data-tip="Score promedio del grupo: su 'temperatura media'.">Score prom.</th></tr></thead><tbody>` +
     B.map((b, i) => `<tr><td><b>${{esc(labels[i])}}</b></td><td>${{fmtN(b.n)}}</td><td>${{barra2(b)}}</td>` +
       celda(b, 'hot') + celda(b, 'warm') + celda(b, 'cold') + celda(b, 'none') +
-      `<td><b>${{b.n ? (b.sum / b.n).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—'}}</b></td></tr>`).join('') +
+      `<td><b>${{b.n ? (b.sum / b.n).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—'}}</b></td></tr>`).join('') +
     `<tr style="border-top:2px solid var(--gris-linea)"><td><b>Toda la selección</b></td><td><b>${{fmtN(tot.n)}}</b></td><td>${{barra2(tot)}}</td>` +
     celda(tot, 'hot') + celda(tot, 'warm') + celda(tot, 'cold') + celda(tot, 'none') +
-    `<td><b>${{tot.n ? (tot.sum / tot.n).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) : '—'}}</b></td></tr></tbody></table>`;
+    `<td><b>${{tot.n ? (tot.sum / tot.n).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) : '—'}}</b></td></tr></tbody></table>`;
 }}
 
 /* ---------- barras: llegada de leads nuevos ---------- */

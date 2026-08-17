@@ -366,7 +366,7 @@ const canCell = it => it ? (((it[2] ? '💬' : '') + (it[3] ? '📞' : '') + (it
 const intTip = it => it ? `${{it[0]}} intento(s) de contacto saliente(s) en ${{it[1]}} día(s) distinto(s): ` + [it[2] ? it[2] + ' WhatsApp' : '', it[3] ? it[3] + ' llamada(s)' : '', it[4] ? it[4] + ' email(s)' : '', it[5] ? it[5] + ' SMS' : ''].filter(Boolean).join(' · ') + '. Varios intentos con 1 día = ráfaga única sin seguimiento.' : 'Sin intentos salientes en las conversaciones descargadas.';
 const canTxt = it => it ? [it[2] ? it[2] + ' WhatsApp' : '', it[3] ? it[3] + ' llamadas' : '', it[4] ? it[4] + ' emails' : '', it[5] ? it[5] + ' SMS' : ''].filter(Boolean).join(' | ') : '';
 
-const pc = (a, b) => b ? (a / b * 100).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + '%' : '—';
+const pc = (a, b) => b ? (a / b * 100).toLocaleString('es-CO', {{maximumFractionDigits: 0}}) + '%' : '—';
 function tagsCell(idxs) {{
   if (!idxs || !idxs.length) return '—';
   const nm = idxs.map(i => D.tg[i]);

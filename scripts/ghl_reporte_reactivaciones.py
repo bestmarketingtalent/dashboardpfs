@@ -177,7 +177,7 @@ DESCARTADOS = sum(1 for r in ROWS if ST_LIST[r[4]] == 'Descartado')
 CALIENTES = sum(1 for r in ROWS if r[8] >= 55)
 TIBIOS = sum(1 for r in ROWS if 30 <= r[8] < 55)
 OPP_ABIERTA = sum(1 for r in ROWS if r[14] and r[14][1] == 'abierta')
-SC_PROM = round(sum(r[8] for r in ROWS) / N, 1) if N else 0
+SC_PROM = round(sum(r[8] for r in ROWS) / N) if N else 0
 SIN_HUMANO = sum(1 for r in ROWS if ordered(DA)[r[3]] in ('MARKETING PFS', '(Sin asesor asignado)'))
 SIN_HORIZONTE = sum(1 for r in ROWS if r[5] in ('(Sin dato)', '_', 'No Aplica', 'Sin Oportunidad'))
 
