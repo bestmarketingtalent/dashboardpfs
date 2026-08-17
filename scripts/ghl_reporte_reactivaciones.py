@@ -340,6 +340,14 @@ PIPELINE (si hay varias, la abierta más reciente). Generado desde la API de GHL
 const D = {PAYLOAD};
 const fN = n => n.toLocaleString('es-CO');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}})[c]);
+// búsqueda tolerante: texto en nombre/email y, si lo escrito tiene dígitos, compara solo dígitos contra el teléfono
+// (así '(786) 932-6512', '786 932 6512' o '7869326512' encuentran +17869326512)
+function matchQ(q, nombre, email, tel) {{
+  if (!q) return true;
+  if ((nombre + ' ' + email + ' ' + tel).toLowerCase().includes(q)) return true;
+  const qd = q.replace(/[^0-9]/g, '');
+  return qd.length >= 4 && (tel || '').replace(/[^0-9]/g, '').includes(qd);
+}}
 const scCol = sc => sc >= 55 ? '#D64545' : sc >= 30 ? '#AA9664' : sc >= 10 ? '#3A566B' : '#8A99A8';
 const intCell = it => it ? `<b>${{it[0]}}</b> · ${{it[1]}}d ` + (((it[2] ? '💬' : '') + (it[3] ? '📞' : '') + (it[4] ? '✉' : '') + (it[5] ? '𝗌' : '')) || '') : '—';
 const intTip = it => it ? `${{it[0]}} intento(s) saliente(s) en ${{it[1]}} día(s) distinto(s): ` + [it[2] ? it[2] + ' WhatsApp' : '', it[3] ? it[3] + ' llamada(s)' : '', it[4] ? it[4] + ' email(s)' : '', it[5] ? it[5] + ' SMS' : ''].filter(Boolean).join(' · ') : 'Sin intentos salientes registrados.';
@@ -422,7 +430,7 @@ function pasa(r) {{
   if (selT.value === 'warm' && (r[8] < 30 || r[8] >= 55)) return false;
   if (selT.value === 'cold' && r[8] >= 30) return false;
   const q = inQ.value.trim().toLowerCase();
-  if (q && !(r[0] + ' ' + r[1] + ' ' + r[2]).toLowerCase().includes(q)) return false;
+  if (!matchQ(q, r[0], r[1], r[2])) return false;
   return true;
 }}
 function render() {{

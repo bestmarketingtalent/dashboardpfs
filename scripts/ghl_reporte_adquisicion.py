@@ -496,6 +496,14 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 const D = {PAYLOAD};
 const fmtN = n => n.toLocaleString('es-CO');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}})[c]);
+// búsqueda tolerante: texto en nombre/email y, si lo escrito tiene dígitos, compara solo dígitos contra el teléfono
+// (así '(786) 932-6512', '786 932 6512' o '7869326512' encuentran +17869326512)
+function matchQ(q, nombre, email, tel) {{
+  if (!q) return true;
+  if ((nombre + ' ' + email + ' ' + tel).toLowerCase().includes(q)) return true;
+  const qd = q.replace(/[^0-9]/g, '');
+  return qd.length >= 4 && (tel || '').replace(/[^0-9]/g, '').includes(qd);
+}}
 const scoreCol = sc => sc >= 55 ? '#D64545' : sc >= 30 ? '#AA9664' : sc >= 10 ? '#3A566B' : '#8A99A8';
 const tempTxt = sc => sc >= 55 ? 'Caliente' : sc >= 30 ? 'Tibio' : sc >= 10 ? 'Frío' : 'Sin señales';
 const atnT = h => h < 1 ? Math.round(h * 60) + ' min' : h < 48 ? h.toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' h' : (h / 24).toLocaleString('es-CO', {{maximumFractionDigits: 1}}) + ' días';
@@ -553,7 +561,7 @@ function filtro(exceptos) {{
     (exceptos.includes('p') || p === '' || x[4] == p) &&
     (exceptos.includes('s') || s === '' || x[5] == s) &&
     (exceptos.includes('t') || matchTemp(x[7])) && inFecha(x) &&
-    (q === '' || (x[0] + ' ' + x[1] + ' ' + x[2]).toLowerCase().includes(q)));
+    matchQ(q, x[0], x[1], x[2]));
 }}
 
 let view = [];

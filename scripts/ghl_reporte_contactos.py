@@ -568,6 +568,14 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 const D = {PAYLOAD};
 const fmtN = n => n.toLocaleString('es-CO');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}})[c]);
+// búsqueda tolerante: texto en nombre/email y, si lo escrito tiene dígitos, compara solo dígitos contra el teléfono
+// (así '(786) 932-6512', '786 932 6512' o '7869326512' encuentran +17869326512)
+function matchQ(q, nombre, email, tel) {{
+  if (!q) return true;
+  if ((nombre + ' ' + email + ' ' + tel).toLowerCase().includes(q)) return true;
+  const qd = q.replace(/[^0-9]/g, '');
+  return qd.length >= 4 && (tel || '').replace(/[^0-9]/g, '').includes(qd);
+}}
 const STATUS_ORDER = {json.dumps(STATUS_ORDER, ensure_ascii=False)};
 const SCOL = {json.dumps(SCOL, ensure_ascii=False)};
 const scol = s => SCOL[s] || '#5B6B85';
@@ -611,7 +619,7 @@ function pillsUpdate() {{
   const rows = D.rows.filter(x =>
     matchA(x, a) && (k === '' || x[5] == k) && (r === '' || x[6] == r) &&
     (f === '' || x[7] == f) && inFecha(x) &&
-    (q === '' || (x[0] + ' ' + x[1] + ' ' + x[2]).toLowerCase().includes(q)));
+    matchQ(q, x[0], x[1], x[2]));
   document.getElementById('pill-hot').textContent = fmtN(rows.filter(r2 => r2[9] >= 55).length);
   document.getElementById('pill-warm').textContent = fmtN(rows.filter(r2 => r2[9] >= 30 && r2[9] < 55).length);
   document.getElementById('pill-cold').textContent = fmtN(rows.filter(r2 => r2[9] >= 10 && r2[9] < 30).length);
@@ -669,7 +677,7 @@ function apply() {{
     matchA(x, a) && (s === '' || x[4] == s) && (k === '' || x[5] == k) &&
     (r === '' || x[6] == r) && (f === '' || x[7] == f) && matchTemp(x[9]) &&
     inFecha(x) &&
-    (q === '' || (x[0] + ' ' + x[1] + ' ' + x[2]).toLowerCase().includes(q)));
+    matchQ(q, x[0], x[1], x[2]));
   paintPills();
   pillsUpdate();
   renderPies();
@@ -949,7 +957,7 @@ function filtroBase(exceptos) {{
     (exceptos.includes('r') || r === '' || x[6] == r) &&
     (exceptos.includes('f') || f === '' || x[7] == f) &&
     (exceptos.includes('t') || matchTemp(x[9])) && inFecha(x) &&
-    (q === '' || (x[0] + ' ' + x[1] + ' ' + x[2]).toLowerCase().includes(q)));
+    matchQ(q, x[0], x[1], x[2]));
 }}
 function arcPath(cx, cy, r0, r1, a0, a1) {{
   const p = (r, a) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];

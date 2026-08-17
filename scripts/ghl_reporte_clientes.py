@@ -335,6 +335,14 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 const D = {PAYLOAD};
 const fmtN = n => n.toLocaleString('es-CO');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}})[c]);
+// búsqueda tolerante: texto en nombre/email y, si lo escrito tiene dígitos, compara solo dígitos contra el teléfono
+// (así '(786) 932-6512', '786 932 6512' o '7869326512' encuentran +17869326512)
+function matchQ(q, nombre, email, tel) {{
+  if (!q) return true;
+  if ((nombre + ' ' + email + ' ' + tel).toLowerCase().includes(q)) return true;
+  const qd = q.replace(/[^0-9]/g, '');
+  return qd.length >= 4 && (tel || '').replace(/[^0-9]/g, '').includes(qd);
+}}
 const scCol = s => s >= 55 ? '#D64545' : s >= 30 ? '#AA9664' : s >= 10 ? '#3A566B' : '#8A99A8';
 const intCell = it => it ? `<b>${{it[0]}}</b> · ${{it[1]}}d` : '—';
 const canCell = it => it ? (((it[2] ? '💬' : '') + (it[3] ? '📞' : '') + (it[4] ? '✉' : '') + (it[5] ? '𝗌' : '')) || '—') : '—';
@@ -383,7 +391,7 @@ function apply() {{
       (fe === '' || r[11] !== null) &&
       (fel === '' || (fel === 'si' ? r[12] === 1 : r[12] === 0)) &&
       (TEL === '' || r[2] !== '') &&
-      (q === '' || (r[0] + ' ' + r[1] + ' ' + r[2]).toLowerCase().includes(q));
+      matchQ(q, r[0], r[1], r[2]);
   }}).sort((x, y) => y[8] - x[8]);
   document.querySelectorAll('#chips .chip').forEach(c => c.classList.toggle('on', c.dataset.p === PRESET && PRESET !== ''));
   const n = view.length;
