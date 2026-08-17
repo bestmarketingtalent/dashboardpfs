@@ -73,7 +73,18 @@ def fuente_of(c):
     if sl.startswith('prensa'):
         return 'Prensa'
     if sl in ('web site', 'sitio web', 'web blog', 'blog', 'pfsmain', 'external_form', 'miamisumejorinversion') or sl.endswith('pfsrealty.com'):
-        return 'Sitio Web (SEO / directo)'
+        # "web site" es el PUNTO DE CAPTURA (formulario/widget en la web), no el origen del tráfico.
+        # El origen real está en el registro de atribución que GHL guarda al crear el contacto.
+        a = c.get('attr') or {}
+        ss = (a.get('sessionSource') or '').lower(); md = (a.get('medium') or '').lower()
+        if 'organic search' in ss: return 'SEO (búsqueda orgánica)'
+        if 'paid search' in ss: return 'Paid Search'
+        if 'paid social' in ss: return 'Facebook'
+        if 'social' in ss: return 'Social Media (orgánico)'
+        if 'direct' in ss: return 'Sitio Web (directo)'
+        if 'referral' in ss: return 'Referidos / Personal'
+        if 'crm' in ss or 'csv' in md or 'manual' in md: return 'Importaciones / creación manual'
+        return 'Sitio Web (sin atribución)'
     return CANON[sl]
 
 # ---------- score (misma fórmula 0-100) ----------
@@ -182,7 +193,7 @@ CAT_ORDER = ['Pauta digital', 'Orgánico digital', 'Eventos', 'Referidos y aliad
 def categoria_of(f):
     fl = f.lower()
     if f == '(Sin fuente)': return 'Sin fuente registrada'
-    if 'hubspot' in fl or 'migration' in fl or 'importa' in fl: return 'Importaciones / listas'
+    if 'hubspot' in fl or 'migration' in fl or 'importa' in fl or 'creación manual' in fl: return 'Importaciones / listas'
     if 'referid' in fl or 'personal' in fl or 'aliado' in fl: return 'Referidos y aliados'
     if fl in ('antonio aguirre', 'pfs guardia'): return 'Equipo comercial'
     if any(k in fl for k in ('evento', 'celebra', 'simposio', 'torneo', 'master class', 'masterclass', 'mundial',
@@ -190,7 +201,7 @@ def categoria_of(f):
                              'cotelco', 'club lagos', 'campestre', 'salto', 'webinar', 'jornada', 'feria')):
         return 'Eventos'
     # lo explícitamente ORGÁNICO nunca es pauta, aunque nombre una red social
-    if 'organic' in fl or 'orgánic' in fl or 'formulario' in fl or fl.startswith('sitio web'):
+    if 'organic' in fl or 'orgánic' in fl or 'formulario' in fl or fl.startswith('sitio web') or fl.startswith('seo'):
         return 'Orgánico digital'
     # PAUTA DIGITAL: subcategorías Paid Search · Paid LinkedIn · Facebook (+ resto de pago)
     if any(k in fl for k in ('facebook', 'google', 'paid', 'instagram', 'tiktok', 'digital',
@@ -298,7 +309,7 @@ try:
 except Exception:
     INV = {'moneda': 'USD', 'fuentes': {}, 'categorias': {}}
 # filas que SIEMPRE se muestran en su categoría aunque no tengan leads en la selección
-FIJAS = {'Orgánico digital': ['Sitio Web (SEO / directo)', 'Social Media (orgánico)', 'LinkedIn Orgánico'],
+FIJAS = {'Orgánico digital': ['SEO (búsqueda orgánica)', 'Sitio Web (directo)', 'Social Media (orgánico)', 'LinkedIn Orgánico'],
          'Pauta digital': ['Paid Search', 'Paid LinkedIn', 'Facebook']}
 for _cat, _fs in FIJAS.items():
     giC(_cat)
@@ -459,7 +470,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
 <p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra: leads y score promedio → <b>tipificación de sus oportunidades en HOT / WARM / COLD</b> (por etapa del pipeline) → MQL y SQL → contactabilidad y tiempo de 1ª atención → % descartados → clientes, conversión y cierres. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
 <div style="overflow-x:auto"><table style="min-width:1750px"><thead><tr>
-<th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Facebook (Meta) + resto de pago. Orgánico digital: Sitio Web (SEO / directo), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios orgánicos.">Categoría / fuente</th>
+<th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Facebook (Meta) + resto de pago. Orgánico digital: SEO (búsqueda orgánica), Sitio Web (directo), Social Media (orgánico), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios. Los leads con fuente 'web site' se reclasifican por el registro de atribución de GHL (sessionSource): Organic Search→SEO, Direct→Sitio Web directo, Social→Social Media, Paid Social→Facebook, CRM/CSV→Importaciones; sin atribución quedan como 'Sitio Web (sin atribución)'.">Categoría / fuente</th>
 <th data-tip="Inversión en el medio (USD), tomada de scripts/inversiones.json — se diligencia a mano por fuente y/o categoría, con total y/o por mes. Con filtro de fechas suma solo los meses del rango; sin filtro usa el total. '—' = sin dato de inversión.">Inversión</th>
 <th data-tip="Leads adquiridos en la selección (respetan los filtros de arriba, salvo categoría y fuente).">Leads</th>
 <th data-tip="Costo por lead = inversión ÷ leads de la selección. Solo se calcula donde hay inversión registrada.">CPL</th>

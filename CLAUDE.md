@@ -209,3 +209,13 @@ GHL guarda `dateAdded` en UTC: un lead que escribe a las 8 PM de Miami queda con
 del día siguiente. Todas las hojas muestran y filtran "Creado" con `fecha_local()`
 (America/New_York), que es la fecha que el equipo ve en el CRM. Caso: Midalia,
 2026-08-17T00:56Z → se muestra 2026-08-16.
+
+## Adquisición: "web site" se reclasifica por atribución (ago-2026)
+La fuente 'web site' del CRM es el PUNTO DE CAPTURA (formulario/widget), no el
+origen. En ghl_reporte_adquisicion.py fuente_of() usa attr.sessionSource:
+Organic Search→"SEO (búsqueda orgánica)", Direct→"Sitio Web (directo)",
+Social→"Social Media (orgánico)", Paid Social→"Facebook", Paid Search→"Paid
+Search", Referral→"Referidos / Personal", CRM/CSV/manual→"Importaciones /
+creación manual", sin attr→"Sitio Web (sin atribución)". Solo ~20 de 598 son
+SEO real. Las demás hojas mantienen la familia "Sitio Web" simple.
+Inversión/CPL: scripts/inversiones.json (por fuente/categoría, total y/o meses).
