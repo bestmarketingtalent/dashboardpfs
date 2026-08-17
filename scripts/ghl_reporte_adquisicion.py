@@ -255,7 +255,8 @@ def opp_row(c):
     _op = opp_of(c)
     return ([giOP(_STG.get(_op['stage'], '(etapa desconocida)')),
              _ST_ES.get((_op.get('status') or '').lower(), _op.get('status') or ''),
-             (_op.get('stageChange') or _op.get('created') or '')[:10]] if _op else 0)
+             (_op.get('stageChange') or _op.get('created') or '')[:10],
+             round(float(_op.get('value') or 0))] if _op else 0)
 for _c2 in CAT_ORDER: giC(_c2)
 for s in STATUS_ORDER: giS(s)
 for k in CURSO_ORDER:  giK(k)
@@ -475,7 +476,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div class="chart-sec">
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
 <p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra: leads y score promedio → <b>tipificación de sus oportunidades en HOT / WARM / COLD</b> (por etapa del pipeline) → MQL y SQL → contactabilidad y tiempo de 1ª atención → % descartados → clientes, conversión y cierres. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
-<div style="overflow-x:auto"><table style="min-width:1850px"><thead><tr>
+<div style="overflow-x:auto"><table style="min-width:1980px"><thead><tr>
 <th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Paid Social (Facebook / Instagram / Meta) + resto de pago. Orgánico digital: SEO (búsqueda orgánica), Sitio Web (directo), Social Media (orgánico), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios. Los leads con fuente 'web site' se reclasifican por el registro de atribución de GHL (sessionSource): Organic Search→SEO, Direct→Sitio Web directo, Social→Social Media, Paid Social→Paid Social, CRM/CSV→Importaciones; sin atribución quedan como 'Sitio Web (sin atribución)'.">Categoría / fuente</th>
 <th data-tip="Inversión en el medio (USD), tomada de scripts/inversiones.json — se diligencia a mano por fuente y/o categoría, con total y/o por mes. Con filtro de fechas suma solo los meses del rango; sin filtro usa el total. '—' = sin dato de inversión.">Inversión</th>
 <th data-tip="Leads adquiridos en la selección (respetan los filtros de arriba, salvo categoría y fuente).">Leads</th>
@@ -487,6 +488,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="Oportunidades COLD: Nuevo Lead, Intento de Contacto, COLD y Sin Oportunidad.">Opp. COLD</th>
 <th data-tip="Leads de la fila que NO tienen oportunidad en el pipeline (nunca entraron al embudo de ventas).">Sin opp.</th>
 <th data-tip="Costo por oportunidad = inversión ÷ TODAS las oportunidades creadas en el pipeline (HOT + WARM + COLD) de la selección. Solo donde hay inversión registrada.">Costo / opp.</th>
+<th data-tip="Ingresos futuros: suma del VALOR registrado en las oportunidades ABIERTAS del pipeline de los leads de la fila (campo valor de la oportunidad en el CRM). Entre paréntesis: cuántas oportunidades tienen valor diligenciado — hoy solo una minoría lo tiene, así que es un piso, no el total.">Ingresos futuros</th>
 <th data-tip="% MQL: leads con señal de calificación de marketing — score ≥30 u oportunidad declarada (En curso por = Oportunidad…) o ya en Negocio abierto/Cliente.">MQL%</th>
 <th data-tip="% SQL: leads aceptados por ventas — Negocio abierto o Cliente, o En curso CON oportunidad vigente. Todo SQL es MQL.">SQL%</th>
 <th data-tip="% contactabilidad: leads que RESPONDIERON (mensaje entrante de WhatsApp o llamada contestada).">Contactab.</th>
@@ -721,7 +723,7 @@ function renderPies() {{
 
 /* ---------- tabla maestra: categoría → fuente (drill-down) ---------- */
 const EXP = new Set();
-function mkAgg() {{ return {{n: 0, cli: 0, desc: 0, sum: 0, atnS: 0, atnN: 0, d90: 0, p90: 0, resp: 0, mql: 0, sql: 0, opp: 0, oHot: 0, oWarm: 0, oCold: 0, oCierre: 0}}; }}
+function mkAgg() {{ return {{n: 0, cli: 0, desc: 0, sum: 0, atnS: 0, atnN: 0, d90: 0, p90: 0, resp: 0, mql: 0, sql: 0, opp: 0, oHot: 0, oWarm: 0, oCold: 0, oCierre: 0, valAb: 0, valAbN: 0}}; }}
 // TIPIFICACIÓN de la oportunidad por bloque del embudo (etapa del PIPELINE):
 //   COLD = Nuevo Lead · Intento de Contacto · COLD · Sin Oportunidad
 //   WARM = Cita/Asistió jornada · Cita Virtual · Asistió Presencial/Virtual · WARM · Llamada/Precalificación financiera · Atención Contador
@@ -746,6 +748,7 @@ function addTo(a, x, c90, c180) {{
     const tp = tipoOpp(et);
     if (tp === 'hot') a.oHot++; else if (tp === 'warm') a.oWarm++; else a.oCold++;
     if (RE_CIERRE.test(et) || o[1] === 'ganada') a.oCierre++;
+    if (o[1] === 'abierta' && o[3] > 0) {{ a.valAb += o[3]; a.valAbN++; }}
   }}
 }}
 // ---------- inversión (scripts/inversiones.json) según el filtro de fechas ----------
@@ -815,6 +818,7 @@ function renderFuentes() {{
     <td style="white-space:nowrap;color:var(--azul);font-weight:700">${{fmtN(a.oCold)}}${{oPct(a.oCold, a)}}</td>
     <td style="white-space:nowrap;color:var(--gris)">${{fmtN(a.n - a.opp)}}</td>
     <td style="white-space:nowrap">${{cpoTxt(inv, a.opp)}}</td>
+    <td style="white-space:nowrap">${{a.valAb ? `<b>US$${{Math.round(a.valAb).toLocaleString('es-CO')}}</b> <small style="color:var(--gris)">(${{a.valAbN}})</small>` : '<span style="color:#B9BDCC">—</span>'}}</td>
     <td style="color:var(--naranja);font-weight:700">${{pcc(a.mql, a.n)}}</td>
     <td style="color:var(--rojo);font-weight:700">${{pcc(a.sql, a.n)}}</td>
     <td><b style="color:${{a.n && a.resp / a.n >= .3 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.resp, a.n)}}</b></td>
