@@ -453,7 +453,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 
 <div class="chart-sec">
 <h2>🥧 Cómo se reparte la selección</h2>
-<p class="chart-sub">Los cuatro cortes clave de los leads que cumplen los filtros de arriba: de dónde vienen, en qué lead status están, en qué etapa del pipeline de ventas van y qué temperatura tienen. Clic en una porción aplica (o quita) ese filtro.</p>
+<p class="chart-sub">Los cortes clave de los leads que cumplen los filtros de arriba: de dónde vienen, en qué lead status están, en qué etapa del pipeline van, qué temperatura tienen — y de qué origen salen las oportunidades HOT, WARM y COLD. Clic en una porción aplica (o quita) ese filtro.</p>
 <div class="pies">
 <div class="pie-box"><h3 data-tip="Reparto de los leads de la selección por medio/fuente (top 7 + Otros). Clic = filtrar por esa fuente.">📣 Por origen (fuente)</h3>
 <svg id="pie-fu" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-fu"></div></div>
@@ -463,6 +463,12 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <svg id="pie-op" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-op"></div></div>
 <div class="pie-box"><h3 data-tip="Reparto por temperatura del lead scoring v2: Caliente ≥55, Tibio 30-54, Frío 10-29, Sin señales <10. Clic = filtrar por esa temperatura.">🌡 Por lead scoring</h3>
 <svg id="pie-sc" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-sc"></div></div>
+<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa HOT del pipeline (Date to Miami, Asistió Oficina Miami, Tour Miami, Toma Decisión, Recompra, Pending, Cierre): de qué origen vienen. Clic = filtrar por esa fuente.">🔥 Origen de las oportunidades HOT</h3>
+<svg id="pie-hot" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-hot"></div></div>
+<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa WARM (Cita/Asistió jornada, Cita Virtual, Asistió Presencial/Virtual, WARM, Precalificación, Contador): de qué origen vienen. Clic = filtrar por esa fuente.">🌤 Origen de las oportunidades WARM</h3>
+<svg id="pie-warm" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-warm"></div></div>
+<div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa COLD (Nuevo Lead, Intento de Contacto, COLD, Sin Oportunidad): de qué origen vienen. Clic = filtrar por esa fuente.">❄ Origen de las oportunidades COLD</h3>
+<svg id="pie-cold" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-cold"></div></div>
 </div>
 </div>
 
@@ -680,8 +686,9 @@ function pieDe(svgId, legId, col, nombres, selId, titulo, exc) {{
     tip: `Otros ${{top.length - 7}} valores: ${{fmtN(resto)}} leads.`, click: null}});
   drawPie(svgId, legId, datos, 'leads');
 }}
-function pieGen(svgId, legId, keyOf, labelOf, exc, onClick, colores) {{
-  const base = filtro([exc]);
+function pieGen(svgId, legId, keyOf, labelOf, exc, onClick, colores, pre, centro) {{
+  let base = filtro([exc]);
+  if (pre) base = base.filter(pre);
   const cnt = new Map();
   base.forEach(x => {{ const k = keyOf(x); cnt.set(k, (cnt.get(k) || 0) + 1); }});
   const top = [...cnt.entries()].sort((a, b) => b[1] - a[1]);
@@ -692,7 +699,7 @@ function pieGen(svgId, legId, keyOf, labelOf, exc, onClick, colores) {{
   }}));
   const resto = top.slice(7).reduce((t, [, c]) => t + c, 0);
   if (resto) datos.push({{label: 'Otros', val: resto, color: '#C9D6E4', tip: `Otros ${{top.length - 7}} valores: ${{fmtN(resto)}} leads.`, click: null}});
-  drawPie(svgId, legId, datos, 'leads');
+  drawPie(svgId, legId, datos, centro || 'leads');
 }}
 const TEMP_OF = sc => sc >= 55 ? 'hot' : sc >= 30 ? 'warm' : sc >= 10 ? 'cold' : 'none';
 const TEMP_LBL = {{hot: '🔥 Caliente (≥55)', warm: '🌤 Tibio (30-54)', cold: '❄ Frío (10-29)', none: 'Sin señales (<10)'}};
@@ -704,6 +711,12 @@ function renderPies() {{
     k => {{ const sel = document.getElementById('f-o'); sel.value = sel.value == k ? '' : k; apply(); }});
   pieGen('pie-sc', 'pleg-sc', x => TEMP_OF(x[7]), k => TEMP_LBL[k], 't',
     k => {{ const sel = document.getElementById('f-t'); sel.value = sel.value == k ? '' : k; apply(); }}, TEMP_COL);
+  // por origen, restringido a la tipificación de la oportunidad (HOT / WARM / COLD)
+  const clickFu = k => {{ const sel = document.getElementById('f-f'); sel.value = sel.value == k ? '' : k; apply(); }};
+  const esTipo = tp => x => x[20] && tipoOpp(D.opps[x[20][0]] || '') === tp;
+  pieGen('pie-hot', 'pleg-hot', x => x[3], k => D.fuentes[k], 'f', clickFu, null, esTipo('hot'), 'opp. HOT');
+  pieGen('pie-warm', 'pleg-warm', x => x[3], k => D.fuentes[k], 'f', clickFu, null, esTipo('warm'), 'opp. WARM');
+  pieGen('pie-cold', 'pleg-cold', x => x[3], k => D.fuentes[k], 'f', clickFu, null, esTipo('cold'), 'opp. COLD');
 }}
 
 /* ---------- tabla maestra: categoría → fuente (drill-down) ---------- */
