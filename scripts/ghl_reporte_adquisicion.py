@@ -455,16 +455,21 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div class="chart-sec">
 <h2>🏆 Calidad de cada medio: la tabla maestra de adquisición</h2>
 <p class="chart-sub">Agrupada por <b>categoría de medios</b> (pauta digital, orgánico, eventos, referidos…) con drill-down: clic en la fila de una categoría la expande a <b>todas</b> sus fuentes, sin agrupar ninguna en "otras" — para auditar exactamente qué contiene cada categoría. Cada nivel muestra: leads y score promedio → <b>tipificación de sus oportunidades en HOT / WARM / COLD</b> (por etapa del pipeline) → MQL y SQL → contactabilidad y tiempo de 1ª atención → % descartados → clientes, conversión y cierres. <b>Respeta todos los filtros activos (asesor, status, fechas…) excepto categoría y fuente.</b> Clic en una fuente = filtrarla y ver sus leads abajo.</p>
-<div style="overflow-x:auto"><table style="min-width:1980px"><thead><tr>
+<div style="overflow-x:auto"><table style="min-width:2250px"><thead><tr>
 <th data-tip="Categoría de medios (clic para expandir TODAS sus fuentes, ninguna se agrupa en otras) o fuente individual (clic para filtrar). Pauta digital: Paid Search (Google Ads y variantes), Paid LinkedIn y Paid Social (Facebook / Instagram / Meta) + resto de pago. Orgánico digital: SEO (búsqueda orgánica), Sitio Web (directo), Social Media (orgánico), LinkedIn Orgánico (todo LinkedIn no pagado), WhatsApp, Email, Prensa, oficinas y formularios. Los leads con fuente 'web site' se reclasifican por el registro de atribución de GHL (sessionSource): Organic Search→SEO, Direct→Sitio Web directo, Social→Social Media, Paid Social→Paid Social, CRM/CSV→Importaciones; sin atribución quedan como 'Sitio Web (sin atribución)'.">Categoría / fuente</th>
 <th data-tip="Inversión en el medio (USD), tomada de scripts/inversiones.json — se diligencia a mano por fuente y/o categoría, con total y/o por mes. Con filtro de fechas suma solo los meses del rango; sin filtro usa el total. '—' = sin dato de inversión.">Inversión</th>
 <th data-tip="Leads adquiridos en la selección (respetan los filtros de arriba, salvo categoría y fuente).">Leads</th>
 <th data-tip="Costo por lead = inversión ÷ leads de la selección. Solo se calcula donde hay inversión registrada.">CPL</th>
 <th data-tip="% del total de la selección.">%</th>
 <th data-tip="Lead scoring v2 promedio (0-100) de los leads de la fila.">Score prom.</th>
+<th data-tip="Total de oportunidades creadas en el pipeline por los leads de la fila (HOT + WARM + COLD).">Opp. total</th>
+<th data-tip="% de TODAS las oportunidades de la selección que aporta este medio (share).">% opp.</th>
 <th data-tip="Oportunidades tipificadas HOT por su etapa en el pipeline: Date to Miami, Asistió Oficina Miami, Tour Miami, Toma Decisión (HOT), Recompra, Pending y Cierre (Elite Club). Entre paréntesis: % de las oportunidades de la fila.">Opp. HOT</th>
+<th data-tip="% de las oportunidades HOT de la selección que aporta este medio (share).">% HOT</th>
 <th data-tip="Oportunidades WARM: Cita/Asistió a jornada-evento-webinar, Cita Virtual, Asistió Presencial o Virtual, WARM, Llamada de Precalificación, Precalificación Financiera y Atención Contador.">Opp. WARM</th>
+<th data-tip="% de las oportunidades WARM de la selección que aporta este medio (share).">% WARM</th>
 <th data-tip="Oportunidades COLD: Nuevo Lead, Intento de Contacto, COLD y Sin Oportunidad.">Opp. COLD</th>
+<th data-tip="% de las oportunidades COLD de la selección que aporta este medio (share).">% COLD</th>
 <th data-tip="Leads de la fila que NO tienen oportunidad en el pipeline (nunca entraron al embudo de ventas).">Sin opp.</th>
 <th data-tip="Costo por oportunidad = inversión ÷ TODAS las oportunidades creadas en el pipeline (HOT + WARM + COLD) de la selección. Solo donde hay inversión registrada.">Costo / opp.</th>
 <th data-tip="Ingresos futuros: suma del VALOR registrado en las oportunidades ABIERTAS del pipeline de los leads de la fila (campo valor de la oportunidad en el CRM). Entre paréntesis: cuántas oportunidades tienen valor diligenciado — hoy solo una minoría lo tiene, así que es un piso, no el total.">Ingresos futuros</th>
@@ -493,6 +498,8 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <svg id="pie-op" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-op"></div></div>
 <div class="pie-box"><h3 data-tip="Reparto por temperatura del lead scoring v2: Caliente ≥55, Tibio 30-54, Frío 10-29, Sin señales <10. Clic = filtrar por esa temperatura.">🌡 Por lead scoring</h3>
 <svg id="pie-sc" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-sc"></div></div>
+<div class="pie-box"><h3 data-tip="De los leads de la selección que tienen oportunidad en el pipeline (HOT + WARM + COLD): de qué origen vienen. Clic = filtrar por esa fuente.">🪜 Origen de TODAS las oportunidades</h3>
+<svg id="pie-oppall" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-oppall"></div></div>
 <div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa HOT del pipeline (Date to Miami, Asistió Oficina Miami, Tour Miami, Toma Decisión, Recompra, Pending, Cierre): de qué origen vienen. Clic = filtrar por esa fuente.">🔥 Origen de las oportunidades HOT</h3>
 <svg id="pie-hot" viewBox="0 0 340 230"></svg><div class="pleg" id="pleg-hot"></div></div>
 <div class="pie-box"><h3 data-tip="De los leads de la selección cuya oportunidad está en etapa WARM (Cita/Asistió jornada, Cita Virtual, Asistió Presencial/Virtual, WARM, Precalificación, Contador): de qué origen vienen. Clic = filtrar por esa fuente.">🌤 Origen de las oportunidades WARM</h3>
@@ -716,6 +723,7 @@ function renderPies() {{
   // por origen, restringido a la tipificación de la oportunidad (HOT / WARM / COLD)
   const clickFu = k => {{ const sel = document.getElementById('f-f'); sel.value = sel.value == k ? '' : k; apply(); }};
   const esTipo = tp => x => x[20] && tipoOpp(D.opps[x[20][0]] || '') === tp;
+  pieGen('pie-oppall', 'pleg-oppall', x => x[3], k => D.fuentes[k], 'f', clickFu, null, x => !!x[20], 'oportunidades');
   pieGen('pie-hot', 'pleg-hot', x => x[3], k => D.fuentes[k], 'f', clickFu, null, esTipo('hot'), 'opp. HOT');
   pieGen('pie-warm', 'pleg-warm', x => x[3], k => D.fuentes[k], 'f', clickFu, null, esTipo('warm'), 'opp. WARM');
   pieGen('pie-cold', 'pleg-cold', x => x[3], k => D.fuentes[k], 'f', clickFu, null, esTipo('cold'), 'opp. COLD');
@@ -798,6 +806,9 @@ function renderFuentes() {{
     addTo(porFu.get(k), x, c90, c180);
   }});
   Object.keys(D.fijas).forEach(ci => {{ if (!porCat.has(+ci)) porCat.set(+ci, mkAgg()); }});
+  // totales de oportunidades de la selección (denominador del % por medio)
+  const TOT = mkAgg(); base.forEach(x => addTo(TOT, x, c90, c180));
+  const shr = (v, t) => t ? `<small style="color:var(--gris)">${{(v / t * 100).toFixed(0)}}%</small>` : '';
   const pcc = (v, n) => n ? (v / n * 100).toFixed(0).replace('.', ',') + '%' : '—';
   const momTxt = a => {{
     if (a.p90 >= 5 || a.d90 >= 5) {{
@@ -813,9 +824,10 @@ function renderFuentes() {{
     <td style="white-space:nowrap">${{money(inv)}}</td>
     <td><b>${{fmtN(a.n)}}</b></td><td style="white-space:nowrap">${{cplTxt(inv, a.n)}}</td><td>${{pcc(a.n, base.length)}}</td>
     <td><b>${{a.n ? (a.sum / a.n).toFixed(0).replace('.', ',') : '—'}}</b></td>
-    <td style="white-space:nowrap;color:var(--rojo);font-weight:700">${{fmtN(a.oHot)}}${{oPct(a.oHot, a)}}</td>
-    <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{fmtN(a.oWarm)}}${{oPct(a.oWarm, a)}}</td>
-    <td style="white-space:nowrap;color:var(--azul);font-weight:700">${{fmtN(a.oCold)}}${{oPct(a.oCold, a)}}</td>
+    <td style="white-space:nowrap"><b>${{fmtN(a.opp)}}</b></td><td>${{shr(a.opp, TOT.opp)}}</td>
+    <td style="white-space:nowrap;color:var(--rojo);font-weight:700">${{fmtN(a.oHot)}}${{oPct(a.oHot, a)}}</td><td>${{shr(a.oHot, TOT.oHot)}}</td>
+    <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{fmtN(a.oWarm)}}${{oPct(a.oWarm, a)}}</td><td>${{shr(a.oWarm, TOT.oWarm)}}</td>
+    <td style="white-space:nowrap;color:var(--azul);font-weight:700">${{fmtN(a.oCold)}}${{oPct(a.oCold, a)}}</td><td>${{shr(a.oCold, TOT.oCold)}}</td>
     <td style="white-space:nowrap;color:var(--gris)">${{fmtN(a.n - a.opp)}}</td>
     <td style="white-space:nowrap">${{cpoTxt(inv, a.opp)}}</td>
     <td style="white-space:nowrap">${{a.valAb ? `<b>US$${{Math.round(a.valAb).toLocaleString('es-CO')}}</b> <small style="color:var(--gris)">(${{a.valAbN}})</small>` : '<span style="color:#B9BDCC">—</span>'}}</td>
