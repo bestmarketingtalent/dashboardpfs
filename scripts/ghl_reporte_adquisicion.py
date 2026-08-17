@@ -480,7 +480,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="Oportunidades WARM: Cita/Asistió a jornada-evento-webinar, Cita Virtual, Asistió Presencial o Virtual, WARM, Llamada de Precalificación, Precalificación Financiera y Atención Contador.">Opp. WARM</th>
 <th data-tip="Oportunidades COLD: Nuevo Lead, Intento de Contacto, COLD y Sin Oportunidad.">Opp. COLD</th>
 <th data-tip="Leads de la fila que NO tienen oportunidad en el pipeline (nunca entraron al embudo de ventas).">Sin opp.</th>
-<th data-tip="Costo por oportunidad calificada = inversión ÷ (oportunidades HOT + WARM) de la selección. Solo donde hay inversión registrada.">Costo / opp.</th>
+<th data-tip="Costo por oportunidad = inversión ÷ TODAS las oportunidades creadas en el pipeline (HOT + WARM + COLD) de la selección. Solo donde hay inversión registrada.">Costo / opp.</th>
 <th data-tip="% MQL: leads con señal de calificación de marketing — score ≥30 u oportunidad declarada (En curso por = Oportunidad…) o ya en Negocio abierto/Cliente.">MQL%</th>
 <th data-tip="% SQL: leads aceptados por ventas — Negocio abierto o Cliente, o En curso CON oportunidad vigente. Todo SQL es MQL.">SQL%</th>
 <th data-tip="% contactabilidad: leads que RESPONDIERON (mensaje entrante de WhatsApp o llamada contestada).">Contactab.</th>
@@ -766,7 +766,7 @@ const invCat = (ci, porFu) => {{
 }};
 const MON = D.inv.moneda || 'USD';
 const money = v => v === null ? '<span style="color:#B9BDCC">—</span>' : `<b>${{MON === 'USD' ? 'US$' : MON + ' '}}${{Math.round(v).toLocaleString('es-CO')}}</b>`;
-const cpoTxt = (v, n) => v === null ? '<span style="color:#B9BDCC">—</span>' : n ? `<b>US$${{Math.round(v / n).toLocaleString('es-CO')}}</b>` : '<span style="color:var(--rojo)" data-tip="Hay inversión pero 0 oportunidades HOT+WARM en la selección">sin opp.</span>';
+const cpoTxt = (v, n) => v === null ? '<span style="color:#B9BDCC">—</span>' : n ? `<b>US$${{Math.round(v / n).toLocaleString('es-CO')}}</b>` : '<span style="color:var(--rojo)" data-tip="Hay inversión pero 0 oportunidades en la selección">sin opp.</span>';
 const cplTxt = (v, n) => v === null ? '<span style="color:#B9BDCC">—</span>' : n ? `<b>US$${{(v / n).toLocaleString('es-CO', {{maximumFractionDigits: 0}})}}</b>` : '<span style="color:var(--rojo)" data-tip="Hay inversión pero 0 leads en la selección">sin leads</span>';
 function renderFuentes() {{
   const base = filtro(['c', 'f']);
@@ -801,7 +801,7 @@ function renderFuentes() {{
     <td style="white-space:nowrap;color:var(--naranja);font-weight:700">${{fmtN(a.oWarm)}}${{oPct(a.oWarm, a)}}</td>
     <td style="white-space:nowrap;color:var(--azul);font-weight:700">${{fmtN(a.oCold)}}${{oPct(a.oCold, a)}}</td>
     <td style="white-space:nowrap;color:var(--gris)">${{fmtN(a.n - a.opp)}}</td>
-    <td style="white-space:nowrap">${{cpoTxt(inv, a.oHot + a.oWarm)}}</td>
+    <td style="white-space:nowrap">${{cpoTxt(inv, a.opp)}}</td>
     <td style="color:var(--naranja);font-weight:700">${{pcc(a.mql, a.n)}}</td>
     <td style="color:var(--rojo);font-weight:700">${{pcc(a.sql, a.n)}}</td>
     <td><b style="color:${{a.n && a.resp / a.n >= .3 ? 'var(--verde)' : 'var(--tinta)'}}">${{pcc(a.resp, a.n)}}</b></td>
