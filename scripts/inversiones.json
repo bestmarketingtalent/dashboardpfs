@@ -4,7 +4,11 @@
   "fuentes": {
     "Paid Search": {
       "total": 0,
-      "meses": {}
+      "meses": {
+        "2026-06": 8595,
+        "2026-07": 20104,
+        "2026-08": 990
+      }
     },
     "Paid LinkedIn": {
       "total": 0,
