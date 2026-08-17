@@ -774,7 +774,7 @@ function invDe(entry) {{
   const m1 = d1 ? d1.slice(0, 7) : '0000-00', m2 = d2 ? d2.slice(0, 7) : '9999-99';
   let t = 0, alguno = false;
   Object.entries(meses).forEach(([m, v]) => {{ if (m >= m1 && m <= m2) {{ t += (+v || 0); alguno = true; }} }});
-  return alguno ? t : null;
+  return alguno && t > 0 ? t : null;
 }}
 const invFuente = nombre => invDe((D.inv.fuentes || {{}})[nombre]);
 const invCat = (ci, porFu) => {{
@@ -786,7 +786,7 @@ const invCat = (ci, porFu) => {{
   }});
   // fuentes fijas sin leads en la selección también pueden tener inversión
   (D.fijas[ci] || []).forEach(fi => {{ if (!porFu.has(ci + ':' + fi)) {{ const v = invFuente(D.fuentes[fi]); if (v !== null) {{ t = (t || 0) + v; alguno = true; }} }} }});
-  return alguno ? t : null;
+  return alguno && t > 0 ? t : null;
 }};
 const MON = D.inv.moneda || 'USD';
 const money = v => v === null ? '<span style="color:#B9BDCC">—</span>' : `<b>${{MON === 'USD' ? 'US$' : MON + ' '}}${{Math.round(v).toLocaleString('es-CO')}}</b>`;
