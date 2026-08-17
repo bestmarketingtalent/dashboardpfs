@@ -201,3 +201,9 @@ cerrada, corren al abrirla).
 Los HTML generados y `scripts/data/` contienen nombres, correos y teléfonos de ~15.000
 personas: son la base de datos misma. No publicarlos, no subirlos a servicios externos,
 no circularlos fuera del equipo comercial autorizado de PFS.
+
+## Fechas de creación en hora de Miami
+GHL guarda `dateAdded` en UTC: un lead que escribe a las 8 PM de Miami queda con fecha
+del día siguiente. Todas las hojas muestran y filtran "Creado" con `fecha_local()`
+(America/New_York), que es la fecha que el equipo ve en el CRM. Caso: Midalia,
+2026-08-17T00:56Z → se muestra 2026-08-16.

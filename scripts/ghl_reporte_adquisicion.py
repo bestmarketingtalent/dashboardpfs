@@ -10,6 +10,23 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+# ---------- fecha de creación en hora de Miami (el CRM guarda UTC; un lead de las 8 PM
+# aparece como "mañana" en UTC). Se muestra y filtra con la fecha que ve el equipo. ----------
+try:
+    from zoneinfo import ZoneInfo as _ZI
+    _TZ_MIA = _ZI('America/New_York')
+except Exception:
+    _TZ_MIA = None
+def fecha_local(iso):
+    if not iso: return ''
+    try:
+        from datetime import datetime as _dt
+        d = _dt.fromisoformat(str(iso).replace('Z', '+00:00'))
+        if _TZ_MIA is not None and d.tzinfo is not None: d = d.astimezone(_TZ_MIA)
+        return d.strftime('%Y-%m-%d')
+    except Exception:
+        return str(iso)[:10]
+
 ROOT = Path(__file__).resolve().parent.parent
 DATA = Path(__file__).resolve().parent / 'data'
 
@@ -244,7 +261,7 @@ for c in contacts:
         (c['name'] or '(sin nombre)').strip().title(),
         c['email'] or '', c['phone'] or '',
         giF(fuente_of(c)), giP(pais_of(c.get('phone') or '')),
-        giS(st), giK(ku), score_of(c), (c['created'] or '')[:10],
+        giS(st), giK(ku), score_of(c), fecha_local(c['created']),
         giA(a),
         num(c.get('vecesContactado')) + num(c.get('salesActivities')),
         atn_of(c),
