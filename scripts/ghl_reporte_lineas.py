@@ -45,7 +45,7 @@ def fuente_of(c):
     if not s or s.lower() == '<unspecified>': return '(Sin fuente)'
     sl = s.lower()
     if 'google' in sl or sl.startswith('goo ') or sl == 'goo disp' or sl == 'paid search':
-        return 'Google / Paid Search'
+        return 'Paid Search'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl or sl in ('rerefido', 'referral', 'pereonal', 'personall'):
         return 'Referidos / Personal'
     if sl.startswith('prensa'):

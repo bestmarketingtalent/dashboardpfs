@@ -53,7 +53,7 @@ def pais_of(ph):
 def grupo(src):
     s = ' '.join((src or '').split()); sl = s.lower()
     if not sl or sl == '<unspecified>': return '(Sin fuente)'
-    if 'google' in sl or sl.startswith('goo ') or sl == 'paid search': return 'Google / Paid Search'
+    if 'google' in sl or sl.startswith('goo ') or sl == 'paid search': return 'Paid Search'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl: return 'Referidos / Personal'
     if sl.startswith('prensa'): return 'Prensa'
     if sl in ('web site', 'sitio web', 'web blog', 'blog') or sl.endswith('pfsrealty.com'): return 'Sitio Web'

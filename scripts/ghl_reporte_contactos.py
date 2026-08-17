@@ -43,7 +43,7 @@ def fuente_of(c):
     # Familias que en el CRM vienen dispersas en variantes/typos del mismo medio;
     # se agrupan para que sus resultados no se dispersen en el análisis por fuente.
     if 'google' in sl or sl.startswith('goo ') or sl == 'goo disp' or sl == 'paid search':
-        return 'Google / Paid Search'
+        return 'Paid Search'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl or sl in ('rerefido', 'referral', 'pereonal', 'personall'):
         return 'Referidos / Personal'
     if sl.startswith('prensa'):
@@ -479,7 +479,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div><label data-tip="Filtra por el campo 'Lead Status' del CRM: la clasificación comercial del contacto (Nuevo, En curso, En Nutrición, Cliente, Descartado, etc.), ordenada de más caliente a más fría.">Lead status</label><select id="f-s" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'En curso por' del CRM: el horizonte de oportunidad que registró el equipo (Oportunidad 1-3 / 3-6 / 6+ meses, Sin Oportunidad). '(Sin dato)' = campo vacío.">En curso por</label><select id="f-k" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'Realtor' del CRM: el realtor vinculado al contacto, ordenado por volumen.">Realtor</label><select id="f-r" autocomplete="off"></select></div>
-<div><label data-tip="Filtra por el origen del lead: campo 'Fuente de contacto' del CRM tal cual, con las variantes de Google, Referidos, Prensa y Sitio Web agrupadas. Ordenado por volumen.">Fuente del lead</label><select id="f-f" autocomplete="off"></select></div>
+<div><label data-tip="Filtra por el origen del lead: campo 'Fuente de contacto' del CRM tal cual, con las variantes de Paid Search (Google Ads), Referidos, Prensa y Sitio Web agrupadas. Ordenado por volumen.">Fuente del lead</label><select id="f-f" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por la temperatura del lead scoring (0-100): Caliente ≥55, Tibio 30-54, Frío 10-29, Sin señales <10. Misma clasificación de las píldoras — se sincronizan entre sí.">Scoring (temperatura)</label><select id="f-t" autocomplete="off">
 <option value="">Todos</option>
 <option value="hot">🔥 Calientes (≥55)</option>
@@ -562,7 +562,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div id="tree"></div>
 
 <div class="warnpii"><b>⚠ Datos personales:</b> este archivo contiene nombres, correos y teléfonos de {fmt(TOTAL)} personas — es la base de datos misma (Habeas Data). No publicarlo ni circularlo fuera del equipo comercial autorizado.</div>
-<footer>Drill-down: Asesor → Lead Status → leads ordenados por score (más caliente primero). Lead scoring 0-100 calculado por interacción y temperatura declarada en el CRM: "En curso por" (hasta 35 pts: 1-3 meses=35, 3-6=28, 6+=18) + Lead Status (hasta 25 pts: Negocio abierto=25, En curso=15, Intento de contacto=8, Nuevo=5, En Nutrición=3) + nº de interacciones registradas (contactos + actividades de venta, hasta 20 pts) + recencia de última actividad (hasta 20 pts: ≤7 días=20, ≤30=15, ≤90=8, ≤180=4). Caliente ≥55 · Tibio 30-54 · Frío 10-29 · Sin señales &lt;10. Origen = campo "Fuente de contacto" del CRM tal cual, con cuatro agrupaciones de variantes del mismo medio: "Google / Paid Search" (Google Ads, GOOGLE, GOO DISP, paid search), "Referidos / Personal" (Personal, PERSONAL, PG Personal, Referido/a, REFERIDO y typos), "Prensa" (PRENSA, PRENSA ELECTRONICA) y "Sitio Web" (web site, Sitio web, Web Blog, dominios del sitio corporativo). Base completa de contactos (con y sin oportunidad). Generado desde la API de GHL, solo consulta.</footer>
+<footer>Drill-down: Asesor → Lead Status → leads ordenados por score (más caliente primero). Lead scoring 0-100 calculado por interacción y temperatura declarada en el CRM: "En curso por" (hasta 35 pts: 1-3 meses=35, 3-6=28, 6+=18) + Lead Status (hasta 25 pts: Negocio abierto=25, En curso=15, Intento de contacto=8, Nuevo=5, En Nutrición=3) + nº de interacciones registradas (contactos + actividades de venta, hasta 20 pts) + recencia de última actividad (hasta 20 pts: ≤7 días=20, ≤30=15, ≤90=8, ≤180=4). Caliente ≥55 · Tibio 30-54 · Frío 10-29 · Sin señales &lt;10. Origen = campo "Fuente de contacto" del CRM tal cual, con cuatro agrupaciones de variantes del mismo medio: "Paid Search" (Google Ads, GOOGLE ADS, GOOGLE, GOO DISP, paid search — todo el tráfico pagado de búsqueda), "Referidos / Personal" (Personal, PERSONAL, PG Personal, Referido/a, REFERIDO y typos), "Prensa" (PRENSA, PRENSA ELECTRONICA) y "Sitio Web" (web site, Sitio web, Web Blog, dominios del sitio corporativo). Base completa de contactos (con y sin oportunidad). Generado desde la API de GHL, solo consulta.</footer>
 </div>
 <script>
 const D = {PAYLOAD};
@@ -844,7 +844,7 @@ function renderLeads(d) {{
      <th data-tip="Qué es: el nombre del contacto tal como está registrado en el CRM.">Contacto</th>
      <th data-tip="Qué es: el correo del contacto en el CRM; el enlace abre tu cliente de correo.">Email</th>
      <th data-tip="Qué es: el teléfono del contacto; 'WA' abre el chat de WhatsApp (wa.me + número).">Teléfono</th>
-     <th data-tip="Qué es: de dónde llegó el lead. Cómo se calcula: campo 'Fuente de contacto' del CRM tal cual, con las variantes de Google, Referidos, Prensa y Sitio Web agrupadas.">Origen</th>
+     <th data-tip="Qué es: de dónde llegó el lead. Cómo se calcula: campo 'Fuente de contacto' del CRM tal cual, con las variantes de Paid Search (Google Ads), Referidos, Prensa y Sitio Web agrupadas.">Origen</th>
      <th data-tip="Qué es: el horizonte de oportunidad que el equipo registró. Cómo se calcula: campo 'En curso por' del CRM (Oportunidad 1-3 / 3-6 / 6+ meses, Sin Oportunidad).">En curso por</th>
      <th data-tip="Qué es: si el lead tiene OPORTUNIDAD creada en el pipeline de ventas y en qué etapa del embudo está (Nuevo Lead, Intento de Contacto, WARM, HOT, Cierre…), con su estado: abierta, ganada, perdida o abandonada, y la fecha del último cambio de etapa. Cómo se calcula: cruce por email/teléfono contra las oportunidades del PIPELINE; si tiene varias se muestra la abierta más reciente. '—' = nunca ha entrado al pipeline.">Etapa de oportunidad</th>
      <th data-tip="Qué es: el realtor vinculado al contacto. Cómo se calcula: campo 'Realtor' del CRM.">Realtor</th>

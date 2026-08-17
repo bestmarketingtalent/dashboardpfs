@@ -56,7 +56,7 @@ def score_of(ct):
 def grupo(src):
     s = ' '.join((src or '').split()); sl = s.lower()
     if not sl or sl == '<unspecified>': return '(Sin fuente)'
-    if 'google' in sl or sl.startswith('goo ') or sl == 'paid search': return 'Google / Paid Search'
+    if 'google' in sl or sl.startswith('goo ') or sl == 'paid search': return 'Paid Search'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl: return 'Referidos / Personal'
     if sl.startswith('prensa'): return 'Prensa'
     if sl in ('web site', 'sitio web', 'web blog', 'blog') or sl.endswith('pfsrealty.com'): return 'Sitio Web'
@@ -1030,7 +1030,7 @@ function masLeads() {{
   <th data-tip="Nombre del contacto en el CRM.">Contacto</th>
   <th data-tip="Email del lead registrado en el CRM.">Email</th>
   <th data-tip="Teléfono del lead; 'WA' abre su chat de WhatsApp.">Teléfono</th>
-  <th data-tip="Origen del lead: campo 'Fuente de contacto' del CRM con las agrupaciones de Google, Referidos, Prensa y Sitio Web.">Origen</th>
+  <th data-tip="Origen del lead: campo 'Fuente de contacto' del CRM con las agrupaciones de Paid Search (Google Ads y variantes), Referidos, Prensa y Sitio Web.">Origen</th>
   <th data-tip="Campo Lead Status del CRM.">Lead Status</th>
   <th data-tip="Campo 'En curso por' del CRM (horizonte de oportunidad).">En curso por</th>
   <th data-tip="Si el lead tiene OPORTUNIDAD creada en el pipeline de ventas y en qué etapa del embudo está (Nuevo Lead, WARM, HOT, Cierre…), con su estado (abierta/ganada/perdida/abandonada) y la fecha del último cambio de etapa. Cruce por email/teléfono; si tiene varias, la abierta más reciente. '—' = nunca entró al pipeline.">Etapa de oportunidad</th>

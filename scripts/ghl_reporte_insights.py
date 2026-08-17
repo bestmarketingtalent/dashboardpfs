@@ -97,7 +97,7 @@ TOT_CLI = sum(cli_p.values())
 def grupo(src):
     s = ' '.join((src or '').split()); sl = s.lower()
     if not sl or sl == '<unspecified>': return '(Sin fuente)'
-    if 'google' in sl or sl.startswith('goo ') or sl == 'paid search': return 'Google / Paid Search'
+    if 'google' in sl or sl.startswith('goo ') or sl == 'paid search': return 'Paid Search'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl: return 'Referidos / Personal'
     if sl.startswith('prensa'): return 'Prensa'
     if sl in ('web site', 'sitio web', 'web blog', 'blog') or sl.endswith('pfsrealty.com'): return 'Sitio Web'
@@ -640,7 +640,7 @@ function matchLf(r, f) {{
   if (f === 'p1') return D.pa[r[10]] === 'Colombia' && D.fu[r[5]] === 'Evento';
   if (f === 'agrem') return r[17] === 1;
   if (f === 'p3') return D.pa[r[10]] === 'México';
-  if (f === 'p4') return D.fu[r[5]] === 'Google / Paid Search';
+  if (f === 'p4') return D.fu[r[5]] === 'Paid Search';
   if (f === 'p5') return D.pa[r[10]] === 'EE.UU. / Canadá';
   if (f === 'p6') return D.sts[r[6]] === 'Cliente';
   return false;

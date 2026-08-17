@@ -41,7 +41,7 @@ def fuente_of(c):
     if not s or s.lower() == '<unspecified>': return '(Sin fuente)'
     sl = s.lower()
     if 'google' in sl or sl.startswith('goo ') or sl == 'goo disp' or sl == 'paid search':
-        return 'Google / Paid Search'
+        return 'Paid Search'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl or sl in ('rerefido', 'referral', 'pereonal', 'personall'):
         return 'Referidos / Personal'
     if sl.startswith('prensa'):
@@ -376,7 +376,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 
 <div class="filters">
 <div><label data-tip="Filtra por la categoría de medios: pauta digital, orgánico digital, eventos, referidos y aliados, equipo comercial, importaciones. Cada fuente pertenece a una categoría (ver la tabla maestra).">Categoría de medios</label><select id="f-c" autocomplete="off"></select></div>
-<div><label data-tip="Filtra por el medio/fuente del lead: campo 'Fuente de contacto' del CRM con las variantes de Google, Referidos, Prensa y Sitio Web agrupadas. Ordenado por volumen.">Medio / fuente</label><select id="f-f" autocomplete="off"></select></div>
+<div><label data-tip="Filtra por el medio/fuente del lead: campo 'Fuente de contacto' del CRM con las variantes de Paid Search (Google Ads), Referidos, Prensa y Sitio Web agrupadas. Ordenado por volumen.">Medio / fuente</label><select id="f-f" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el país del lead, determinado por el prefijo internacional de su número móvil.">País (prefijo del móvil)</label><select id="f-p" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'Lead Status' del CRM: en qué quedó el lead adquirido (Cliente, Descartado, En curso…).">Lead status</label><select id="f-s" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por temperatura del lead scoring 0-100: Caliente ≥55, Tibio 30-54, Frío 10-29, Sin señales <10.">Scoring (temperatura)</label><select id="f-t" autocomplete="off">
@@ -482,7 +482,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 </div>
 
 <div class="warnpii"><b>⚠ Datos personales:</b> este archivo contiene nombres, correos y teléfonos de {fmt(TOTAL)} personas — es la base de datos misma (Habeas Data). No publicarlo ni circularlo fuera del equipo comercial autorizado.</div>
-<footer>Universo: los {fmt(TOTAL)} contactos del CRM. Fuente = campo "Fuente de contacto" con las familias de Google, Referidos, Prensa y Sitio Web agrupadas; vacío = "(Sin fuente)". País por prefijo internacional del móvil. Conversión = Lead Status "Cliente" ÷ leads (con rango de fechas mide el cierre de esa camada). Descarte = Lead Status "Descartado". Score 0-100 con la fórmula de todo el dashboard. 1ª atención = primer mensaje saliente de WhatsApp menos creación del lead (solo leads con conversación). Campaña = primera etiqueta no genérica. Atribución = registro attributionSource de la plataforma. Generado desde la API de GHL, solo consulta.</footer>
+<footer>Universo: los {fmt(TOTAL)} contactos del CRM. Fuente = campo "Fuente de contacto" con las familias de Paid Search (Google Ads), Referidos, Prensa y Sitio Web agrupadas; vacío = "(Sin fuente)". País por prefijo internacional del móvil. Conversión = Lead Status "Cliente" ÷ leads (con rango de fechas mide el cierre de esa camada). Descarte = Lead Status "Descartado". Score 0-100 con la fórmula de todo el dashboard. 1ª atención = primer mensaje saliente de WhatsApp menos creación del lead (solo leads con conversación). Campaña = primera etiqueta no genérica. Atribución = registro attributionSource de la plataforma. Generado desde la API de GHL, solo consulta.</footer>
 </div>
 <script>
 const D = {PAYLOAD};

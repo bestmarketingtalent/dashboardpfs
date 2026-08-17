@@ -67,7 +67,7 @@ ESPERANDO = sum(v[1] for v in astat.values())
 def grupo(src):
     s = ' '.join((src or '').split()); sl = s.lower()
     if not sl or sl == '<unspecified>': return '(Sin fuente)'
-    if 'google' in sl or sl.startswith('goo ') or sl == 'paid search': return 'Google / Paid Search'
+    if 'google' in sl or sl.startswith('goo ') or sl == 'paid search': return 'Paid Search'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl: return 'Referidos / Personal'
     if sl.startswith('prensa'): return 'Prensa'
     if sl in ('web site', 'sitio web', 'web blog', 'blog') or sl.endswith('pfsrealty.com'): return 'Sitio Web'
@@ -388,14 +388,14 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <h2>2 · Conversaciones por fuente</h2>
 <p class="note">La tasa de "sin responder" por fuente muestra dónde se está perdiendo la demanda entrante. Google/Paid Search y las fuentes agrupadas usan el mismo criterio del reporte de contactos.</p>
 <table><thead><tr>
-<th data-tip="Qué es: el origen del lead dueño de la conversación. Cómo se calcula: campo 'Fuente de contacto' del CRM, con las variantes de Google, Referidos, Prensa y Sitio Web agrupadas como en el reporte de contactos.">Fuente</th>
+<th data-tip="Qué es: el origen del lead dueño de la conversación. Cómo se calcula: campo 'Fuente de contacto' del CRM, con las variantes de Paid Search (Google Ads), Referidos, Prensa y Sitio Web agrupadas como en el reporte de contactos.">Fuente</th>
 <th data-tip="Qué es: cuántas conversaciones de WhatsApp corresponden a leads de esa fuente. Cómo se calcula: cruce conversación → contacto → fuente.">Convos WA</th>
 <th data-tip="Qué es: la tasa de abandono de esa fuente — conversaciones donde el cliente escribió de último y no ha recibido respuesta, y su % del total. Colores: verde <4%, ámbar 4-10%, rojo ≥10%.">Cliente sin respuesta</th>
 </tr></thead>
 <tbody id="tb-f">{''.join(tr_f(r) for r in rows_f)}</tbody></table>
 <ul>
 <li><b>La fuente "Whatsapp" (mensajes orgánicos entrantes) tiene un 64% de abandono</b>: 34 de 53 personas que escribieron por iniciativa propia nunca recibieron respuesta. Es la fuga más grave: máxima intención, mínima atención.</li>
-<li><b>Google / Paid Search (12%) y Sitio Web (10,7%)</b> — leads pagados y de alta intención ("quiero asesoría para invertir en…") con 4-7 veces más abandono que los leads de Evento (1,7%). El embudo atiende bien lo que ya conoce (eventos) y desatiende el tráfico de intención.</li>
+<li><b>Paid Search (12%) y Sitio Web (10,7%)</b> — leads pagados y de alta intención ("quiero asesoría para invertir en…") con 4-7 veces más abandono que los leads de Evento (1,7%). El embudo atiende bien lo que ya conoce (eventos) y desatiende el tráfico de intención.</li>
 <li><b>(Sin fuente): 21%</b> — sin atribución tampoco hay proceso: nadie sabe de quién es ese lead.</li>
 </ul>
 
@@ -408,7 +408,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <th data-tip="Qué es: el email del lead registrado en el CRM; el enlace abre tu cliente de correo.">Email</th>
 <th data-tip="Qué es: el teléfono del lead registrado en el CRM, con enlace de llamada y de WhatsApp.">Teléfono</th>
 <th data-tip="Qué es: el usuario del CRM al que está asignada la conversación. '(Sin asesor)' significa que la conversación no tiene dueño.">Asesor</th>
-<th data-tip="Qué es: el origen del lead. Cómo se calcula: campo 'Fuente de contacto' del CRM con las agrupaciones de Google, Referidos, Prensa y Sitio Web.">Fuente</th>
+<th data-tip="Qué es: el origen del lead. Cómo se calcula: campo 'Fuente de contacto' del CRM con las agrupaciones de Paid Search (Google Ads y variantes), Referidos, Prensa y Sitio Web.">Fuente</th>
 <th data-tip="Qué es: la clasificación comercial del contacto. Cómo se calcula: campo 'Lead Status' del CRM tal cual (Nuevo, En curso, En Nutrición, Cliente, etc.).">Lead Status</th>
 <th data-tip="Qué es: cuánto lleva el cliente esperando. Cómo se calcula: días transcurridos entre el último mensaje (que escribió el cliente) y hoy.">Días esperando</th>
 <th data-tip="Qué es: el texto del último mensaje que escribió el cliente, recortado a 110 caracteres, tal cual quedó en el CRM.">Último mensaje del cliente</th>

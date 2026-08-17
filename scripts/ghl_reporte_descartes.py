@@ -40,7 +40,7 @@ def fuente_of(c):
     if not s or s.lower() == '<unspecified>': return '(Sin fuente)'
     sl = s.lower()
     if 'google' in sl or sl.startswith('goo ') or sl == 'goo disp' or sl == 'paid search':
-        return 'Google / Paid Search'
+        return 'Paid Search'
     if 'personal' in sl or 'referid' in sl or 'refirio' in sl or sl in ('rerefido', 'referral', 'pereonal', 'personall'):
         return 'Referidos / Personal'
     if sl.startswith('prensa'):
@@ -296,7 +296,7 @@ footer{{color:var(--gris);font-size:11.5px;margin-top:18px;border-top:1px solid 
 <div class="filters">
 <div><label data-tip="Filtra por asesor contando OWNER (quien lo tenía al descartarse) o SEGUIDOR (followers). MARKETING PFS = descartado por la automatización. Solo cambia la consulta del reporte.">Quién lo descartó (asesor)</label><select id="f-a" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'Motivo de descarte' del CRM. '(Sin motivo registrado)' = descarte sin explicación. Ordenado por volumen.">Motivo de descarte</label><select id="f-m" autocomplete="off"></select></div>
-<div><label data-tip="Filtra por el origen del lead: campo 'Fuente de contacto' del CRM, con las variantes de Google, Referidos, Prensa y Sitio Web agrupadas. Ordenado por volumen de toda la base.">Fuente del lead</label><select id="f-f" autocomplete="off"></select></div>
+<div><label data-tip="Filtra por el origen del lead: campo 'Fuente de contacto' del CRM, con las variantes de Paid Search (Google Ads), Referidos, Prensa y Sitio Web agrupadas. Ordenado por volumen de toda la base.">Fuente del lead</label><select id="f-f" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'En curso por': el horizonte de oportunidad que registró el equipo. Un descartado con 'Oportunidad …' vigente es una contradicción a revisar.">En curso por</label><select id="f-k" autocomplete="off"></select></div>
 <div><label data-tip="Filtra por el campo 'Realtor' del CRM, ordenado por volumen de descartes.">Realtor</label><select id="f-r" autocomplete="off"></select></div>
 <div><label data-tip="Busca texto libre dentro del nombre, el email y el teléfono de los leads descartados.">Buscar (nombre, email, teléfono)</label><input id="f-q" autocomplete="off" placeholder="Escribe para filtrar…"></div>
