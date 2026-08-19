@@ -23,7 +23,12 @@ Pilares (misma escala 0-100 de siempre):
  ④ RECENCIA REAL 0-20 : la fecha más reciente entre lastActivity/Engagement,
      última nota, última tarea, último intento de contacto y última
      conversación en cualquier canal (≤7d=20, ≤30=15, ≤90=8, ≤180=4).
-Flags: 🏠 propiedad específica (MLS) · 💰 monto declarado · 🛒 compra declarada · ✋ respondió · ⏸ aplazado."""
+ ⑤ FEEDBACK DEL ASESOR −15 a +15 (ajuste sobre el total, tope 100): el juicio que el asesor deja en notas y
+     comentarios internos (últimos 180 días): "interesado / le gusta / quiere
+     invertir / agenda / tiene capital / hot" suma; "no interesa / no quiere /
+     sin capital / sin visa / descartar / cold / bloqueó / número equivocado"
+     resta. La nota más reciente pesa el doble. ("no responde" no cuenta aquí.)
+Flags: 🏠 propiedad específica (MLS) · 💰 monto declarado · 🛒 compra declarada · ✋ respondió · ⏸ aplazado · 👍 feedback positivo del asesor · 👎 feedback negativo."""
 import json, re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -66,6 +71,26 @@ RE_COMPRA = re.compile(
 # dirección) — ya eligió qué quiere comprar o arrendar: la intención más concreta posible.
 RE_MLS = re.compile(r'\bMLS\s*[:#]?\s*([A-Z]{1,2}\d{6,9})\b|\b([AR]\d{8})\b', re.I)
 RE_PROP = re.compile(r'me interesa esta propiedad|interesad[oa] en esta propiedad|informaci[oó]n (de|sobre) (esta|la) propiedad', re.I)
+# FEEDBACK DEL ASESOR: el juicio que el asesor deja en notas / comentarios internos tras hablar con el lead.
+# Vocabulario calibrado sobre las 43.546 notas reales del CRM.
+RE_FB_POS = re.compile(
+    r'muy interesad|interesad[oa]\b|le gust|le interesa|quiere (comprar|invertir|avanzar|agendar|ver|conocer|saber m)|'
+    r'confirma (cita|reuni|asistencia|inter)|cita (confirmada|agendada)|agend[oó]|agendamos|'
+    r'va a (comprar|invertir|viajar|ir a miami)|viaja a miami|tiene (el )?(capital|dinero|recursos|presupuesto)|'
+    r'cuenta con (el )?(capital|dinero|recursos)|listo para|decidid|buena oportunidad|\bhot\b|caliente|'
+    r'potencial|positiv|avanz(a|ó|amos|ando)|reserv[oó]|separ[oó] |apart[oó] |env[ií]a (documentos|documentaci)|pide (cotizaci|proforma)',
+    re.I)
+RE_FB_NEG = re.compile(
+    r'no (le )?interesa|no est[aá] interesad|no quiere|no desea|no (le )?gust|descart|'
+    r'no tiene (capital|dinero|recursos|presupuesto|visa)|sin capital|no cuenta con|'
+    r'no es (el )?momento|no (por )?ahora|m[aá]s adelante|no califica|no aplica|'
+    r'no (puede|podr[ií]a) (viajar|comprar|invertir)|perdid|\bcold\b|fr[ií]o\b|desist|'
+    r'ya compr[oó] (con|en) otr|n[uú]mero (equivocado|errado|no existe)|equivocad|'
+    r'dej[oó] de responder|no volvi[oó] a (responder|contestar)|bloque|molest|no (le )?sirve|'
+    r'fuera de (su )?alcance|muy caro|no le alcanza|estudiante|sin empleo|desemplead',
+    re.I)
+# Mensajes MASIVOS / plantilla pegados como nota (no son feedback del asesor sobre el lead)
+RE_MASIVO = re.compile(r'desde pfs realty queremos|expresar nuestra solidaridad|colombia estamos contigo|responde a masivo|mensaje masivo', re.I)
 RE_RESP = re.compile(r'\b(responde|contesta|respondi[oó]|contest[oó]|me dice|dice que|confirma)\b', re.I)
 RE_NORESP = re.compile(r'\bno (responde|contesta|contest[oó]|respondi[oó])\b', re.I)
 RE_APLAZA = re.compile(
@@ -179,17 +204,38 @@ for c in contacts:
     dmin = min(fechas) if fechas else None
     p4 = 0 if dmin is None else 20 if dmin <= 7 else 15 if dmin <= 30 else 8 if dmin <= 90 else 4 if dmin <= 180 else 0
 
-    s = min(100, p1 + p2 + p3 + p4)
+    # ⑤ FEEDBACK DEL ASESOR (−15 a +15): juicio dejado en notas / comentarios internos
+    # de los últimos 180 días. Cada nota aporta +1 por señal positiva / −1 por negativa
+    # (sin contar "no responde", que ya mide reciprocidad); la nota MÁS RECIENTE con
+    # veredicto pesa el doble: si lo último que dijo el asesor es "no interesado", manda.
+    fb_score = 0.0; fb_pos = 0; fb_neg = 0; fb_ult = None; fb_ult_d = 10**9
+    for n in notas:
+        d = dias_desde(n[0])
+        if d is None or d > 180: continue
+        if RE_MASIVO.search(n[2]): continue          # plantilla masiva: no es juicio del asesor
+        t = sin_citas_out(n[2])
+        pos = len(RE_FB_POS.findall(t)); neg = len(RE_FB_NEG.findall(t))
+        if not pos and not neg: continue
+        peso = 1.0 if d <= 30 else 0.7 if d <= 90 else 0.4
+        fb_score += (pos - neg) * peso
+        fb_pos += pos; fb_neg += neg
+        if d < fb_ult_d: fb_ult_d = d; fb_ult = 1 if pos > neg else -1 if neg > pos else 0
+    if fb_ult: fb_score += fb_ult               # el último veredicto cuenta una vez más (pesa el doble)
+    p5 = max(-15, min(15, round(fb_score * 2)))  # escala: ±2 por señal neta; ~7 señales netas = tope ±15
+
+    s = max(0, min(100, p1 + p2 + p3 + p4 + p5))
     fl = ''
     if prop: fl += 'P'; stats['prop'] = stats.get('prop', 0) + 1
     if RE_MONTO.search(todo_txt): fl += 'M'; stats['monto'] += 1
     if compra: fl += 'C'; stats['compra'] += 1
     if respondio: fl += 'R'; stats['resp'] += 1
     if aplazado: fl += 'Z'; stats['aplazado'] += 1
-    OUT[cid] = {'s': s, 'd': [p1, p2, p3, p4], 'fl': fl}
+    if p5 >= 4: fl += 'G'; stats['fbpos'] = stats.get('fbpos', 0) + 1      # 👍 feedback positivo del asesor
+    elif p5 <= -4: fl += 'B'; stats['fbneg'] = stats.get('fbneg', 0) + 1   # 👎 feedback negativo del asesor
+    OUT[cid] = {'s': s, 'd': [p1, p2, p3, p4, p5], 'fl': fl}
 
 json.dump(OUT, open(DATA / 'score_v2.json', 'w'))
 scs = [v['s'] for v in OUT.values()]
 print(f"score_v2: {len(OUT)} leads | prom {sum(scs)/len(scs):.1f} | "
       f"calientes(≥55) {sum(1 for s in scs if s >= 55)} | tibios(30-54) {sum(1 for s in scs if 30 <= s < 55)}")
-print(f"flags: propiedad/MLS {stats.get('prop', 0)} | monto {stats['monto']} | compra declarada {stats['compra']} | respondieron {stats['resp']} | aplazados {stats['aplazado']}")
+print(f"flags: feedback+ {stats.get('fbpos', 0)} | feedback- {stats.get('fbneg', 0)} | propiedad/MLS {stats.get('prop', 0)} | monto {stats['monto']} | compra declarada {stats['compra']} | respondieron {stats['resp']} | aplazados {stats['aplazado']}")

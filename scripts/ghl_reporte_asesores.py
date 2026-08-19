@@ -963,7 +963,7 @@ function matchLf(r, f) {{
 // ¿Por qué ese score? — explicación simple para el asesor (r[19]=flags, r[20]=[compra,etapa,respuesta,reciente])
 function scDesg(r) {{
   const d = r[20] || [];
-  if (d.length !== 4) return '';
+  if (d.length < 4) return '';
   const fl = r[19] || '', sc = r[8];
   const st = D.sts[r[6]] || '(sin status)';
   let e1;
@@ -981,11 +981,12 @@ function scDesg(r) {{
            : d[3] >= 8 ? 'su última actividad fue hace 1 a 3 meses'
            : d[3] >= 4 ? 'su última actividad fue hace 3 a 6 meses'
            : 'lleva más de 6 meses sin ninguna actividad';
-  return `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ` +
+  const e5 = d.length >= 5 && d[4] !== 0 ? (d[4] > 0 ? `el asesor dejó retroalimentación POSITIVA en sus notas (interesado, le gusta, agenda, tiene capital…): +${{d[4]}} pts` : `el asesor dejó retroalimentación NEGATIVA en sus notas (no interesa, sin capital, sin visa, molesto, cold…): ${{d[4]}} pts`) : 'sin retroalimentación del asesor en los últimos 6 meses (0 pts)';
+  return `Este lead tiene ${{sc}} de 100 puntos por estas 5 razones: ` +
     `① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ` +
     `② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ` +
     `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
-    `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
+    `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}. ⑤ RETROALIMENTACIÓN DEL ASESOR: ${{e5}}.`;
 }}
 function waBtn(dig) {{
   return dig ? `<a href="https://wa.me/${{dig}}" target="_blank" style="display:inline-block;background:#25D366;color:#fff;border-radius:8px;padding:4px 9px;white-space:nowrap;font-size:.74rem;font-weight:700;text-decoration:none" data-tip="Escribirle directamente por WhatsApp (abre wa.me con su número).">💬 WhatsApp</a>` : '<span style="color:#B9BDCC">—</span>';
@@ -1002,6 +1003,7 @@ function opCell(r) {{
 function tareasDe(r) {{
   const d = r[20] || [0, 0, 0, 0], fl = r[19] || '', sc = r[8], t = [];
   const intTot = (r[17] && r[17][0]) || 0;
+  if (fl.indexOf('B') !== -1) t.push(['👎', 'Revisar la objeción que anotó el asesor', 'El asesor dejó retroalimentación negativa en sus notas: leerla antes de cualquier toque, resolver la objeción concreta (capital, visa, momento, precio) o pasar a nutrición con motivo registrado — no insistir a ciegas.']);
   if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
   if (fl.indexOf('P') !== -1) t.push(['🏠', 'Responder YA sobre la propiedad que pidió', 'El lead citó una propiedad concreta (MLS): responder en menos de 1 hora con precio, disponibilidad y ficha de ESA propiedad + 1-2 alternativas similares, y proponer visita o videollamada de inmediato. Es el lead de mayor intención que existe.']);
   if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);
@@ -1034,7 +1036,7 @@ function masLeads() {{
     const dig = r[4].replace(/[^0-9]/g, '');
     const ph = r[4] ? `<a href="tel:${{esc(r[4])}}">${{esc(r[4])}}</a>${{dig ? ' · <a href="https://wa.me/' + dig + '" target="_blank">WA</a>' : ''}}` : '—';
     const sTip = scDesg(r);
-    const FLGV = {{P: '🏠', M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
+    const FLGV = {{P: '🏠', M: '💰', C: '🛒', R: '✋', Z: '⏸', G: '👍', B: '👎'}};
     const flgs = (r[19] || '').split('').map(ch => FLGV[ch] || '').join('');
     return `<tr><td style="white-space:nowrap${{sTip ? ';cursor:help' : ''}}"${{sTip ? ` data-tip="${{sTip}}"` : ''}}><span class="tag" style="background:${{scCol(r[8])}}">${{r[8]}}</span> ${{flgs}}</td>
       <td><b>${{esc(r[2])}}</b>${{(curIdx >= 0 && r[0] !== curIdx) ? ` <span class="tagchip" style="background:#FBF6E7;color:#8A6D1A" data-tip="Este asesor es SEGUIDOR del lead; el owner es ${{esc(D.ase[r[0]])}}.">seguidor · owner: ${{esc(D.ase[r[0]]).slice(0, 16)}}</span>` : ''}}</td><td>${{em}}</td><td style="white-space:nowrap">${{ph}}</td>
@@ -1045,7 +1047,7 @@ function masLeads() {{
   <button class="btn" onclick="document.getElementById('leadbox').innerHTML=''">✕ Cerrar</button></h3>
   <div style="border:1px solid var(--gris-linea);border-radius:12px;overflow:auto;max-height:62vh">
   <table style="margin:0"><thead><tr>
-  <th data-tip="Lead scoring v2 0-100 (misma fórmula del reporte de contactos). PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Flags: 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
+  <th data-tip="Lead scoring v2 0-100 (misma fórmula del reporte de contactos). PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Flags: 👍/👎 retroalimentación del asesor · 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
   <th data-tip="Nombre del contacto en el CRM.">Contacto</th>
   <th data-tip="Email del lead registrado en el CRM.">Email</th>
   <th data-tip="Teléfono del lead; 'WA' abre su chat de WhatsApp.">Teléfono</th>

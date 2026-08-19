@@ -158,7 +158,14 @@ declarada 20 / presupuesto 22; APLAZAMIENTO reciente ≤120d lo congela a 15);
 ② ETAPA 0-25 (lead status); ③ RECIPROCIDAD 0-20 (eco del lead: WA entrantes,
 llamadas contestadas o notas de respuesta; gestión sin respuesta máx 4);
 ④ RECENCIA REAL 0-20 (mejor fecha entre lastActivity, notas, tareas, intentos y
-conversaciones — los campos lastActivity suelen estar rotos). Flags: 🏠P propiedad específica (MLS) · 💰M monto ·
+conversaciones — los campos lastActivity suelen estar rotos); ⑤ RETROALIMENTACIÓN DEL
+ASESOR −15 a +15 (ajuste sobre el total): juicio del asesor en notas/comentarios
+internos de los últimos 180 días — RE_FB_POS (interesado, le gusta, agenda, tiene
+capital, hot, viaja a Miami…) suma, RE_FB_NEG (no interesa, no quiere, sin capital/
+visa, descartar, cold, bloqueó, molesto, nº equivocado…) resta; ±2 por señal neta
+ponderada por antigüedad (≤30d ×1, ≤90d ×0.7, ≤180d ×0.4), la nota más reciente pesa
+el doble; "no responde" NO cuenta (ya está en reciprocidad); plantillas masivas
+(RE_MASIVO) excluidas. d tiene 5 elementos. Flags 👍G / 👎B. Flags: 🏠P propiedad específica (MLS) · 💰M monto ·
 🛒C compra · ✋R respondió · ⏸Z aplazado (chips en el drill-down del home).
 Las citas de mensajes SALIENTES pegadas en notas ("PFS REALTY LLC: …") se
 recortan antes de buscar evidencia (el pitch del asesor no es declaración del

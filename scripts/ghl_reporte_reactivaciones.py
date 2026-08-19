@@ -311,7 +311,7 @@ la regla de oro es responder su reacción <b>en menos de 1 hora con un humano</b
 
 <h2>Leads reactivados <span id="cnt" style="color:var(--gris);font-weight:600;font-size:12px"></span></h2>
 <div class="tbox"><table><thead><tr>
-<th data-tip="Lead scoring v2 0-100. PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos. Flags: 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
+<th data-tip="Lead scoring v2 0-100. PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos. Flags: 👍/👎 retroalimentación del asesor · 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado.">Score</th>
 <th>Contacto</th><th>Email</th><th>Teléfono</th>
 <th data-tip="Usuario del CRM asignado.">Asesor</th>
 <th>Lead Status</th>
@@ -391,7 +391,7 @@ function tagsCell(idxs) {{
   return out;
 }}
 function scTip(d, fl, sc, st) {{
-  if (!d || d.length !== 4) return '';
+  if (!d || d.length < 4) return '';
   let e1;
   if (fl.indexOf('Z') !== -1) e1 = 'dijo que quiere comprar' + (fl.indexOf('M') !== -1 ? ' y habló de monto' : '') + ', PERO pidió aplazar la decisión — por eso este punto se limita a 15';
   else if (fl.indexOf('P') !== -1) e1 = 'citó una PROPIEDAD ESPECÍFICA (número MLS o "me interesa esta propiedad"): ya eligió qué quiere — intención máxima';
@@ -405,16 +405,18 @@ function scTip(d, fl, sc, st) {{
   const e4 = d[3] >= 20 ? 'tuvo actividad esta última semana' : d[3] >= 15 ? 'tuvo actividad en el último mes'
            : d[3] >= 8 ? 'su última actividad fue hace 1 a 3 meses' : d[3] >= 4 ? 'su última actividad fue hace 3 a 6 meses'
            : 'lleva más de 6 meses sin ninguna actividad';
-  return `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
+  const e5 = d.length >= 5 && d[4] !== 0 ? (d[4] > 0 ? `el asesor dejó retroalimentación POSITIVA en sus notas (interesado, le gusta, agenda, tiene capital…): +${{d[4]}} pts` : `el asesor dejó retroalimentación NEGATIVA en sus notas (no interesa, sin capital, sin visa, molesto, cold…): ${{d[4]}} pts`) : 'sin retroalimentación del asesor en los últimos 6 meses (0 pts)';
+  return `Este lead tiene ${{sc}} de 100 puntos por estas 5 razones: ① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}. ⑤ RETROALIMENTACIÓN DEL ASESOR: ${{e5}}.`;
 }}
-const FLGV = {{P: '🏠', M: '💰', C: '🛒', R: '✋', Z: '⏸'}};
+const FLGV = {{P: '🏠', M: '💰', C: '🛒', R: '✋', Z: '⏸', G: '👍', B: '👎'}};
 function opCellG(o) {{
   if (!o) return '<span style="color:#B9BDCC" data-tip="Este lead NO tiene oportunidad creada en el pipeline de ventas: nunca ha entrado al embudo comercial.">—</span>';
   const col = o[1] === 'abierta' ? '#1D7A46' : o[1] === 'ganada' ? '#0F6E56' : '#A33B3B';
   return `<span style="white-space:nowrap;cursor:help" data-tip="Tiene OPORTUNIDAD en el pipeline de ventas: etapa «${{esc(D.opps[o[0]])}}» (${{esc(o[1])}}). Último cambio de etapa: ${{esc(o[2] || 'sin fecha')}}."><b>${{esc(D.opps[o[0]])}}</b><small style="display:block;color:${{col}};font-size:.68rem">${{esc(o[1])}} · ${{esc(o[2] || '')}}</small></span>`;
 }}
 function tareasG(d, fl, sc, intTot) {{
-  d = d && d.length === 4 ? d : [0, 0, 0, 0]; fl = fl || ''; const t = [];
+  d = d && d.length >= 4 ? d : [0, 0, 0, 0, 0]; fl = fl || ''; const t = [];
+  if (fl.indexOf('B') !== -1) t.push(['👎', 'Revisar la objeción que anotó el asesor', 'El asesor dejó retroalimentación negativa en sus notas: leerla antes de cualquier toque, resolver la objeción concreta (capital, visa, momento, precio) o pasar a nutrición con motivo registrado — no insistir a ciegas.']);
   if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
   if (fl.indexOf('P') !== -1) t.push(['🏠', 'Responder YA sobre la propiedad que pidió', 'El lead citó una propiedad concreta (MLS): responder en menos de 1 hora con precio, disponibilidad y ficha de ESA propiedad + 1-2 alternativas similares, y proponer visita o videollamada de inmediato. Es el lead de mayor intención que existe.']);
   if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);

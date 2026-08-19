@@ -356,13 +356,13 @@ TIPS = {
 def _tip(s, n):
     return (f'{TIPS.get(s, "")} Cómo se calcula: cuenta los {fmt(n)} contactos cuyo campo '
             f'“Lead Status” del CRM es “{s}”. Clic: filtra la tabla y los muestra clasificados por asesor.')
-FORMULA = ('El score v2 (0-100) suma 4 pilares con TODA la evidencia del CRM: ① INTENCIÓN hasta 35 pts — propiedad ESPECÍFICA citada por el lead '
+FORMULA = ('El score v2 (0-100) suma 5 pilares con TODA la evidencia del CRM: ① INTENCIÓN hasta 35 pts — propiedad ESPECÍFICA citada por el lead '
            '(nº MLS o "me interesa esta propiedad" = 35: ya eligió qué quiere), horizonte declarado (En curso por), monto de compra detectado en notas/conversaciones (30), compra declarada en texto (20) '
            'o presupuesto diligenciado (22); un aplazamiento reciente ("retomar en octubre…") la congela a máx 15 · '
            '② ETAPA hasta 25 pts (Lead Status: Negocio abierto=25, En curso=15…) · ③ RECIPROCIDAD hasta 20 pts — cuenta el eco '
            'del lead (respondió +8, nº de mensajes entrantes hasta +8, diálogo real +4); gestión sin respuesta vale máx 4 · '
            '④ RECENCIA REAL hasta 20 pts — la fecha más reciente entre actividad, notas, tareas, intentos y conversaciones '
-           '(≤7 días=20, ≤30=15, ≤90=8, ≤180=4). Flags: 🏠 propiedad específica · 💰 monto · 🛒 compra declarada · ✋ respondió · ⏸ aplazado.')
+           '(≤7 días=20, ≤30=15, ≤90=8, ≤180=4) · ⑤ RETROALIMENTACIÓN DEL ASESOR −15 a +15 — el juicio que el asesor deja en notas y comentarios internos de los últimos 6 meses (interesado / le gusta / agenda / tiene capital / hot suman; no interesa / sin capital / sin visa / molesto / cold / número equivocado restan; la nota más reciente pesa el doble). Flags: 👍/👎 retroalimentación del asesor · 🏠 propiedad específica · 💰 monto · 🛒 compra declarada · ✋ respondió · ⏸ aplazado.')
 hot_tip = (f'CALIENTE = score ≥ 55. {FORMULA} Para superar 55 el lead necesita combinar al menos dos señales fuertes: '
            'oportunidad vigente + estado activo + interacción reciente. Son los más cercanos a la venta. '
            'Clic: filtra la tabla y muestra de cada lead su asesor, etapa y “En curso por”.')
@@ -792,7 +792,7 @@ function tagsCell(idxs) {{
 // "tiene X de 100 puntos por estas razones", con las 4 variables y su porqué
 function scDesg(r) {{
   const d = r[17] || [];
-  if (d.length !== 4) return '';
+  if (d.length < 4) return '';
   const fl = r[16] || '', sc = r[9];
   const st = D.status[r[4]] || '(sin status)';
   let e1;
@@ -810,11 +810,12 @@ function scDesg(r) {{
            : d[3] >= 8 ? 'su última actividad fue hace 1 a 3 meses'
            : d[3] >= 4 ? 'su última actividad fue hace 3 a 6 meses'
            : 'lleva más de 6 meses sin ninguna actividad';
-  return `Este lead tiene ${{sc}} de 100 puntos por estas 4 razones: ` +
+  const e5 = d.length >= 5 && d[4] !== 0 ? (d[4] > 0 ? `el asesor dejó retroalimentación POSITIVA en sus notas (interesado, le gusta, agenda, tiene capital…): +${{d[4]}} pts` : `el asesor dejó retroalimentación NEGATIVA en sus notas (no interesa, sin capital, sin visa, molesto, cold…): ${{d[4]}} pts`) : 'sin retroalimentación del asesor en los últimos 6 meses (0 pts)';
+  return `Este lead tiene ${{sc}} de 100 puntos por estas 5 razones: ` +
     `① GANAS DE COMPRAR: ${{d[0]}} de 35 pts — ${{e1}}. ` +
     `② ETAPA EN EL CRM: ${{d[1]}} de 25 pts — su lead status es «${{st}}». ` +
     `③ RESPUESTAS DEL LEAD: ${{d[2]}} de 20 pts — ${{e3}}. ` +
-    `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}.`;
+    `④ ACTIVIDAD RECIENTE: ${{d[3]}} de 20 pts — ${{e4}}. ⑤ RETROALIMENTACIÓN DEL ASESOR: ${{e5}}.`;
 }}
 function waBtn(dig) {{
   return dig ? `<a href="https://wa.me/${{dig}}" target="_blank" style="display:inline-block;background:#25D366;color:#fff;border-radius:8px;padding:4px 9px;white-space:nowrap;font-size:.74rem;font-weight:700;text-decoration:none" data-tip="Escribirle directamente por WhatsApp (abre wa.me con su número).">💬 WhatsApp</a>` : '<span style="color:#B9BDCC">—</span>';
@@ -831,6 +832,7 @@ function opCell(r) {{
 function tareasDe(r) {{
   const d = r[17] || [0, 0, 0, 0], fl = r[16] || '', sc = r[9], t = [];
   const intTot = (r[14] && r[14][0]) || 0;
+  if (fl.indexOf('B') !== -1) t.push(['👎', 'Revisar la objeción que anotó el asesor', 'El asesor dejó retroalimentación negativa en sus notas: leerla antes de cualquier toque, resolver la objeción concreta (capital, visa, momento, precio) o pasar a nutrición con motivo registrado — no insistir a ciegas.']);
   if (fl.indexOf('Z') !== -1) t.push(['⏰', 'Agendar recontacto en la fecha aplazada', 'Crear tarea de recontacto para la fecha que él mismo dio ("retomar en…") y, mientras, enviar solo contenido de valor sin presionar.']);
   if (fl.indexOf('P') !== -1) t.push(['🏠', 'Responder YA sobre la propiedad que pidió', 'El lead citó una propiedad concreta (MLS): responder en menos de 1 hora con precio, disponibilidad y ficha de ESA propiedad + 1-2 alternativas similares, y proponer visita o videollamada de inmediato. Es el lead de mayor intención que existe.']);
   if (fl.indexOf('M') !== -1) t.push(['💰', 'Meet 1:1 con opciones en su rango de monto', 'Prioridad alta: agendar meet 1:1 y llegar con 2-3 opciones concretas dentro del rango de monto que declaró.']);
@@ -857,7 +859,7 @@ function renderLeads(d) {{
   const rows = ls.slice(0, shown).map(r => {{
     const em = r[1] ? `<a href="mailto:${{esc(r[1])}}">${{esc(r[1])}}</a>` : '—';
     const ph = r[2] ? `<a href="tel:${{esc(r[2])}}">${{esc(r[2])}}</a> · <a href="https://wa.me/${{esc(r[2].replace(/[^0-9]/g, ''))}}" target="_blank">WA</a>` : '—';
-    const FLG = {{P: ['🏠', 'PROPIEDAD ESPECÍFICA: el lead citó un número MLS o pidió información de "esta propiedad" — ya eligió qué quiere comprar o arrendar (intención máxima).'], M: ['💰', 'Monto de compra detectado en notas o mensajes del lead.'], C: ['🛒', 'Declaración de compra/inversión detectada en notas o conversaciones.'], R: ['✋', 'El lead HA RESPONDIDO (mensaje entrante, llamada contestada o respuesta registrada en notas).'], Z: ['⏸', 'Aplazamiento reciente detectado en notas ("retomar en…", "más adelante") — la intención está congelada.']}};
+    const FLG = {{G: ['👍', 'RETROALIMENTACIÓN POSITIVA del asesor en sus notas/comentarios internos (interesado, le gusta, agenda, tiene capital, hot…).'], B: ['👎', 'RETROALIMENTACIÓN NEGATIVA del asesor en sus notas (no interesa, sin capital, sin visa, molesto, cold, número equivocado…).'], P: ['🏠', 'PROPIEDAD ESPECÍFICA: el lead citó un número MLS o pidió información de "esta propiedad" — ya eligió qué quiere comprar o arrendar (intención máxima).'], M: ['💰', 'Monto de compra detectado en notas o mensajes del lead.'], C: ['🛒', 'Declaración de compra/inversión detectada en notas o conversaciones.'], R: ['✋', 'El lead HA RESPONDIDO (mensaje entrante, llamada contestada o respuesta registrada en notas).'], Z: ['⏸', 'Aplazamiento reciente detectado en notas ("retomar en…", "más adelante") — la intención está congelada.']}};
     const flg = (r[16] || '').split('').map(ch => FLG[ch] ? `<span data-tip="${{FLG[ch][1]}}" style="cursor:help">${{FLG[ch][0]}}</span>` : '').join('');
     const sTip = scDesg(r);
     return `<tr><td style="white-space:nowrap${{sTip ? ';cursor:help' : ''}}"${{sTip ? ` data-tip="${{sTip}}"` : ''}}><span class="sc" style="background:${{scoreCol(r[9])}}">${{r[9]}}</span> <small style="color:${{scoreCol(r[9])}};font-weight:700">${{tempTxt(r[9])}}</small> ${{flg}}</td>
@@ -867,7 +869,7 @@ function renderLeads(d) {{
   }}).join('');
   d.querySelector('[data-holder]').innerHTML =
     `<table><thead><tr>
-     <th data-tip="Qué es: lead scoring v2 0-100 y su temperatura. PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Cómo se calcula: ① Intención 0-35 (horizonte declarado, monto o compra detectados en notas y mensajes; un aplazamiento reciente la congela a 15) + ② Etapa 0-25 (lead status) + ③ Reciprocidad 0-20 (cuánto responde EL LEAD) + ④ Recencia real 0-20 (última actividad en notas, tareas, intentos o conversaciones). Flags: 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado. Caliente ≥55, Tibio 30-54, Frío 10-29.">Score</th>
+     <th data-tip="Qué es: lead scoring v2 0-100 y su temperatura. PASA EL MOUSE sobre el score de cada lead para ver POR QUÉ tiene esos puntos (las 4 variables con su explicación). Cómo se calcula: ① Intención 0-35 (horizonte declarado, monto o compra detectados en notas y mensajes; un aplazamiento reciente la congela a 15) + ② Etapa 0-25 (lead status) + ③ Reciprocidad 0-20 (cuánto responde EL LEAD) + ④ Recencia real 0-20 (última actividad en notas, tareas, intentos o conversaciones). Flags: 👍/👎 retroalimentación del asesor · 🏠 propiedad específica (MLS) · 💰 monto · 🛒 compra · ✋ respondió · ⏸ aplazado. Caliente ≥55, Tibio 30-54, Frío 10-29.">Score</th>
      <th data-tip="Qué es: el nombre del contacto tal como está registrado en el CRM.">Contacto</th>
      <th data-tip="Qué es: el correo del contacto en el CRM; el enlace abre tu cliente de correo.">Email</th>
      <th data-tip="Qué es: el teléfono del contacto; 'WA' abre el chat de WhatsApp (wa.me + número).">Teléfono</th>
