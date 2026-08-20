@@ -226,3 +226,12 @@ Search", Referral→"Referidos / Personal", CRM/CSV/manual→"Importaciones /
 creación manual", sin attr→"Sitio Web (sin atribución)". Solo ~20 de 598 son
 SEO real. Las demás hojas mantienen la familia "Sitio Web" simple.
 Inversión/CPL: scripts/inversiones.json (por fuente/categoría, total y/o meses).
+
+## Corrida en la nube (GitHub Actions)
+`.github/workflows/actualizar.yml`: cron 10:30 UTC (6:30 Miami) lunes-viernes +
+botón manual. Crea el .env desde los Secrets (GHL_PIT), corre actualizar_diario.py
+completo y publica netlify-pfs/ en Netlify con netlify-cli (NETLIFY_AUTH_TOKEN +
+NETLIFY_SITE_ID). scripts/data/ persiste SOLO en la caché privada de Actions
+(nunca en el repo — Habeas Data); si la caché expira, la corrida re-descarga todo.
+Repo productivo: github.com/BestMarketingTalentGlobal/pfsrealtygroup. Cuando la
+nube esté verificada, la tarea local de las 6:30 de la Mac se puede desactivar.

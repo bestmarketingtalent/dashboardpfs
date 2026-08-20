@@ -1,0 +1,69 @@
+# Actualización diaria del dashboard PFS en la nube:
+# descarga incremental del CRM (solo lectura) → scoring v2 → 16 páginas → deploy a Netlify.
+#
+# Secretos requeridos (Settings → Secrets and variables → Actions):
+#   GHL_PIT             token de integración privada de GoHighLevel (subcuenta PFS)
+#   NETLIFY_AUTH_TOKEN  personal access token de Netlify
+#   NETLIFY_SITE_ID     Site ID del sitio en Netlify
+#
+# Los datos descargados (scripts/data/, ~28.000 personas — Habeas Data) NUNCA se
+# suben al repositorio: persisten entre corridas solo en la caché privada de
+# Actions de este repo, para que la corrida diaria sea incremental (~15 min).
+# Si la caché expira, la corrida siguiente re-descarga todo (~2 h) sola.
+
+name: Actualizar dashboard
+
+on:
+  schedule:
+    - cron: '30 10 * * 1-5'   # 10:30 UTC = 6:30 a.m. Miami (EDT), lunes a viernes
+  workflow_dispatch: {}        # botón de ejecución manual en la pestaña Actions
+
+concurrency:
+  group: actualizar-dashboard
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Código
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Restaurar datos incrementales (caché privada del repo)
+        uses: actions/cache/restore@v4
+        with:
+          path: scripts/data
+          key: ghl-data-${{ github.run_id }}
+          restore-keys: |
+            ghl-data-
+
+      - name: Credenciales (desde Secrets, nunca en el repo)
+        run: |
+          printf 'GHL_PIT=%s\nGHL_LOCATION_ID=nbqsauwBcmgQF0wP5mxx\n' "${{ secrets.GHL_PIT }}" > .env
+          mkdir -p "$HOME/Desktop"   # el orquestador deja ahí el zip de respaldo
+
+      - name: Actualización completa (fetch incremental + scoring + reportes)
+        run: python3 scripts/actualizar_diario.py
+
+      - name: Guardar datos incrementales para la próxima corrida
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: scripts/data
+          key: ghl-data-${{ github.run_id }}
+
+      - name: Publicar en Netlify
+        run: npx --yes netlify-cli@17 deploy --prod --dir netlify-pfs --auth "$NETLIFY_AUTH_TOKEN" --site "$NETLIFY_SITE_ID" --message "Corrida automática $(date -u +%F_%H-%M)"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+      - name: Limpieza de credenciales
+        if: always()
+        run: rm -f .env
